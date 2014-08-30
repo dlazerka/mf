@@ -1,0 +1,125 @@
+project.version = '1.0'
+
+apply plugin: 'android'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+repositories {
+    mavenCentral()
+}
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'com.android.tools.build:gradle:0.9.+'
+	}
+}
+
+apply plugin: 'android'
+dependencies {
+	compile project(':api')
+
+	// Common
+    compile 'com.google.code.findbugs:jsr305:2.+' // 2.0.3
+    compile 'com.google.guava:guava:+' // 16.0.1
+    compile 'joda-time:joda-time:2.+' // 2.3
+    compile 'commons-io:commons-io:2.+' // 2.4
+
+	// Google Play Services
+	compile 'com.google.android.gms:play-services:4.+'
+
+	// IO
+	compile 'com.fasterxml.jackson.core:jackson-core:2.+'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.+'
+	compile 'com.loopj.android:android-async-http:1.+'
+
+	// DI
+//	compile 'com.jakewharton:butterknife:4.+'
+//	compile('org.roboguice:roboguice:2.+')  {
+//		exclude group: 'com.google.android'
+//		exclude group: 'com.google.inject'
+//	}
+//	compile('com.google.inject:guice:3.0:no_aop@jar')
+
+	// Logging
+	compile('ch.acra:acra:4.+') {exclude group: 'org.json'}
+
+	// Support Libraries
+	// compile 'com.android.support:support-v4:19.0.1'
+	// compile 'com.android.support:appcompat-v7:19.0.1'
+	// compile 'com.android.support:gridlayout-v7:19.0.1'
+	// compile 'com.android.support:mediarouter-v7:19.0.1'
+	// compile 'com.android.support:support-v13:19.0.1'
+}
+
+android {
+	compileSdkVersion 19
+	buildToolsVersion '19.0.3'
+
+	defaultConfig {
+		// Fragments are introduced in 11
+		// Notification.Builder since 16
+		minSdkVersion 16
+		targetSdkVersion 19
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_7
+		targetCompatibility JavaVersion.VERSION_1_7
+	}
+
+	buildTypes {
+		debug {
+			//packageNameSuffix '.debug'
+			runProguard false
+			proguardFile 'proguard-android-optimize.txt'
+			proguardFile 'proguard-project.txt'
+			proguardFile 'proguard-acra.txt'
+			proguardFile 'proguard-jackson.txt'
+		}
+		release {
+			//packageNameSuffix '.release'
+			runProguard true
+			proguardFile 'proguard-android-optimize.txt'
+			proguardFile 'proguard-project.txt'
+			proguardFile 'proguard-acra.txt'
+			proguardFile 'proguard-jackson.txt'
+		}
+	}
+
+	sourceSets {
+			main {
+				manifest.srcFile 'AndroidManifest.xml'
+                java.srcDirs = ['src/main/java']
+                resources.srcDirs = ['src/main/resources']
+				aidl.srcDirs = ['src/main/aidl']
+				renderscript.srcDirs = ['src/main/renderscript']
+				res.srcDirs = ['res']
+				assets.srcDirs = ['assets']
+			}
+	}
+
+	packagingOptions {
+		// To ignore "Error: duplicate files during packaging of APK" from deps.
+		exclude 'META-INF/LICENSE.txt'
+		exclude 'META-INF/NOTICE.txt'
+		exclude 'META-INF/LICENSE'
+		exclude 'META-INF/NOTICE'
+	}
+
+	// Need to figure out do I need it or not
+		//androidTest.setRoot('tests')
+
+//	signingConfigs {
+//		release {
+//			storeFile file(System.getProperty('user.home') + '/.ssh/android/pro.release.keystore')
+//			storePassword System.console().readPassword("\n\$ Enter keystore password: ")
+//			keyAlias 'pro.release'
+//			keyPassword System.console().readPassword("\n\$ Enter key password: ")
+//		}
+//	}
+}
+
+

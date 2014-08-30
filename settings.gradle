@@ -1,2 +1,1 @@
-include 'gae'
-//include 'api', 'gae', 'android'
+include 'api', 'gae', 'android'
