@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+	<application>lazerka-mf</application>
+	<version>01-init</version>
+
+	<threadsafe>true</threadsafe>
+
+	<static-files>
+		<include path="/favicon.ico"/>
+		<include path="/robots.txt"/>
+
+		<include path="/font/*" expiration="365d"/>
+
+		<include path="/image/**.png"/>
+		<include path="/image/**.jpeg"/>
+		<include path="/image/**.jpg"/>
+		<include path="/image/**.svg"/>
+
+		<include path="/**.js"/>
+		<include path="/**.css"/>
+		<include path="/**.html"/>
+	</static-files>
+
+	<!-- This enables app to read its own files from filesystem.
+	<resource-files>
+		<include path="/**.css" />
+		<include path="/**.js" />
+		<include path="/index.html" />
+	</resource-files>
+	-->
+
+	<system-properties>
+		<property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+	</system-properties>
+
+	<inbound-services>
+		<!--
+			This enables receiving Channel API hooks:
+			POST /_ah/channel/connected/
+			POST /_ah/channel/disconnected/
+		-->
+		<!--<service>channel_presence</service>-->
+	</inbound-services>
+
+	<!-- For Cloud SQL
+		<use-google-connector-j>true</use-google-connector-j>
+	-->
+
+</appengine-web-app>
