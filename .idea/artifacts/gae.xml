@@ -1,40 +1,29 @@
 <component name="ArtifactManager">
-  <artifact type="exploded-war" name="gae">
+  <artifact type="exploded-war" build-on-make="true" name="gae">
     <output-path>$PROJECT_DIR$/out/artifacts/gae</output-path>
     <root id="root">
       <element id="directory" name="WEB-INF">
         <element id="directory" name="classes">
           <element id="module-output" name="gae" />
+          <element id="module-output" name="api" />
         </element>
         <element id="directory" name="lib">
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/235ba8b489512805ac13a8f9ea77a1ca5ebe3e8/aopalliance-1.0.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.appengine/appengine-api-1.0-sdk/1.9.10/18e12f5dc8b769e4c8be15869e355dffa85f2d41/appengine-api-1.0-sdk-1.9.10.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/asm/asm/3.1/c157def142714c544bdea2e6144645702adf7097/asm-3.1.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.sonatype.sisu.inject/cglib/2.2.1-v20090111/7ce5e983fd0e6c78346f4c9cbfa39d83049dda2/cglib-2.2.1-v20090111.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.3.2/90a3822c38ec8c996e84c16a3477ef632cbc87a3/commons-lang3-3.3.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/18.0/cce0823396aa693798f8882e64213b1772032b09/guava-18.0.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.inject/guice/3.0/9d84f15fe35e2c716a02979fb62f50a29f38aefa/guice-3.0.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.inject.extensions/guice-multibindings/3.0/5e670615a927571234df68a8b1fe1a16272be555/guice-multibindings-3.0.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.inject.extensions/guice-servlet/3.0/610cde0e8da5a8b7d8efb8f0b8987466ffebaaf9/guice-servlet-3.0.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.4.2/6bb52af09372d5064206d47d7887d41671f00f7d/jackson-annotations-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.4.2/ceb72830d95c512b4b300a38f29febc85bdf6e4b/jackson-core-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.4.2/8e31266a272ad25ac4c089734d93e8d811652c1f/jackson-databind-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-joda/2.4.2/d826d1db3f9f2277576c524a71d03d1f1cbe462b/jackson-datatype-joda-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.4.2/304e6e60d495095bdae65f80462afc26d76dded4/jackson-jaxrs-base-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.4.2/f73ede4b0c3747626d83c713242f2286d3924366/jackson-jaxrs-json-provider-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/2.4.2/c2b2c9d52d90776f3186c5fc758de369dc46ce12/jackson-module-jaxb-annotations-2.4.2.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.sun.jersey/jersey-core/1.18.1/4f97b0f85a881d3b3478f99a17df7bd258b9d626/jersey-core-1.18.1.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.sun.jersey.contribs/jersey-guice/1.18.1/ff8e8f9e7dd9a353d3bb4e992458fdbf4256d126/jersey-guice-1.18.1.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.sun.jersey/jersey-server/1.18.1/6e4e4fb491ea360a0f4d672729224cbbb9cb456d/jersey-server-1.18.1.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.sun.jersey/jersey-servlet/1.18.1/ecec31589375845cbd42e75c32b64a1475c44bb4/jersey-servlet-1.18.1.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/joda-time/joda-time/2.4/89e9725439adffbbd41c5f5c215c136082b34a7f/joda-time-2.4.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/2.0.3/5871fb60dc68d67da54a663c3fd636a10a532948/jsr305-2.0.3.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.oauth.core/oauth/20100527/a84c5331e225bc25a5a288db328048d6b1bb6fd5/oauth-20100527.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.googlecode.objectify/objectify/5.0.3/bdf3d99a259b6528841b4cf72a36dc0f1bb97703/objectify-5.0.3.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.7/2b8019b6249bb05d81d3a3094e468753e2b21311/slf4j-api-1.7.7.jar" />
-          <element id="file-copy" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-jdk14/1.7.7/25d160723ea37a6cb84e87cd70773ff02997e857/slf4j-jdk14-1.7.7.jar" />
+          <element id="library" level="project" name="org.slf4j:slf4j-api:1.7.7" />
+          <element id="library" level="project" name="com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.4.2" />
+          <element id="library" level="project" name="com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.3.3" />
+          <element id="library" level="project" name="com.googlecode.objectify:objectify:5.0.3" />
+          <element id="library" level="project" name="com.fasterxml.jackson.core:jackson-core:2.4.2" />
+          <element id="library" level="project" name="org.slf4j:slf4j-jdk14:1.7.7" />
+          <element id="library" level="project" name="com.google.inject.extensions:guice-servlet:3.0" />
+          <element id="library" level="project" name="com.fasterxml.jackson.core:jackson-annotations:2.4.2" />
+          <element id="library" level="project" name="joda-time:joda-time:2.4" />
+          <element id="library" level="project" name="com.google.appengine:appengine-api-1.0-sdk:1.9.9" />
+          <element id="library" level="project" name="com.fasterxml.jackson.core:jackson-databind:2.4.2" />
+          <element id="library" level="project" name="com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.2" />
+          <element id="library" level="project" name="com.sun.jersey.contribs:jersey-guice:1.18.1" />
+          <element id="library" level="project" name="com.google.inject:guice:3.0" />
+          <element id="library" level="project" name="javax.servlet:servlet-api:2.5" />
+          <element id="library" level="project" name="com.sun.jersey:jersey-servlet:1.18.1" />
         </element>
       </element>
       <element id="javaee-facet-resources" facet="gae/web/Web" />

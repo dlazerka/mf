@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="com.sun.jersey.contribs:jersey-guice:1.18.1" type="repository">
+    <properties maven-id="com.sun.jersey.contribs:jersey-guice:1.18.1" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/sun/jersey/contribs/jersey-guice/1.18.1/jersey-guice-1.18.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/sun/jersey/contribs/jersey-guice/1.18.1/jersey-guice-1.18.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

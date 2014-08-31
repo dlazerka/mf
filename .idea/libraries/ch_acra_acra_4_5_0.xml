@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="ch.acra:acra:4.5.0" type="repository">
+    <properties maven-id="ch.acra:acra:4.5.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/ch/acra/acra/4.5.0/acra-4.5.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/ch/acra/acra/4.5.0/acra-4.5.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,12 +1,11 @@
+# MacOS
 .DS_Store
 
-/*/build
-
-/.gradle
-/*.iws
-/*.ipr
+# IntelliJ
+/out
 /.idea/workspace.xml
 /.idea/tasks.xml
 /.idea/dictionaries.xml
 
-/android/gen
+# Android
+gen

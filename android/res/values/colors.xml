@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- Doesn't work, draws black instead. -->
+	<color name="transparent_blue">#DAEAFF</color>
+	<color name="blue">#AA84B8FE</color>
+	<color name="error_background">#330000</color>
+</resources>
