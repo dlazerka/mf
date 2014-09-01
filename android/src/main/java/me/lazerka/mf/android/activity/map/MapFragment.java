@@ -2,7 +2,6 @@ package me.lazerka.mf.android.activity.map;
 
 import android.app.Fragment;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +9,9 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
-import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.model.*;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.R;
@@ -66,8 +67,6 @@ public class MapFragment extends Fragment {
 			}
 		});
 
-
-
 		// Updates the location and zoom of the MapView
 		//CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(43.1, -87.9), 10);
 		//map.animateCamera(cameraUpdate);
@@ -91,46 +90,6 @@ public class MapFragment extends Fragment {
 	public void onLowMemory() {
 		super.onLowMemory();
 		mMapView.onLowMemory();
-	}
-
-	@Override
-	public void onStart() {
-		super.onStart();
-
-		if (true) {
-			return;
-		}
-
-		if (map != null) {
-			// Happens when activity stops and then starts again (e.g. Home button).
-			return;
-		}
-
-		//map = getMap();
-		map.getUiSettings().setZoomControlsEnabled(true);
-		if (map == null) {
-			Toast.makeText(this.getActivity(), "GoogleMap is null, is Google Play services enabled?", Toast.LENGTH_LONG).show();
-			return;
-		}
-
-		map.setMyLocationEnabled(true);
-		map.setTrafficEnabled(true);
-
-		if (map.getCameraPosition().zoom < 2) {
-			Location myLocation = map.getMyLocation();
-			if (myLocation != null) {
-				LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-				CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
-				map.moveCamera(cameraUpdate);
-			}
-		}
-
-		//		map.setOnMarkerClickListener(new MyMarkerClickListener());
-//		LatLng latLng = new LatLng(37.76, -122.46);
-//		CameraUpdate update = CameraUpdateFactory.newLatLngZoom(latLng, 10);
-//		map.moveCamera(update);
-
-//		addTestMarker();
 	}
 
 	void drawLocation(String email, LocationEvent location) {
