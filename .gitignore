@@ -9,3 +9,6 @@
 
 # Android
 gen
+
+#Maven
+target

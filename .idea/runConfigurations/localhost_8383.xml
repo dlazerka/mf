@@ -2,7 +2,7 @@
   <configuration default="false" name="localhost:8383" type="GoogleAppEngineDevServer" factoryName="Local" APPLICATION_SERVER_NAME="AppEngine Dev 1.9.10" ALTERNATIVE_JRE_ENABLED="false" ALTERNATIVE_JRE_PATH="">
     <option name="OPEN_IN_BROWSER" value="false" />
     <server-settings>
-      <option name="artifact" value="gae" />
+      <option name="artifact" value="gae:war exploded" />
       <option name="port" value="8383" />
     </server-settings>
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
@@ -28,7 +28,7 @@
     </ConfigurationWrapper>
     <method>
       <option name="BuildArtifacts" enabled="true">
-        <artifact name="gae" />
+        <artifact name="gae:war exploded" />
       </option>
     </method>
   </configuration>

@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/api/api.iml" filepath="$PROJECT_DIR$/api/api.iml" />
       <module fileurl="file://$PROJECT_DIR$/gae/gae.iml" filepath="$PROJECT_DIR$/gae/gae.iml" />
       <module fileurl="file://$PROJECT_DIR$/android/google-play-services_lib/google-play-services_lib.iml" filepath="$PROJECT_DIR$/android/google-play-services_lib/google-play-services_lib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mf.iml" filepath="$PROJECT_DIR$/mf.iml" />
     </modules>
   </component>
 </project>
