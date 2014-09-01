@@ -1,12 +1,16 @@
 package me.lazerka.mf.android.activity.map;
 
+import android.app.Fragment;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.R;
@@ -15,7 +19,7 @@ import org.joda.time.Period;
 
 import java.util.Map;
 
-public class MapFragment extends com.google.android.gms.maps.MapFragment {
+public class MapFragment extends Fragment {
 	public static final String CAMERA_POSITION = "cameraPosition";
 	private final String TAG = ((Object) this).getClass().getName();
 
@@ -30,6 +34,7 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment {
 	private GoogleMap map;
 
 	private final Map<String, Item> items = Maps.newHashMap();
+	private MapView mMapView;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -38,15 +43,70 @@ public class MapFragment extends com.google.android.gms.maps.MapFragment {
 	}
 
 	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View view = inflater.inflate(R.layout.fragment_map, container, false);
+
+		// Gets the MapView from the XML layout and creates it
+		mMapView = (MapView) view.findViewById(R.id.mapview);
+		mMapView.onCreate(savedInstanceState);
+
+		// Gets to GoogleMap from the MapView and does initialization stuff
+		map = mMapView.getMap();
+		map.getUiSettings().setMyLocationButtonEnabled(true);
+		map.setMyLocationEnabled(true);
+
+		// Needs to call MapsInitializer before doing any CameraUpdateFactory calls
+		MapsInitializer.initialize(this.getActivity());
+
+		// Watch for button clicks.
+		Button button = (Button) view.findViewById(R.id.send_my);
+		button.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Toast.makeText(getActivity(), "Work In Progress", Toast.LENGTH_SHORT).show();
+			}
+		});
+
+
+
+		// Updates the location and zoom of the MapView
+		//CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(43.1, -87.9), 10);
+		//map.animateCamera(cameraUpdate);
+
+		return view;
+	}
+
+	@Override
+	public void onResume() {
+		mMapView.onResume();
+		super.onResume();
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		mMapView.onDestroy();
+	}
+
+	@Override
+	public void onLowMemory() {
+		super.onLowMemory();
+		mMapView.onLowMemory();
+	}
+
+	@Override
 	public void onStart() {
 		super.onStart();
+
+		if (true) {
+			return;
+		}
 
 		if (map != null) {
 			// Happens when activity stops and then starts again (e.g. Home button).
 			return;
 		}
 
-		map = getMap();
+		//map = getMap();
 		map.getUiSettings().setZoomControlsEnabled(true);
 		if (map == null) {
 			Toast.makeText(this.getActivity(), "GoogleMap is null, is Google Play services enabled?", Toast.LENGTH_LONG).show();

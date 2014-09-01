@@ -8,6 +8,8 @@
 
 	<dimen name="activity_horizontal_margin_map">0dp</dimen>
 	<dimen name="activity_vertical_margin_map">0dp</dimen>
+	<dimen name="bottom_button_font_size">30sp</dimen>
+	<dimen name="bottom_button_padding">20dp</dimen>
 
 	<!--
 	<dimen name="button_text_size">22sp</dimen>

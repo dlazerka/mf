@@ -3,6 +3,9 @@ package me.lazerka.mf.android;
 import android.accounts.Account;
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 /**
  * My API for SharedPreferences, type-safe.
@@ -40,5 +43,9 @@ public class Preferences {
 				.remove(ACCOUNT_NAME)
 				.remove(ACCOUNT_TYPE)
 				.apply();
+	}
+
+	public List<String> getFriends() {
+		return ImmutableList.of("John Doe", "Malcolm Reynolds");
 	}
 }

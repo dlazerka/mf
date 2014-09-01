@@ -1,19 +1,14 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Fragment;
-import android.app.LoaderManager;
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract.Contacts;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 
 /**
@@ -22,30 +17,17 @@ import me.lazerka.mf.android.R;
 public class ContactsFragment extends Fragment {
 	private ListView mContactsList;
 
-	/** An adapter that binds the result Cursor to the ListView */
-	private SimpleCursorAdapter mCursorAdapter;
-
-	long mContactId;
-	// The contact's LOOKUP_KEY
-	String mContactKey;
-	// A content URI for the selected contact
-	Uri mContactUri;
-
-	private static final String[] PROJECTION = {
-		Contacts._ID,
-		Contacts.LOOKUP_KEY,
-		Contacts.DISPLAY_NAME_PRIMARY
-	};
-
-	// The column index for the _ID column
-	private static final int CONTACT_ID_INDEX = 0;
-	private static final int CONTACT_KEY_INDEX = 1;
-
 	// A UI Fragment must inflate its View
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 	                         Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.fragment_contacts,container, false);
+		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
+		return view;
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
 	}
 
 	@Override
@@ -54,47 +36,34 @@ public class ContactsFragment extends Fragment {
 
 		mContactsList = (ListView) getActivity().findViewById(android.R.id.list);
 
-		// Init CursorAdapter.
-		mCursorAdapter = new SimpleCursorAdapter(
-				getActivity(),
-				R.layout.contacts_item,
-				null,
-				new String[] {Contacts.DISPLAY_NAME_PRIMARY},
-				new int[] {android.R.id.text1},
-				0
-		);
-		// Sets the adapter for the ListView
-		mContactsList.setAdapter(mCursorAdapter);
+		mContactsList.setAdapter(new ListAdapter());
 		mContactsList.setOnItemClickListener(new OnItemClickListener());
-
-		// Init Loader.
-		getLoaderManager().initLoader(0, null, new LoaderCallbacks());
 	}
 
-	private class LoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
-		@Override
-		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-			// Starts the query
-			return new CursorLoader(
-					getActivity(),
-					Contacts.CONTENT_URI,
-					PROJECTION,
-					null, // No WHERE
-					//Contacts.DISPLAY_NAME_PRIMARY + " LIKE ?",
-					null, // No WHERE arguments
-					//mSelectionArgs,
-					null // Default sort
-			);
+	private class ListAdapter extends ArrayAdapter<String> {
+		public ListAdapter() {
+			super(getActivity(), R.layout.contacts_item, android.R.id.text1);
+			addAll(Application.preferences.getFriends());
 		}
 
 		@Override
-		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-			mCursorAdapter.swapCursor(cursor);
+		public int getCount() {
+			return super.getCount();
 		}
 
 		@Override
-		public void onLoaderReset(Loader<Cursor> loader) {
-			mCursorAdapter.swapCursor(null);
+		public String getItem(int position) {
+			return super.getItem(position);
+		}
+
+		@Override
+		public int getPosition(String item) {
+			return super.getPosition(item);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return super.getItemId(position);
 		}
 	}
 
@@ -102,20 +71,7 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			// Get the Cursor
-			SimpleCursorAdapter adapter = (SimpleCursorAdapter) parent.getAdapter();
-			Cursor cursor = adapter.getCursor();
-			// Move to the selected contact
-			cursor.moveToPosition(position);
-			// Get the _ID value
-			mContactId = cursor.getLong(CONTACT_ID_INDEX);
-			// Get the selected LOOKUP KEY
-			mContactKey = cursor.getString(CONTACT_KEY_INDEX);
-			// Create the contact's content Uri
-			mContactUri = Contacts.getLookupUri(mContactId, mContactKey);
-        /*
-         * You can use mContactUri as the content URI for retrieving
-         * the details for a contact.
-         */
+			ListAdapter adapter = (ListAdapter) parent.getAdapter();
 		}
 	}
 }

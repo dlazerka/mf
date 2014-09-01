@@ -4,23 +4,21 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical"
-	>
-	<ListView
-       android:id="@android:id/list"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-	   android:layout_weight="1"
+>
+	<com.google.android.gms.maps.MapView
+		android:id="@+id/mapview"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
 	/>
 
 	<Button
-		android:id="@+id/add_friend"
+		android:id="@+id/send_my"
 		android:layout_height="wrap_content"
 		android:layout_width="match_parent"
 		android:layout_marginLeft="100dp"
 		android:layout_marginRight="100dp"
 		android:layout_gravity="bottom"
-		android:layout_weight="0"
-		android:text="@string/add_friend"
+		android:text="@string/send_my"
 		android:textSize="@dimen/bottom_button_font_size"
 		android:padding="@dimen/bottom_button_padding">
 	</Button>
