@@ -1,26 +1,32 @@
 package me.lazerka.mf.android.activity.map;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.*;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.api.LocationEvent;
 import org.joda.time.Period;
 
+import java.util.Formatter;
+import java.util.Locale;
 import java.util.Map;
 
 public class MapFragment extends Fragment {
+	private final int CONTACT_PICKER_RESULT = 1;
+
+
 	public static final String CAMERA_POSITION = "cameraPosition";
 	private final String TAG = ((Object) this).getClass().getName();
 
@@ -54,6 +60,7 @@ public class MapFragment extends Fragment {
 		// Gets to GoogleMap from the MapView and does initialization stuff
 		map = mMapView.getMap();
 		map.getUiSettings().setMyLocationButtonEnabled(true);
+		map.setOnMyLocationChangeListener(new MyLocationChangeListener());
 		map.setMyLocationEnabled(true);
 
 		// Needs to call MapsInitializer before doing any CameraUpdateFactory calls
@@ -62,8 +69,47 @@ public class MapFragment extends Fragment {
 		// Watch for button clicks.
 		Button button = (Button) view.findViewById(R.id.send_my);
 		button.setOnClickListener(new OnClickListener() {
+			private int toZoom(double accuracy) {
+				// From http://stackoverflow.com/questions/18383236
+				DisplayMetrics metrics = new DisplayMetrics();
+				WindowManager windowManager = getActivity().getWindowManager();
+				Display defaultDisplay = windowManager.getDefaultDisplay();
+				defaultDisplay.getMetrics(metrics);
+				int screenSize = Math.min(metrics.widthPixels, metrics.heightPixels);
+				double mpp = accuracy/screenSize;
+
+				long equatorInMeters = 40075004;
+				return (int) (((Math.log(equatorInMeters / (256 * mpp))) / Math.log(2)) + 1);
+			}
+
 			public void onClick(View v) {
-				Toast.makeText(getActivity(), "Work In Progress", Toast.LENGTH_SHORT).show();
+				Location myLocation = map.getMyLocation();
+				if (myLocation == null) {
+					Toast.makeText(getActivity(), "Current location is unknown, try later", Toast.LENGTH_LONG)
+							.show();
+					return;
+				}
+
+				double lat = myLocation.getLatitude();
+				double lon = myLocation.getLongitude();
+				double acc = myLocation.getAccuracy();
+
+				int zoom = toZoom(acc);
+
+				// Like "https://www.google.com/maps/@40.5697761,-119.7923031,8z"
+				StringBuilder sb = new StringBuilder();
+				new Formatter(sb, Locale.US).format("https://www.google.com/maps/@%.7f,%.7f,%dz", lat, lon, zoom);
+				String url = sb.toString();
+
+				String message = "I'm here: " + url + "\nby \"Where I Am\" app";
+				//String html = "I'm <a href=\"" + url + "\">here</a><br/>\nby <a href=\"#\">Where I Am</a> app";
+
+				Intent sendIntent = new Intent();
+				sendIntent.setAction(Intent.ACTION_SEND);
+				sendIntent.putExtra(Intent.EXTRA_TEXT, message);
+				//sendIntent.putExtra(Intent.EXTRA_HTML_TEXT, html);
+				sendIntent.setType("text/plain");
+				startActivity(Intent.createChooser(sendIntent, url));
 			}
 		});
 
@@ -150,6 +196,7 @@ public class MapFragment extends Fragment {
 		Circle circle;
 		Marker marker;
 	}
+
 /*
 	private class MyMarkerClickListener implements OnMarkerClickListener {
 		@Override
@@ -158,17 +205,23 @@ public class MapFragment extends Fragment {
 			return false;
 		}
 	}
+	*/
 
 	private class MyLocationChangeListener implements OnMyLocationChangeListener {
+		boolean set = false;
+
 		@Override
 		public void onMyLocationChange(android.location.Location location) {
+			if (set) {
+				return;
+			}
 			Log.d(TAG, "onMyLocationChange" + location);
+			set = true;
 			LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 14f);
 			map.moveCamera(cameraUpdate);
 			map.setOnMyLocationButtonClickListener(null);
 		}
 	}
-	*/
 }
 

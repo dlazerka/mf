@@ -27,7 +27,7 @@ import java.util.List;
  * @author Dzmitry Lazerka
  */
 public class ContactsFragment extends Fragment {
-	private static final int CONTACT_PICKER_RESULT = 1;
+	private final int CONTACT_PICKER_RESULT = 1;
 	private static final String TAG = "ContactsFragment";
 	private ListView mContactsList;
 	private CursorAdapter mAdapter;
