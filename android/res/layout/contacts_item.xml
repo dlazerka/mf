@@ -8,17 +8,16 @@
 
 	<ImageView
 		android:id="@+id/userpic"
-		android:layout_width="150dp"
-		android:layout_height="150dp"
-		android:contentDescription="Userpic"
+		android:layout_width="100dp"
+		android:layout_height="100dp"
+		android:contentDescription="@string/userpic_alt"
 		/>
 
 	<TextView
 		android:id="@android:id/text1"
-		android:layout_width="match_parent"
+		android:layout_width="0dp"
 		android:layout_height="wrap_content"
 		android:layout_weight="1"
-		android:clickable="true"
 		android:textSize="24sp"
 		android:padding="12dp"
 	    android:layout_gravity="center_vertical"
@@ -26,10 +25,11 @@
 
 	<ImageButton
 		android:id="@+id/remove"
-		android:layout_width="20dp"
-		android:layout_height="20dp"
-		android:layout_marginRight="10dp"
+		android:layout_width="60dp"
+		android:layout_height="60dp"
 		android:src="@android:drawable/ic_menu_close_clear_cancel"
 		android:layout_gravity="center_vertical"
+	    android:background="@color/transparent"
+	    android:contentDescription="@string/delete_alt"
 		/>
 </LinearLayout>

@@ -61,8 +61,6 @@ public class ContactsFragment extends Fragment {
 		mContactsList.setOnItemClickListener(new OnItemClickListener());
 	}
 
-
-
 	public Cursor getDataCursor() {
 		List<Uri> friends = Application.preferences.getFriends();
 		List<String> lookups = new ArrayList<>(friends.size());
@@ -93,7 +91,7 @@ public class ContactsFragment extends Fragment {
 				projection,
 				Contacts.LOOKUP_KEY + " IN (" + placeholders + ")",
 				selectionArgs,
-				null
+				Contacts.DISPLAY_NAME_PRIMARY
 		);
 	}
 
@@ -120,6 +118,9 @@ public class ContactsFragment extends Fragment {
 			// Just to not try to bind null photo uri and spam log with warnings.
 			if (!value.isEmpty()) {
 				v.setImageURI(Uri.parse(value));
+			} else {
+				// To clear image of a newly added item.
+				v.setImageURI(null);
 			}
 		}
 
@@ -133,12 +134,15 @@ public class ContactsFragment extends Fragment {
 
 			View removeButton = view.findViewById(R.id.remove);
 			removeButton.setOnClickListener(new OnDeleteListener(contactUri));
+			// Otherwise item doesn't catch click events http://stackoverflow.com/questions/7645880
+			removeButton.setFocusable(false);
 		}
 	}
 
 	private class OnItemClickListener implements AdapterView.OnItemClickListener {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			Log.d(TAG, "click " + id);
 			// Get the Cursor
 			ListAdapter adapter = (ListAdapter) parent.getAdapter();
 		}

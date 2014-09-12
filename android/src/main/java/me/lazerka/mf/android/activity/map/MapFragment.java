@@ -20,7 +20,6 @@ import me.lazerka.mf.api.LocationEvent;
 import org.joda.time.Period;
 
 import java.util.Formatter;
-import java.util.Locale;
 import java.util.Map;
 
 public class MapFragment extends Fragment {
@@ -98,16 +97,21 @@ public class MapFragment extends Fragment {
 
 				// Like "https://www.google.com/maps/@40.5697761,-119.7923031,8z"
 				StringBuilder sb = new StringBuilder();
-				new Formatter(sb, Locale.US).format("https://www.google.com/maps/@%.7f,%.7f,%dz", lat, lon, zoom);
+				new Formatter(sb).format("https://www.google.com/maps/@%.7f,%.7f,%dz", lat, lon, zoom);
 				String url = sb.toString();
-
-				String message = "I'm here: " + url + "\nby \"Where I Am\" app";
-				//String html = "I'm <a href=\"" + url + "\">here</a><br/>\nby <a href=\"#\">Where I Am</a> app";
+				sb.setLength(0);
+				new Formatter(sb).format(getActivity().getString(R.string.my_location_message_text), url);
+				String text = sb.toString();
+				sb.setLength(0);
+				new Formatter(sb).format(getActivity().getString(R.string.my_location_message_html), url);
+				String html = sb.toString();
+				String subject = getActivity().getString(R.string.my_location_subject);
 
 				Intent sendIntent = new Intent();
 				sendIntent.setAction(Intent.ACTION_SEND);
-				sendIntent.putExtra(Intent.EXTRA_TEXT, message);
-				//sendIntent.putExtra(Intent.EXTRA_HTML_TEXT, html);
+				sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+				sendIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+				sendIntent.putExtra(Intent.EXTRA_HTML_TEXT, html); // Doesn't work, actually.
 				sendIntent.setType("text/plain");
 				startActivity(Intent.createChooser(sendIntent, url));
 			}
