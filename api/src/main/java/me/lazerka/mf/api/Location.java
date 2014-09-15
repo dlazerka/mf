@@ -1,9 +1,19 @@
 package me.lazerka.mf.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.joda.time.DateTime;
 
-public class LocationEvent extends Event {
-	public static final String PATH = "/location";
+/**
+ * @author Dzmitry Lazerka
+ */
+public class Location {
+	public static final String PATH = "/rest/location";
+
+	@JsonProperty
+	private DateTime when;
+
+	@JsonProperty
+	private String email;
 
 	@JsonProperty
 	private double lat;
@@ -14,11 +24,23 @@ public class LocationEvent extends Event {
 	@JsonProperty
 	private float acc;
 
-	public LocationEvent() {
+	public Location() {
 	}
 
-	public LocationEvent(String deviceId, long ms) {
-		super(deviceId, ms);
+	public DateTime getWhen() {
+		return when;
+	}
+
+	public void setWhen(DateTime when) {
+		this.when = when;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public double getLat() {
@@ -47,6 +69,6 @@ public class LocationEvent extends Event {
 
 	@Override
 	public String toString() {
-		return "{" + lat + ", " + lon +", " + acc + "}";
+		return email + ":" + lat + "," + lon +"," + acc;
 	}
 }

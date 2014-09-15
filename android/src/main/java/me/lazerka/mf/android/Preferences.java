@@ -3,9 +3,11 @@ package me.lazerka.mf.android;
 import android.accounts.Account;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.util.Log;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 /**
@@ -35,12 +37,12 @@ public class Preferences {
 		return new Account(name, type);
 	}
 
-	//public void setAccount(@Nonnull Account account) {
-	//	Editor editor = preferences.edit();
-	//	editor.putString(ACCOUNT_NAME, account.name);
-	//	editor.putString(ACCOUNT_TYPE, account.type);
-	//	editor.apply();
-	//}
+	public void setAccount(@Nonnull Account account) {
+		Editor editor = preferences.edit();
+		editor.putString(ACCOUNT_NAME, account.name);
+		editor.putString(ACCOUNT_TYPE, account.type);
+		editor.apply();
+	}
 
 	public void clearAccount() {
 		preferences.edit()

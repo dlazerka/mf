@@ -17,6 +17,11 @@ public class TabsAdapter extends FragmentPagerAdapter {
 	private final ActionBar mActionBar;
 	private final ViewPager mViewPager;
 
+	private ContactsFragment mContactsFragment;
+	private MapFragment mMapFragment;
+	private Tab mFriendsTab;
+	private Tab mMapTab;
+
 	public TabsAdapter(FragmentManager fragmentManager, ActionBar actionBar, ViewPager viewPager) {
 		super(fragmentManager);
 		mActionBar = actionBar;
@@ -24,19 +29,22 @@ public class TabsAdapter extends FragmentPagerAdapter {
 	}
 
 	public void init() {
-		OnPageChangeListener mPageChangeListener = new OnPageChangeListener();
-		mViewPager.setOnPageChangeListener(mPageChangeListener);
+		mContactsFragment = new ContactsFragment();
+		mMapFragment = new MapFragment();
+
+		OnPageChangeListener pageChangeListener = new OnPageChangeListener();
+		mViewPager.setOnPageChangeListener(pageChangeListener);
 		mViewPager.setAdapter(this);
 
 		TabListener tabListener = new TabListener();
 
-		Tab friendsTab = mActionBar.newTab().setText("Friends");
-		friendsTab.setTabListener(tabListener);
-		mActionBar.addTab(friendsTab);
+		mFriendsTab = mActionBar.newTab().setText("Friends");
+		mFriendsTab.setTabListener(tabListener);
+		mActionBar.addTab(mFriendsTab);
 
-		Tab mapTab = mActionBar.newTab().setText("Map");
-		mapTab.setTabListener(tabListener);
-		mActionBar.addTab(mapTab);
+		mMapTab = mActionBar.newTab().setText("Map");
+		mMapTab.setTabListener(tabListener);
+		mActionBar.addTab(mMapTab);
 
 		notifyDataSetChanged();
 	}
@@ -50,12 +58,20 @@ public class TabsAdapter extends FragmentPagerAdapter {
 	public Fragment getItem(int position) {
 		switch (position) {
 			case 0:
-				return new ContactsFragment();
+				return mContactsFragment;
 			case 1:
-				return new MapFragment();
+				return mMapFragment;
 			default:
 				throw new IllegalArgumentException("Unknown tab position=" + position);
 		}
+	}
+
+	public MapFragment getMapFragment() {
+		return mMapFragment;
+	}
+
+	public void selectMapTab() {
+		mActionBar.selectTab(mMapTab);
 	}
 
 	private class OnPageChangeListener implements ViewPager.OnPageChangeListener {

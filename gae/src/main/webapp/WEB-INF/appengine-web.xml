@@ -21,13 +21,10 @@
 		<include path="/**.html"/>
 	</static-files>
 
-	<!-- This enables app to read its own files from filesystem.
+	<!-- This enables app to read its own files from filesystem. -->
 	<resource-files>
-		<include path="/**.css" />
-		<include path="/**.js" />
-		<include path="/index.html" />
+		<include path="/WEB-INF/api.key" />
 	</resource-files>
-	-->
 
 	<system-properties>
 		<property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>

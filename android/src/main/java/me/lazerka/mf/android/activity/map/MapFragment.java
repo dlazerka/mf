@@ -3,7 +3,6 @@ package me.lazerka.mf.android.activity.map;
 import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -16,18 +15,17 @@ import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.api.LocationEvent;
+import me.lazerka.mf.api.Location;
+import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import java.util.Formatter;
 import java.util.Map;
 
 public class MapFragment extends Fragment {
 	private final int CONTACT_PICKER_RESULT = 1;
 
-
 	public static final String CAMERA_POSITION = "cameraPosition";
-	private final String TAG = ((Object) this).getClass().getName();
+	private final String TAG = getClass().getName();
 
 	private final int circleArea = Color.parseColor("#55DAEAFF");
 	private final int circleStroke = Color.parseColor("#FF84B8FE");
@@ -82,7 +80,7 @@ public class MapFragment extends Fragment {
 			}
 
 			public void onClick(View v) {
-				Location myLocation = map.getMyLocation();
+				android.location.Location myLocation = map.getMyLocation();
 				if (myLocation == null) {
 					Toast.makeText(getActivity(), "Current location is unknown, try later", Toast.LENGTH_LONG)
 							.show();
@@ -96,15 +94,10 @@ public class MapFragment extends Fragment {
 				int zoom = toZoom(acc);
 
 				// Like "https://www.google.com/maps/@40.5697761,-119.7923031,8z"
-				StringBuilder sb = new StringBuilder();
-				new Formatter(sb).format("https://www.google.com/maps/@%.7f,%.7f,%dz", lat, lon, zoom);
-				String url = sb.toString();
-				sb.setLength(0);
-				new Formatter(sb).format(getActivity().getString(R.string.my_location_message_text), url);
-				String text = sb.toString();
-				sb.setLength(0);
-				new Formatter(sb).format(getActivity().getString(R.string.my_location_message_html), url);
-				String html = sb.toString();
+				String url = getActivity().getString(R.string.gmaps_url, (Double) lat, (Double) lon, zoom);
+				String appName = getActivity().getString(R.string.app_name);
+				String text = getActivity().getString(R.string.my_location_message_text, url, appName);
+				String html = getActivity().getString(R.string.my_location_message_html, url, appName);
 				String subject = getActivity().getString(R.string.my_location_subject);
 
 				Intent sendIntent = new Intent();
@@ -142,9 +135,10 @@ public class MapFragment extends Fragment {
 		mMapView.onLowMemory();
 	}
 
-	void drawLocation(String email, LocationEvent location) {
+	public void drawLocation(Location location) {
 		LatLng position = new LatLng(location.getLat(), location.getLon());
 
+		String email = location.getEmail();
 		Item item = items.get(email);
 		if (item == null) {
 			item = new Item();
@@ -168,8 +162,8 @@ public class MapFragment extends Fragment {
 			item.circle.setCenter(position);
 		}
 
-		long ms = location.getMs();
-		Period period = new Period(ms, System.currentTimeMillis());
+		DateTime when = location.getWhen();
+		Period period = new Period(when.getMillis(), System.currentTimeMillis());
 		String snippet;
 		if (period.getDays() > 0) {
 			snippet = period.getDays() + " days ago";

@@ -7,7 +7,7 @@ import me.lazerka.mf.android.R;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class MapActivity extends Activity {
-	private final String TAG = ((Object) this).getClass().getName();
+	private final String TAG = getClass().getName();
 
 	private MapFragment mapFragment;
 	private ScheduledThreadPoolExecutor executor;
