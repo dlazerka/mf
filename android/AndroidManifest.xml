@@ -15,8 +15,17 @@
 	<!-- Required by Maps API. -->
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
+	<!-- For adding friends from Android contacts. -->
 	<uses-permission android:name="android.permission.READ_CONTACTS" />
 
+	<!-- To use Android account on this device and generate OAuth token, so server can verify you is really you. -->
+	<uses-permission android:name="android.permission.USE_CREDENTIALS" />
+
+	<!-- To show account chooser at the start. -->
+	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
+
+
+	<!-- Google Cloud Messaging: to receive push notifications from server when your friend asks your location. -->
 	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
 	<!-- Needed per https://developers.google.com/maps/documentation/android/start#add_a_map -->
@@ -26,6 +35,7 @@
 
 	<application
 		android:name=".Application"
+		android:allowBackup="true"
 		android:label="@string/app_name"
 		android:icon="@drawable/ic_launcher">
 
@@ -39,13 +49,18 @@
 
 
 		<activity
-			android:name=".activity.MainActivity"
+			android:name=".activity.login.LoginActivity"
 			android:allowBackup="true"
 			android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
+		</activity>
+		<activity
+			android:name=".activity.MainActivity"
+			android:allowBackup="true"
+			android:label="@string/app_name">
 		</activity>
 
 		<service

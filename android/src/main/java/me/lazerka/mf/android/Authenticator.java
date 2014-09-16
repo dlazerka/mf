@@ -239,7 +239,7 @@ public class Authenticator {
 
 		for (Cookie cookie : cookieStore.getCookies()) {
 			if (cookie.getName().equals("dev_appserver_login")) {
-				// Logging only dev cookie.
+				// It's OK to log this auth cookie, because it's local dev server only.
 				Log.i(TAG, "GAE cookie retrieval successful: " + cookie.getValue());
 				return cookie.getValue();
 			}

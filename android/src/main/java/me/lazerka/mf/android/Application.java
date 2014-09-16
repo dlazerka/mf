@@ -5,14 +5,20 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Debug;
+import android.util.Log;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import me.lazerka.mf.android.background.SenderService;
 import me.lazerka.mf.api.AcraException;
+import me.lazerka.mf.api.JsonMapper;
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender.Method;
 
+import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -42,8 +48,27 @@ public class Application extends android.app.Application {
 			? URI.create("http://10.0.2.2:8888")
 			: URI.create(SERVER_ADDRESS);
 
-	public static final ObjectMapper JSON_MAPPER = new JsonMapper()
-			.enable(SerializationFeature.INDENT_OUTPUT);
+	/** Shared static instance, as it's a little expensive to create a new one each time. */
+	public static final ObjectMapper JSON_MAPPER;
+	static {
+		JSON_MAPPER = new JsonMapper();
+		// Warn, but don't fail on unknown property.
+		JSON_MAPPER.addHandler(new DeserializationProblemHandler() {
+			@Override
+			public boolean handleUnknownProperty(
+					DeserializationContext deserializationContext,
+					JsonParser jsonParser,
+					JsonDeserializer<?> deserializer,
+					Object beanOrClass,
+					String propertyName
+			) throws IOException {
+				String msg = "Unknown property `" + propertyName + "` in " + beanOrClass;
+				Log.w(TAG, msg);
+				jsonParser.skipChildren();
+				return true;
+			}
+		});
+	}
 
 	public static Preferences preferences;
 	public static Context context;
@@ -57,6 +82,8 @@ public class Application extends android.app.Application {
 		System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire", "debug");
 		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "debug");
 		System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.headers", "debug");
+
+
 	}
 
 	@Override

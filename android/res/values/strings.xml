@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">Where My Friends</string>
+	<string name="action_logout">Logout</string>
+	<string name="action_quit">Quit</string>
+
 	<string name="send_my">Send My Location</string>
 	<string name="hello_world">Hello World</string>
 	<string name="add_friend">Add Friend</string>

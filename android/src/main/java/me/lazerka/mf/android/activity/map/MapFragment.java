@@ -66,19 +66,6 @@ public class MapFragment extends Fragment {
 		// Watch for button clicks.
 		Button button = (Button) view.findViewById(R.id.send_my);
 		button.setOnClickListener(new OnClickListener() {
-			private int toZoom(double accuracy) {
-				// From http://stackoverflow.com/questions/18383236
-				DisplayMetrics metrics = new DisplayMetrics();
-				WindowManager windowManager = getActivity().getWindowManager();
-				Display defaultDisplay = windowManager.getDefaultDisplay();
-				defaultDisplay.getMetrics(metrics);
-				int screenSize = Math.min(metrics.widthPixels, metrics.heightPixels);
-				double mpp = accuracy/screenSize;
-
-				long equatorInMeters = 40075004;
-				return (int) (((Math.log(equatorInMeters / (256 * mpp))) / Math.log(2)) + 1);
-			}
-
 			public void onClick(View v) {
 				android.location.Location myLocation = map.getMyLocation();
 				if (myLocation == null) {
@@ -133,6 +120,35 @@ public class MapFragment extends Fragment {
 	public void onLowMemory() {
 		super.onLowMemory();
 		mMapView.onLowMemory();
+	}
+
+	private int toZoom(double accuracy) {
+		// From http://stackoverflow.com/questions/18383236
+		DisplayMetrics metrics = new DisplayMetrics();
+		WindowManager windowManager = getActivity().getWindowManager();
+		Display defaultDisplay = windowManager.getDefaultDisplay();
+		defaultDisplay.getMetrics(metrics);
+		int screenSize = Math.min(metrics.widthPixels, metrics.heightPixels);
+		double mpp = accuracy/screenSize;
+
+		long equatorInMeters = 40075004;
+		return (int) (((Math.log(equatorInMeters / (256 * mpp))) / Math.log(2)) + 1);
+	}
+
+	private int getNiceZoom(float accuracy) {
+		int zoom = toZoom(accuracy);
+		return zoom > 4 ? zoom - 3 : zoom;
+	}
+
+	public void showLocation(Location location) {
+		drawLocation(location);
+
+		LatLng latLng = new LatLng(location.getLat(), location.getLon());
+
+		int zoom = getNiceZoom(location.getAcc());
+		CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom + 2);
+		map.moveCamera(cameraUpdate);
+		map.setOnMyLocationButtonClickListener(null);
 	}
 
 	public void drawLocation(Location location) {
@@ -216,7 +232,8 @@ public class MapFragment extends Fragment {
 			Log.d(TAG, "onMyLocationChange" + location);
 			set = true;
 			LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 14f);
+			int zoom = getNiceZoom(location.getAccuracy());
+			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom);
 			map.moveCamera(cameraUpdate);
 			map.setOnMyLocationButtonClickListener(null);
 		}

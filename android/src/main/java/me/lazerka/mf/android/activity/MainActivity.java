@@ -7,10 +7,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.activity.login.LoginActivity;
 import me.lazerka.mf.android.activity.map.MapFragment;
 import me.lazerka.mf.android.adapter.TabsAdapter;
 import me.lazerka.mf.android.background.ApiRequest;
@@ -66,12 +69,35 @@ public class MainActivity extends Activity {
 		unbindService(mServerConnection);
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		Intent intent;
+		switch (item.getItemId()) {
+			case R.id.action_logout:
+				intent = new Intent(this, LoginActivity.class);
+				startActivity(intent);
+				break;
+			case R.id.action_quit:
+				this.finish();
+				break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
 	public void showLocation(Set<String> emails) {
 		String commaSeparatedEmails = Joiner.on(',').join(emails);
 		ApiRequest apiRequest = ApiRequest.get(Location.PATH + "/" + commaSeparatedEmails, new LocationReceiver());
 		mServerConnection.send(apiRequest);
 		mTabsAdapter.selectMapTab();
 	}
+
+
 
 	private class LocationReceiver extends ApiResponseHandler {
 		@Override
@@ -88,7 +114,7 @@ public class MainActivity extends Activity {
 			}
 
 			MapFragment mapFragment = mTabsAdapter.getMapFragment();
-			mapFragment.drawLocation(location);
+			mapFragment.showLocation(location);
 		}
 	}
 }
