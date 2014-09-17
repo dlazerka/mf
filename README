@@ -1,1 +1,18 @@
-The source of truth to build the project is in IntelliJ config. pom.xml-s are used to maintain dependencies.
+Where My Friends
+======
+
+
+About
+------
+
+Where My Friends is android open source app that helps you find where your friends are.
+It is paranoiac-friendly: it gives you full access to who and when can see your location. It logs all accesses to your location.
+
+No data is stored on server. Server is needed only to "wake up" your friend's Android to send you location.
+Server sources are included as well, you are free to set up your own server.
+
+
+Build
+------
+
+The source of truth to build the project is in IntelliJ project config. Maven's pom.xml-s are used only to maintain dependencies.
