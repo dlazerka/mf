@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="me.lazerka.mf.android"
-          android:versionCode="1"
-          android:versionName="1.0">
+<manifest
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	package="me.lazerka.mf.android"
+	android:versionCode="1"
+	android:versionName="1.0">
 
 	<!-- See build.gradle also -->
 		<uses-sdk
@@ -21,12 +22,25 @@
 	<!-- To use Android account on this device and generate OAuth token, so server can verify you is really you. -->
 	<uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
-	<!-- To show account chooser at the start. -->
+	<!-- Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
+		More at https://developer.android.com/google/gcm/client.html
+	-->
+	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<!--<uses-permission android:name="com.google.android.c2dm.SEND" />-->
+	<uses-permission android:name="me.lazerka.mf.android.permission.C2D_MESSAGE" />
+	<permission android:name="me.lazerka.mf.android.permission.C2D_MESSAGE"
+				android:protectionLevel="signature" />
+	<!-- Needed for GcmBroadcastReceiver that processes incoming messages and transfers them to a Service,
+		ensuring that the phone doesn't go to sleep in the meantime.
+	-->
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+
+	<!-- To show account chooser at the start.
+		Also needed by GCM if your Android is older than 4.0.4.
+	-->
 	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
-
-	<!-- Google Cloud Messaging: to receive push notifications from server when your friend asks your location. -->
-	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
 	<!-- Needed per https://developers.google.com/maps/documentation/android/start#add_a_map -->
 	<uses-feature
@@ -37,16 +51,19 @@
 		android:name=".Application"
 		android:allowBackup="true"
 		android:label="@string/app_name"
-		android:icon="@drawable/ic_launcher">
+		android:icon="@drawable/ic_launcher"
+		android:backupAgent="MfBackupAgent">
 
 		<meta-data
 			android:name="com.google.android.maps.v2.API_KEY"
 			android:value="AIzaSyDqQqo74HWVWDon-tTf7LcJmiC-yICJ0RU"/>
-
 		<meta-data
 			android:name="com.google.android.gms.version"
 			android:value="@integer/google_play_services_version"/>
-
+		<!-- TODO-->
+		<meta-data
+			android:name="com.google.android.backup.api_key"
+			android:value="AEdPqrEAAAAIa7dbTRQVuUzcdsYSq-lPAzc_gcC5q0MvGAMCbw" />
 
 		<activity
 			android:name=".activity.login.LoginActivity"
@@ -63,8 +80,23 @@
 			android:label="@string/app_name">
 		</activity>
 
+		<!-- TODO: GcmBroadcastReceiver deprecated? -->
+		<receiver
+			android:name=".GcmBroadcastReceiver"
+			android:permission="com.google.android.c2dm.permission.SEND" >
+			<intent-filter>
+				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
+				<category android:name="me.lazerka.mf.android" />
+			</intent-filter>
+		</receiver>
+		<service android:name=".GcmIntentService" />
+
 		<service
 			android:name=".background.SenderService"
+			android:exported="false"
+			/>
+		<service
+			android:name=".background.GcmIntentService"
 			android:exported="false"
 			/>
 	</application>

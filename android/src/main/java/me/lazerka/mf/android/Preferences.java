@@ -4,21 +4,28 @@ import android.accounts.Account;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.util.Log;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
  * My API for SharedPreferences, type-safe.
  */
 public class Preferences {
-	private static final String TAG = "Preferences";
+	private final String TAG = getClass().getName();
 
-	private static final String ACCOUNT_NAME = "account.name";
-	private static final String ACCOUNT_TYPE = "account.type";
-	private static final String FRIENDS = "friends";
+	private final String ACCOUNT_NAME = "account.name";
+	private final String ACCOUNT_TYPE = "account.type";
+	private final String FRIENDS = "friends";
+
+	private final String GCM_APP_VERSION = "gcm.app.version";
+	private final String GCM_REGISTRATION_ID = "gcm.registration.id";
 
 	private final SharedPreferences preferences;
 
@@ -93,4 +100,68 @@ public class Preferences {
 			return true;
 		}
 	}
+
+	@Nullable
+	public String getGcmRegistrationId() {
+		String result = preferences.getString(GCM_REGISTRATION_ID, null);
+		if (result == null) {
+			Log.i(TAG, "GCM Registration ID not found.");
+			return null;
+		} else {
+			// Do not log real registration ID as it should be private.
+			Log.v(TAG, "GCM Registration ID found.");
+		}
+
+		// Check if app was updated; if so, it must clear the registration ID
+		// since the existing regID is not guaranteed to work with the new
+		// app version.
+		int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
+		int currentVersion = getAppVersion();
+		if (registeredVersion != currentVersion) {
+			Log.i(TAG, "App version changed.");
+			return null;
+		}
+
+		return result;
+	}
+
+	/**
+	 * This should not be backed up when user uses Backup/Restore feature.
+	 * See MfBackupAgent for that.
+	 */
+	public void setGcmRegistrationId(@Nonnull String gcmRegistrationId) {
+		Log.v(TAG, "GCM Registration ID stored.");
+		preferences.edit()
+				.putString(GCM_REGISTRATION_ID, gcmRegistrationId)
+				.putInt(GCM_APP_VERSION, getAppVersion())
+				.apply();
+	}
+
+
+	public int getGcmAppVersion() {
+		return preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
+	}
+
+	/**
+	 * @return Application's version code from the {@code PackageManager}.
+	 */
+	private static int getAppVersion() {
+		String packageName = Application.context.getPackageName();
+		PackageManager packageManager = Application.context.getPackageManager();
+		try {
+			PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+			return packageInfo.versionCode;
+		} catch (NameNotFoundException e) {
+			// should never happen
+			throw new RuntimeException("Could not get package name: " + e);
+		}
+	}
+
+	public void onBeforeBackup() {
+		Log.v(TAG, "onBeforeBackup");
+		preferences.edit()
+				.remove(GCM_REGISTRATION_ID)
+				.apply();
+	}
+
 }

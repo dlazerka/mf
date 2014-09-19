@@ -26,7 +26,7 @@ public class MfUser {
 	@Index User user;
 
 	@Unindex
-	List<Channel> channels = new ArrayList<>(2);
+	List<GcmRegistrationEntity> gcmRegistrations = new ArrayList<>(2);
 
 	public static Key<MfUser> key(User user) {
 		return key(user.getUserId());
@@ -45,7 +45,7 @@ public class MfUser {
 
 	@OnSave
 	void onSave() {
-		checkNotNull(channels);
+		checkNotNull(gcmRegistrations);
 		checkNotNull(googleId);
 
 		if (createdDate == null) {
@@ -83,8 +83,8 @@ public class MfUser {
 		return user.getEmail();
 	}
 
-	public List<Channel> getChannels() {
-		return channels;
+	public List<GcmRegistrationEntity> getGcmRegistrations() {
+		return gcmRegistrations;
 	}
 
 	public User getUser() {

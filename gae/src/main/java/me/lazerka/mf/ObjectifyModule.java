@@ -6,6 +6,7 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
+import me.lazerka.mf.entity.GcmRegistrationEntity;
 import me.lazerka.mf.entity.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +29,14 @@ public class ObjectifyModule extends AbstractModule {
 		// From Objectify docs: example for setting up @Transact annotation (DIY).
 		//bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transact.class), new TransactInterceptor());
 
-		factory.register(MfUser.class);
+		registerEntities(factory);
 
 		logger.debug("Objectify set up.");
+	}
+
+	private void registerEntities(ObjectifyFactory factory) {
+		factory.register(MfUser.class);
+		factory.register(GcmRegistrationEntity.class);
 	}
 
 	@Provides

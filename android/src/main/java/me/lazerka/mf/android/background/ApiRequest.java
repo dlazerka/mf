@@ -23,6 +23,10 @@ public class ApiRequest {
 		return new ApiRequest("PUT", url, obj, null);
 	}
 
+	public static ApiRequest post(String url, ApiObject obj) {
+		return new ApiRequest("POST", url, obj, null);
+	}
+
 	protected ApiRequest(
 			@Nonnull String method,
 			@Nonnull String url,

@@ -90,7 +90,11 @@ class HttpSender extends Handler {
 			} catch (JsonProcessingException e) {
 				throw new RuntimeException(e);
 			}
-			Log.i(TAG, json);
+			// Don't log full JSON on production server as there might be sensitive info.
+			// Not that it's insecure, but let's be safe.
+			if (Application.IS_SERVER_LOCAL) {
+				Log.d(TAG, json);
+			}
 
 			HttpEntity entity = null;
 			try {

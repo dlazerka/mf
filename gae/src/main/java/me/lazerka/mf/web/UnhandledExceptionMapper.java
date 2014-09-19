@@ -48,7 +48,7 @@ public class UnhandledExceptionMapper implements ExceptionMapper<Exception> {
 				logger.warn("{} WebApplicationException: {} {}",
 						head,
 						response.getStatus(),
-						response.getEntity());
+						response.getEntity() == null ? "" : response.getEntity());
 			}
 
 			return response;
