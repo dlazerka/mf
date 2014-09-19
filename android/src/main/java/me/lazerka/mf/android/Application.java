@@ -109,5 +109,4 @@ public class Application extends android.app.Application {
 	private boolean isDebugBuild() {
 		return ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) > 0);
 	}
-
 }

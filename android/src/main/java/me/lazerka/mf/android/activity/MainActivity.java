@@ -4,12 +4,17 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
@@ -20,11 +25,13 @@ import me.lazerka.mf.android.background.ApiRequest;
 import me.lazerka.mf.android.background.ApiResponseHandler;
 import me.lazerka.mf.android.background.SenderService;
 import me.lazerka.mf.android.background.ServerConnection;
+import me.lazerka.mf.api.GcmRegistration;
 import me.lazerka.mf.api.Location;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Dzmitry Lazerka
@@ -32,9 +39,20 @@ import java.util.Set;
 public class MainActivity extends Activity {
 	private final String TAG = getClass().getName();
 
+	private final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+
+	/**
+	 * Project number obtained from the API Console, as described in GCM "Getting Started."
+	 */
+	private final String SENDER_ID = "769083712074";
+
 	private ServerConnection mServerConnection;
 	private TabsAdapter mTabsAdapter;
 	private ActionBar mActionBar;
+
+	private GoogleCloudMessaging gcm;
+	private AtomicInteger msgId = new AtomicInteger();
+	private String gcmRegistrationId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +70,41 @@ public class MainActivity extends Activity {
 
 		mTabsAdapter = new TabsAdapter(getFragmentManager(), mActionBar, viewPager);
 		mTabsAdapter.init();
+
+		if (checkPlayServices()) {
+			gcm = GoogleCloudMessaging.getInstance(this);
+			gcmRegistrationId = Application.preferences.getGcmRegistrationId();
+
+			if (gcmRegistrationId == null) {
+				new GcmRegisterTask().execute();
+			}
+		} else {
+			Log.e(TAG, "No valid Google Play Services APK found.");
+			Toast.makeText(this, "Please install Google Play Services", Toast.LENGTH_LONG)
+				.show();
+			finish();
+		}
+	}
+
+	/**
+	 * https://developer.android.com/google/gcm/client.html
+	 * Check the device to make sure it has the Google Play Services APK. If
+	 * it doesn't, display a dialog that allows users to download the APK from
+	 * the Google Play Store or enable it in the device's system settings.
+	 */
+	private boolean checkPlayServices() {
+		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+		if (resultCode != ConnectionResult.SUCCESS) {
+			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+				GooglePlayServicesUtil.getErrorDialog(resultCode, this, PLAY_SERVICES_RESOLUTION_REQUEST)
+						.show();
+			} else {
+				Log.i(TAG, "This device is not supported.");
+				finish();
+			}
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -61,6 +114,14 @@ public class MainActivity extends Activity {
 
 		Intent intent = new Intent(this, SenderService.class);
 		bindService(intent, mServerConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	protected void onResume() {
+		Log.v(TAG, "onResume");
+		super.onResume();
+
+		checkPlayServices();
 	}
 
 	@Override
@@ -92,12 +153,13 @@ public class MainActivity extends Activity {
 
 	public void showLocation(Set<String> emails) {
 		String commaSeparatedEmails = Joiner.on(',').join(emails);
-		ApiRequest apiRequest = ApiRequest.get(Location.PATH + "/" + commaSeparatedEmails, new LocationReceiver());
-		mServerConnection.send(apiRequest);
-		mTabsAdapter.selectMapTab();
+		//ApiRequest apiRequest = ApiRequest.get(Location.PATH + "/" + commaSeparatedEmails, new LocationReceiver());
+		//mServerConnection.send(apiRequest);
+
+		new SendGcmMessage().execute(commaSeparatedEmails);
+
+		//mTabsAdapter.selectMapTab();
 	}
-
-
 
 	private class LocationReceiver extends ApiResponseHandler {
 		@Override
@@ -117,4 +179,83 @@ public class MainActivity extends Activity {
 			mapFragment.showLocation(location);
 		}
 	}
+
+	private class SendGcmMessage extends AsyncTask<String, Void, String> {
+		@Override
+		protected String doInBackground(String... params) {
+			String msg = "";
+			try {
+				Bundle data = new Bundle();
+				data.putString("emails", params[0]);
+				data.putString("my_action", "com.google.android.gcm.demo.app.ECHO_NOW");
+				String id = Integer.toString(msgId.incrementAndGet());
+				gcm.send(SENDER_ID + "@gcm.googleapis.com", id, data);
+				msg = "Sent message";
+			} catch (IOException ex) {
+				msg = "Error :" + ex.getMessage();
+			}
+			return msg;
+		}
+
+		@Override
+		protected void onPostExecute(String msg) {
+			Log.d(TAG, msg);
+		}
+	}
+
+	/**
+	 * Registers the application with GCM servers asynchronously.
+	 * <p>
+	 * Stores the registration ID and app versionCode in the application's
+	 * shared preferences.
+	 */
+	private class GcmRegisterTask extends AsyncTask<Void, Void, String> {
+		@Override
+		protected String doInBackground(Void... params) {
+			String msg = "";
+			try {
+				if (gcm == null) {
+					gcm = GoogleCloudMessaging.getInstance(Application.context);
+				}
+				gcmRegistrationId = gcm.register(SENDER_ID);
+				msg = "Device registered, registration ID=" + gcmRegistrationId;
+
+				// You should send the registration ID to your server over HTTP,
+				// so it can use GCM/HTTP or CCS to send messages to your app.
+				// The request to your server should be authenticated if your app
+				// is using accounts.
+				sendRegistrationIdToServer();
+
+				// For this demo: we don't need to send it because the device
+				// will send upstream messages to a server that echo back the
+				// message using the 'from' address in the message.
+
+				// Persist the regID - no need to register again.
+				Application.preferences.setGcmRegistrationId(gcmRegistrationId);
+			} catch (IOException ex) {
+				msg = "Error :" + ex.getMessage();
+				// If there is an error, don't just keep trying to register.
+				// Require the user to click a button again, or perform
+				// exponential back-off.
+			}
+			return msg;
+		}
+
+		private void sendRegistrationIdToServer() {
+			GcmRegistration gcmRegistration = new GcmRegistration(gcmRegistrationId);
+			mServerConnection.send(ApiRequest.put(GcmRegistration.PATH, gcmRegistration));
+		}
+
+		@Override
+		protected void onPostExecute(String msg) {
+			if (msg.contains("Error")) {
+				Log.w(TAG, msg);
+				Toast.makeText(MainActivity.this, "Google Cloud Messaging " + msg, Toast.LENGTH_LONG)
+						.show();
+			} else {
+				Log.i(TAG, msg);
+			}
+		}
+	}
+
 }
