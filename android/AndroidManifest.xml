@@ -80,11 +80,15 @@
 			android:label="@string/app_name">
 		</activity>
 
-		<!-- TODO: GcmBroadcastReceiver deprecated? -->
+		<!-- GcmBroadcastReceiver is deprecated, but seems that it's only working way for Sony Xperia Ultra -->
 		<receiver
-			android:name=".GcmBroadcastReceiver"
-			android:permission="com.google.android.c2dm.permission.SEND" >
+			android:name=".background.GcmBroadcastReceiver"
+			>
+			<!-- We don't need android:permission="com.google.android.c2dm.permission.SEND" -->
 			<intent-filter>
+				<!--TODO-->
+				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
 				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
 				<category android:name="me.lazerka.mf.android" />
 			</intent-filter>

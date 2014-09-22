@@ -10,6 +10,9 @@ import javax.annotation.Nonnull;
 public class GcmRegistration implements ApiObject {
 	public static final String PATH = "/rest/gcm/registration";
 
+	/**
+	 * Max length: 4k (max length of a cookie).
+	 */
 	@JsonProperty
 	private String id;
 

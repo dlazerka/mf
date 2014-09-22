@@ -1,6 +1,7 @@
 package me.lazerka.mf.entity;
 
-import com.googlecode.objectify.Key;
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.*;
 import org.joda.time.DateTime;
@@ -19,10 +20,14 @@ public class GcmRegistrationEntity {
 	Ref<MfUser> user;
 
 	@Id
-	String id;
+	String sha256;
 
 	@Index
 	DateTime createdDate;
+
+	@Index
+	/** Aka Registration ID */
+	String token;
 
 	@Index
 	private int appVersion;
@@ -30,18 +35,16 @@ public class GcmRegistrationEntity {
 	private GcmRegistrationEntity() {
 	}
 
-	public static Key<GcmRegistrationEntity> key(MfUser user, String id) {
-		return Key.create(user.key(), GcmRegistrationEntity.class, id);
-	}
-
 	public GcmRegistrationEntity(
 			@Nonnull MfUser user,
-			@Nonnull String id,
+			@Nonnull String token,
 			@Nonnull DateTime createdDate
 	) {
 		this.user = Ref.create(user);
-		this.id = checkNotNull(id);
+		this.token = checkNotNull(token);
 		this.createdDate = createdDate;
+
+		sha256 = Hashing.sha256().hashString(token, Charsets.UTF_8).toString();
 	}
 
 	@OnSave
@@ -56,9 +59,13 @@ public class GcmRegistrationEntity {
 		return user.get();
 	}
 
-	/** Long string, aka token. */
 	public String getId() {
-		return id;
+		return sha256;
+	}
+
+	/** Long string, aka token. */
+	public String getToken() {
+		return token;
 	}
 
 	public DateTime getCreatedDate() {

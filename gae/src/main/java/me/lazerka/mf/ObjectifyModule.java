@@ -44,4 +44,14 @@ public class ObjectifyModule extends AbstractModule {
 		return ObjectifyService.ofy();
 	}
 
+	@Provides
+	private ObjectifyFactory provideObjectifyFactory() {
+		return ObjectifyService.factory();
+	}
+
+	@Provides
+	private com.googlecode.objectify.impl.Keys provideKeys() {
+		return ObjectifyService.factory().keys();
+	}
+
 }

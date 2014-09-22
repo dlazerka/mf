@@ -1,7 +1,7 @@
 package me.lazerka.mf.web.rest.location;
 
-import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
+import com.googlecode.objectify.impl.Keys;
 import me.lazerka.mf.api.GcmRegistration;
 import me.lazerka.mf.entity.GcmRegistrationEntity;
 import me.lazerka.mf.entity.MfUser;
@@ -27,6 +27,9 @@ public class GcmRegistrationResource {
 	Objectify ofy;
 
 	@Inject
+	Keys keys;
+
+	@Inject
 	MfUser user;
 
 	@Inject
@@ -48,9 +51,7 @@ public class GcmRegistrationResource {
 	@DELETE
 	public void delete(GcmRegistration object) {
 		logger.info("Deleting GcmRegistration by {}", user.getEmail());
-
-		Key<GcmRegistrationEntity> key = GcmRegistrationEntity.key(user, object.getToken());
-
-		ofy.delete().key(key).now();
+		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, object.getToken(), now);
+		ofy.delete().entity(entity).now();
 	}
 }

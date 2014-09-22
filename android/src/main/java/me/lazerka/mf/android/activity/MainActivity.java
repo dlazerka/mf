@@ -155,12 +155,10 @@ public class MainActivity extends Activity {
 
 	public void showLocation(Set<String> emails) {
 		String commaSeparatedEmails = Joiner.on(',').join(emails);
-		//ApiRequest apiRequest = ApiRequest.get(Location.PATH + "/" + commaSeparatedEmails, new LocationReceiver());
-		//mServerConnection.send(apiRequest);
+		ApiRequest apiRequest = ApiRequest.get(Location.PATH + "/" + commaSeparatedEmails, new LocationReceiver());
+		mServerConnection.send(apiRequest);
 
-		new SendGcmMessage().execute(commaSeparatedEmails);
-
-		//mTabsAdapter.selectMapTab();
+		mTabsAdapter.selectMapTab();
 	}
 
 	private class LocationReceiver extends ApiResponseHandler {
@@ -182,29 +180,6 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	private class SendGcmMessage extends AsyncTask<String, Void, String> {
-		@Override
-		protected String doInBackground(String... params) {
-			String msg = "";
-			try {
-				Bundle data = new Bundle();
-				data.putString("emails", params[0]);
-				data.putString("my_action", "com.google.android.gcm.demo.app.ECHO_NOW");
-				String id = Integer.toString(msgId.incrementAndGet());
-				gcm.send(SENDER_ID + "@gcm.googleapis.com", id, data);
-				msg = "Sent message";
-			} catch (IOException ex) {
-				msg = "Error :" + ex.getMessage();
-			}
-			return msg;
-		}
-
-		@Override
-		protected void onPostExecute(String msg) {
-			Log.d(TAG, msg);
-		}
-	}
-
 	/**
 	 * Registers the application with GCM servers asynchronously.
 	 * <p>
@@ -218,7 +193,9 @@ public class MainActivity extends Activity {
 				if (gcm == null) {
 					gcm = GoogleCloudMessaging.getInstance(Application.context);
 				}
+				Log.i(TAG, "Calling GCM.register()");
 				gcmRegistrationId = gcm.register(SENDER_ID);
+				Log.i(TAG, "GCM.register() successful");
 
 				// You should send the registration ID to your server over HTTP,
 				// so it can use GCM/HTTP or CCS to send messages to your app.
@@ -234,8 +211,9 @@ public class MainActivity extends Activity {
 				Application.preferences.setGcmRegistrationId(gcmRegistrationId);
 
 				return "Device registered";
-			} catch (IOException ex) {
-				return "Error: " + ex.getMessage();
+			} catch (IOException e) {
+				Log.i(TAG, "GCM.register() failed: " + e.getMessage());
+				return "Error: " + e.getMessage();
 				// If there is an error, don't just keep trying to register.
 				// Require the user to click a button again, or perform
 				// exponential back-off.

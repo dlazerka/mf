@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 /**
- *
+ * TODO
  *
  * @author Dzmitry Lazerka
  */
@@ -20,6 +20,9 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
 		ComponentName comp = new ComponentName(
 				context.getPackageName(), GcmIntentService.class.getName());
 		// Start the service, keeping the device awake while it is launching.
+
+		// On Sony Xperia Ultra this is the way to get registration_id.
+		String registrationId = intent.getExtras().getString("registration_id");
 		startWakefulService(context, intent.setComponent(comp));
 		setResultCode(Activity.RESULT_OK);
 	}
