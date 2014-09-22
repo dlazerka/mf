@@ -134,6 +134,7 @@ public class Preferences {
 		preferences.edit()
 				.putString(GCM_REGISTRATION_ID, gcmRegistrationId)
 				.putInt(GCM_APP_VERSION, getAppVersion())
+				// TODO: storedOnServer
 				.apply();
 	}
 

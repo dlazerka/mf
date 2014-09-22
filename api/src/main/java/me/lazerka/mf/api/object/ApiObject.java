@@ -1,4 +1,4 @@
-package me.lazerka.mf.api;
+package me.lazerka.mf.api.object;
 
 /**
  * Marker interface for serializable objects for client-server communication.

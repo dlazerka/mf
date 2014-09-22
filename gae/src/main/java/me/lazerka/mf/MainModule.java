@@ -22,6 +22,7 @@ import com.google.inject.Provides;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
+import com.googlecode.objectify.impl.Keys;
 import me.lazerka.mf.entity.MfUser;
 import me.lazerka.mf.web.WebModule;
 import org.joda.time.DateTime;
@@ -70,13 +71,13 @@ public class MainModule extends AbstractModule {
 	 * Returns current user, creating entity if doesn't exist.
 	 */
 	@Provides
-	private MfUser provideUser(UserService userService, final Objectify ofy) {
+	private MfUser provideUser(UserService userService, final Objectify ofy, Keys keys) {
 		if (!userService.isUserLoggedIn()) {
 			throw new IllegalStateException("User is not logged in");
 		}
 
 		final User user = userService.getCurrentUser();
-		final Key<MfUser> key = MfUser.key(user);
+		final Key<MfUser> key = keys.keyOf(new MfUser(user));
 
 		return ofy.transact(new Work<MfUser>() {
 			@Override

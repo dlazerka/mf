@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 
 /**
- * TODO
+ * TODO sometimes even Nexus 7 receives this.
  *
  * @author Dzmitry Lazerka
  */

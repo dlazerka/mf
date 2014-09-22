@@ -25,8 +25,8 @@ import me.lazerka.mf.android.background.ApiRequest;
 import me.lazerka.mf.android.background.ApiResponseHandler;
 import me.lazerka.mf.android.background.SenderService;
 import me.lazerka.mf.android.background.ServerConnection;
-import me.lazerka.mf.api.GcmRegistration;
-import me.lazerka.mf.api.Location;
+import me.lazerka.mf.api.object.GcmRegistration;
+import me.lazerka.mf.api.object.Location;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -236,7 +236,13 @@ public class MainActivity extends Activity {
 		GcmRegistration gcmRegistration = new GcmRegistration(
 				gcmRegistrationId,
 				Application.preferences.getGcmAppVersion());
-		mServerConnection.send(ApiRequest.post(GcmRegistration.PATH, gcmRegistration));
+		mServerConnection.send(new ApiRequest("POST", GcmRegistration.PATH, gcmRegistration, new ApiResponseHandler() {
+			@Override
+			protected void handleSuccess(@Nullable String json) {
+				// TODO: set savedOnServer to true, and check it on start.
+				super.handleSuccess(json);
+			}
+		}));
 	}
 
 

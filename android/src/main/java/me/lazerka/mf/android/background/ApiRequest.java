@@ -1,7 +1,7 @@
 package me.lazerka.mf.android.background;
 
 
-import me.lazerka.mf.api.ApiObject;
+import me.lazerka.mf.api.object.ApiObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +27,7 @@ public class ApiRequest {
 		return new ApiRequest("POST", url, obj, null);
 	}
 
-	protected ApiRequest(
+	public ApiRequest(
 			@Nonnull String method,
 			@Nonnull String url,
 			@Nullable ApiObject obj,

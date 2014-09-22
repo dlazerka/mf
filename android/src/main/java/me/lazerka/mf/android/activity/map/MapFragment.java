@@ -15,7 +15,7 @@ import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.api.Location;
+import me.lazerka.mf.api.object.Location;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 

@@ -1,4 +1,4 @@
-package me.lazerka.mf.api;
+package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;

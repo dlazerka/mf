@@ -2,16 +2,23 @@ package me.lazerka.mf.web;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.Maps;
+import com.google.inject.Provides;
 import com.googlecode.objectify.ObjectifyFilter;
 import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
 import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -68,5 +75,26 @@ public class WebModule extends JerseyServletModule {
 		//params.put("com.sun.jersey.config.feature.logging.DisableEntitylogging", "true");
 		//params.put("com.sun.jersey.config.feature.Trace", "true");
 		return params;
+	}
+
+	@Provides
+	@Singleton
+	@Named("gcm.api.key")
+	String provideGcmApiKey() {
+		File file = new File("WEB-INF/gcm.api.key");
+		try {
+			FileReader fr = new FileReader(file);
+			String result = IOUtils.toString(fr).trim();
+			if (result.isEmpty()) {
+				throw new RuntimeException("File is empty: " + file.getAbsolutePath());
+			}
+			return result;
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException("File " + file.getAbsolutePath() + " not found. " +
+					"Put there Google Cloud Messaging API key obtained as described here " +
+					"http://developer.android.com/google/gcm/gs.html");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.Authenticator;
-import me.lazerka.mf.api.ApiObject;
+import me.lazerka.mf.api.object.ApiObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import me.lazerka.mf.android.background.SenderService;
-import me.lazerka.mf.api.AcraException;
+import me.lazerka.mf.api.object.AcraException;
 import me.lazerka.mf.api.JsonMapper;
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;

@@ -6,6 +6,7 @@ import com.googlecode.objectify.annotation.*;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,23 +25,17 @@ public class MfUser {
 	DateTime lastModDate;
 
 	@Index User user;
+	@Index String email;
 
 	@Unindex
 	List<GcmRegistrationEntity> gcmRegistrations = new ArrayList<>(2);
 
-	public static Key<MfUser> key(User user) {
-		return key(user.getUserId());
-	}
-
-	public static Key<MfUser> key(String userId) {
-		return Key.create(MfUser.class, userId);
-	}
-
 	private MfUser() {}
 
-	public MfUser(User user) {
+	public MfUser(@Nonnull User user) {
 		this.googleId = checkNotNull(user.getUserId());
 		this.user = user;
+		this.email = checkNotNull(user.getEmail());
 	}
 
 	@OnSave
@@ -83,8 +78,9 @@ public class MfUser {
 		return user.getEmail();
 	}
 
+	@Nonnull
 	public List<GcmRegistrationEntity> getGcmRegistrations() {
-		return gcmRegistrations;
+		return gcmRegistrations != null ? gcmRegistrations : new ArrayList<GcmRegistrationEntity>();
 	}
 
 	public User getUser() {

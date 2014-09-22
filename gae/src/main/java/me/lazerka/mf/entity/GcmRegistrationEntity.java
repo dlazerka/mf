@@ -79,4 +79,24 @@ public class GcmRegistrationEntity {
 	public int getAppVersion() {
 		return appVersion;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		GcmRegistrationEntity that = (GcmRegistrationEntity) o;
+
+		if (!sha256.equals(that.sha256)) return false;
+		if (!user.equals(that.user)) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = user.hashCode();
+		result = 31 * result + sha256.hashCode();
+		return result;
+	}
 }
