@@ -11,6 +11,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import com.android.volley.Response.ErrorListener;
+import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -21,10 +24,7 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.login.LoginActivity;
 import me.lazerka.mf.android.activity.map.MapFragment;
 import me.lazerka.mf.android.adapter.TabsAdapter;
-import me.lazerka.mf.android.background.ApiRequest;
-import me.lazerka.mf.android.background.ApiResponseHandler;
-import me.lazerka.mf.android.background.SenderService;
-import me.lazerka.mf.android.background.ServerConnection;
+import me.lazerka.mf.android.background.*;
 import me.lazerka.mf.api.object.GcmRegistration;
 import me.lazerka.mf.api.object.Location;
 
@@ -168,7 +168,7 @@ public class MainActivity extends Activity {
 
 			Location location;
 			try {
-				ObjectMapper mapper = Application.JSON_MAPPER;
+				ObjectMapper mapper = Application.jsonMapper;
 				location = mapper.readValue(json, Location.class);
 			} catch (IOException e) {
 				Log.w(TAG, e.getMessage(), e);
@@ -236,14 +236,25 @@ public class MainActivity extends Activity {
 		GcmRegistration gcmRegistration = new GcmRegistration(
 				gcmRegistrationId,
 				Application.preferences.getGcmAppVersion());
-		mServerConnection.send(new ApiRequest("POST", GcmRegistration.PATH, gcmRegistration, new ApiResponseHandler() {
-			@Override
-			protected void handleSuccess(@Nullable String json) {
-				// TODO: set savedOnServer to true, and check it on start.
-				super.handleSuccess(json);
-			}
-		}));
+
+		JsonRequest<String> request = JsonRequest.post(
+				GcmRegistration.PATH,
+				gcmRegistration,
+				new Listener<String>() {
+					@Override
+					public void onResponse(String serverId) {
+						Log.i(TAG, "Server stored our registration ID as " + serverId);
+						Application.preferences.setGcmRegistrationServerKnows(gcmRegistrationId);
+					}
+				},
+				String.class,
+				new ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+						Log.w(TAG, error.getMessage(), error);
+					}
+				}
+		);
+		Application.requestQueue.add(request);
 	}
-
-
 }

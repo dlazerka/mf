@@ -40,6 +40,7 @@
     <orderEntry type="library" name="Maven: com.android.support:support-v13:19.1.0" level="project" />
     <orderEntry type="library" name="Maven: ch.acra:acra:4.5.0" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20080701" level="project" />
+    <orderEntry type="library" name="Maven: com.mcxiaoke.volley:library:1.0.6" level="project" />
   </component>
 </module>
 

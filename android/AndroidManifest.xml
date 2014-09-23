@@ -83,6 +83,7 @@
 		<!-- GcmBroadcastReceiver is deprecated, but seems that it's only working way for Sony Xperia Ultra -->
 		<receiver
 			android:name=".background.GcmBroadcastReceiver"
+			android:permission="com.google.android.c2dm.permission.RECEIVE"
 			>
 			<!-- We don't need android:permission="com.google.android.c2dm.permission.SEND" -->
 			<intent-filter>
@@ -93,11 +94,9 @@
 				<category android:name="me.lazerka.mf.android" />
 			</intent-filter>
 		</receiver>
-		<service android:name=".GcmIntentService" />
-
 		<service
-			android:name=".background.SenderService"
-			android:exported="false"
+			android:name=".background.GcmIntentService"
+		    android:exported="false"
 			/>
 		<service
 			android:name=".background.GcmIntentService"

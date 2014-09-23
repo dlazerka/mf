@@ -20,7 +20,7 @@ public class SenderService extends Service {
 	// Binder given to clients
 	private final IBinder binder = new ServiceBinder();
 
-	private volatile HttpSender handler;
+	private volatile HttpSenderOld handler;
 	private volatile Looper looper;
 	private AndroidHttpClient httpClient;
 
@@ -36,7 +36,7 @@ public class SenderService extends Service {
 		HandlerThread thread = new HandlerThread(getClass().getSimpleName());
 		thread.start();
 		looper = thread.getLooper();
-		handler = new HttpSender(looper, httpClient, new Authenticator());
+		handler = new HttpSenderOld(looper, httpClient, new Authenticator());
 	}
 
 	@Override

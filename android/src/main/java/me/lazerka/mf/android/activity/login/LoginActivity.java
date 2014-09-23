@@ -8,6 +8,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.Authenticator;
 import me.lazerka.mf.android.Authenticator.AuthenticatorCallback;
@@ -34,6 +36,11 @@ public class LoginActivity extends Activity {
 	protected void onResume() {
 		Log.v(TAG, "onResume");
 		super.onResume();
+
+		RequestQueue requestQueue = Volley.newRequestQueue(this);
+
+
+		if (true) return;
 
 		Intent intent = authenticator.checkAccountValid();
 		if (intent != null) {

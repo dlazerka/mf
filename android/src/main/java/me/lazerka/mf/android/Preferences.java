@@ -22,10 +22,12 @@ public class Preferences {
 
 	private final String ACCOUNT_NAME = "account.name";
 	private final String ACCOUNT_TYPE = "account.type";
-	private final String FRIENDS = "friends";
+
+	private final String FRIENDS = "mf.friends";
 
 	private final String GCM_APP_VERSION = "gcm.app.version";
 	private final String GCM_REGISTRATION_ID = "gcm.registration.id";
+	private final String GCM_SERVER_KNOWS = "gcm.server.knows";
 
 	private final SharedPreferences preferences;
 
@@ -138,6 +140,25 @@ public class Preferences {
 				.apply();
 	}
 
+	/**
+	 * This should not be backed up when user uses Backup/Restore feature.
+	 * See MfBackupAgent for that.
+	 * @param gcmRegistrationId to compare with current and avoid race conditions.
+	 * @return is current token equals given.
+	 */
+	public boolean setGcmRegistrationServerKnows(@Nonnull String gcmRegistrationId) {
+		Log.v(TAG, "GCM Registration ID stored.");
+		synchronized (preferences) {
+			String currentId = preferences.getString(GCM_REGISTRATION_ID, null);
+			if (!gcmRegistrationId.equals(currentId)) {
+				return false;
+			}
+			preferences.edit()
+					.putBoolean(GCM_SERVER_KNOWS, true)
+					.apply();
+			return true;
+		}
+	}
 
 	public int getGcmAppVersion() {
 		return preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);

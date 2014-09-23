@@ -35,14 +35,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Sends API requests.
  * Runs in separate thread.
  */
-class HttpSender extends Handler {
+class HttpSenderOld extends Handler {
 	protected final String TAG = getClass().getName();
 	private final AndroidHttpClient httpClient;
 	private final HttpContext httpContext;
 	private final Authenticator authenticator;
 	private final BasicCookieStore cookieStore;
 
-	public HttpSender(Looper looper, AndroidHttpClient httpClient, Authenticator authenticator) {
+	public HttpSenderOld(Looper looper, AndroidHttpClient httpClient, Authenticator authenticator) {
 		super(looper);
 		this.httpClient = httpClient;
 		this.authenticator = authenticator;
@@ -83,7 +83,7 @@ class HttpSender extends Handler {
 		ApiObject obj = apiRequest.getApiObject();
 		if (obj != null) {
 
-			ObjectMapper mapper = Application.JSON_MAPPER;
+			ObjectMapper mapper = Application.jsonMapper;
 			String json;
 			try {
 				json = mapper.writeValueAsString(obj);

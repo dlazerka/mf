@@ -54,7 +54,7 @@ public class MapActivity extends Activity {
 
 			LocationEvent response;
 			try {
-				ObjectMapper mapper = Application.JSON_MAPPER;
+				ObjectMapper mapper = Application.jsonMapper;
 				response = mapper.readValue(json, TeamLocations.class);
 			} catch (IOException e) {
 				Log.w(TAG, e.getMessage(), e);
