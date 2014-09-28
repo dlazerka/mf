@@ -9,8 +9,8 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.Authenticator;
-import me.lazerka.mf.android.Authenticator.AuthenticatorCallback;
+import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import me.lazerka.mf.android.auth.AndroidAuthenticator.AuthenticatorCallback;
 import me.lazerka.mf.android.activity.MainActivity;
 
 import java.io.IOException;
@@ -24,10 +24,10 @@ public class LoginActivity extends Activity {
 	private final int ACCOUNT_PICKER = 0;
 	private final int USER_CONFIRMATION = 1;
 
-	private Authenticator authenticator;
+	private AndroidAuthenticator androidAuthenticator;
 
 	public LoginActivity() {
-		this.authenticator = new Authenticator();
+		this.androidAuthenticator = new AndroidAuthenticator();
 	}
 
 	@Override
@@ -35,13 +35,13 @@ public class LoginActivity extends Activity {
 		Log.v(TAG, "onResume");
 		super.onResume();
 
-		Intent intent = authenticator.checkAccountValid();
+		Intent intent = androidAuthenticator.checkAccountValid();
 		if (intent != null) {
 			startActivityForResult(intent, ACCOUNT_PICKER);
 			return;
 		}
 		// May start activity inside, asking user for permission.
-		authenticator.checkUserPermission(this, new MyAuthenticatorCallback());
+		androidAuthenticator.checkUserPermission(this, new MyAuthenticatorCallback());
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class LoginActivity extends Activity {
 				Account account = new Account(name, type);
 				Application.preferences.setAccount(account);
 
-				authenticator.checkUserPermission(this, new MyAuthenticatorCallback());
+				androidAuthenticator.checkUserPermission(this, new MyAuthenticatorCallback());
 				break;
 			case USER_CONFIRMATION:
 				if (resultCode == RESULT_CANCELED) {

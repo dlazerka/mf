@@ -8,7 +8,7 @@ import android.util.Log;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.Authenticator;
+import me.lazerka.mf.android.auth.GaeAuthenticator;
 import me.lazerka.mf.api.object.ApiObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -39,10 +39,10 @@ class HttpSenderOld extends Handler {
 	protected final String TAG = getClass().getName();
 	private final AndroidHttpClient httpClient;
 	private final HttpContext httpContext;
-	private final Authenticator authenticator;
+	private final GaeAuthenticator authenticator;
 	private final BasicCookieStore cookieStore;
 
-	public HttpSenderOld(Looper looper, AndroidHttpClient httpClient, Authenticator authenticator) {
+	public HttpSenderOld(Looper looper, AndroidHttpClient httpClient, GaeAuthenticator authenticator) {
 		super(looper);
 		this.httpClient = httpClient;
 		this.authenticator = authenticator;
@@ -172,7 +172,7 @@ class HttpSenderOld extends Handler {
 
 		@Override
 		public String getName() {
-			return Application.IS_SERVER_LOCAL ? "dev_appserver_login" : Authenticator.AUTH_TOKEN_COOKIE_NAME;
+			return Application.IS_SERVER_LOCAL ? "dev_appserver_login" : GaeAuthenticator.AUTH_TOKEN_COOKIE_NAME;
 			//return Constants.COOKIE_NAME_AUTH_TOKEN;
 		}
 

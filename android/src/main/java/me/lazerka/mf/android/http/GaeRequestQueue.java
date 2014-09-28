@@ -7,7 +7,7 @@ import com.android.volley.toolbox.HttpStack;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.NoCache;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.Authenticator;
+import me.lazerka.mf.android.auth.GaeAuthenticator;
 import org.apache.http.HttpStatus;
 
 import javax.annotation.Nonnull;
@@ -36,7 +36,7 @@ public class GaeRequestQueue extends RequestQueue {
 	private static final int THREAD_POOL_SIZE = 1;
 
 	public static GaeRequestQueue create() {
-		Authenticator authenticator = new Authenticator();
+		GaeAuthenticator authenticator = new GaeAuthenticator();
 		Network network = new GaeNetwork(new HurlStack(), authenticator);
 		GaeRequestQueue queue = new GaeRequestQueue(new NoCache(), network);
 		queue.start();
@@ -49,9 +49,9 @@ public class GaeRequestQueue extends RequestQueue {
 
 	private static class GaeNetwork extends BasicNetwork {
 		private static final String TAG = GaeNetwork.class.getName();
-		private final Authenticator authenticator;
+		private final GaeAuthenticator authenticator;
 
-		public GaeNetwork(HttpStack httpStack, Authenticator authenticator) {
+		public GaeNetwork(HttpStack httpStack, GaeAuthenticator authenticator) {
 			super(httpStack);
 			this.authenticator = authenticator;
 		}
@@ -97,7 +97,7 @@ public class GaeRequestQueue extends RequestQueue {
 		private void setAuthCookie(String gaeAuthToken, JsonSerializingRequest request) {
 			String name = Application.IS_SERVER_LOCAL
 					? "dev_appserver_login"
-					: Authenticator.AUTH_TOKEN_COOKIE_NAME;
+					: GaeAuthenticator.AUTH_TOKEN_COOKIE_NAME;
 
 			// Check at low-level that the token is never sent over insecure HTTP, unless on local dev server.
 			if (!Application.IS_SERVER_LOCAL && !request.getUrl().startsWith("https")) {

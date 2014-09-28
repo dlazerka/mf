@@ -1,14 +1,14 @@
-package me.lazerka.mf.android;
+package me.lazerka.mf.android.auth;
 
-import android.accounts.*;
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.content.Context;
-import android.content.Intent;
 import android.net.http.AndroidHttpClient;
-import android.os.Bundle;
 import android.util.Log;
-import com.google.android.gms.common.AccountPicker;
 import com.google.common.collect.Lists;
-import me.lazerka.mf.android.activity.login.LoginActivity;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.ApiConstants;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -36,92 +36,27 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Handles authentication.
- * First, authenticates android Account from preferences.
- * Then, makes request to GAE to authenticate obtained authToken.
+ * Authenticates our Android to GAE servers, using Google's default authentication mechanism.
  *
+ * Essentially, exchanges Android-token (see {@link AndroidAuthenticator} for obtaining it)
+ * for GAE-token. The GAE-token (or, simply auth-token) is then provided to our server as Cookie header,
+ * so we use default Google authentication, and not invent our own.
+ *
+ * Google servers will validate the auth-token, and tell our server app that user is really who he is.
+ *
+ * Must be called from background thread, because does network operations.
+ *
+ * @see AndroidAuthenticator
  * @author Dzmitry Lazerka
  */
-public class Authenticator {
+public class GaeAuthenticator {
 	public static final String AUTH_TOKEN_COOKIE_NAME = "SACSID";
-	private final String TAG = getClass().getName();
-	private final String ACCOUNT_TYPE = "com.google";
-
-	private final AccountManager accountManager;
-
-	public Authenticator() {
-		accountManager = (AccountManager) Application.context.getSystemService(Context.ACCOUNT_SERVICE);
-	}
-
-	/**
-	 * @return null if valid, intent to show otherwise.
-	 */
-	public Intent checkAccountValid() {
-		Account account = Application.preferences.getAccount();
-		if (account == null || !isAccountAvailable(account)) {
-			return AccountPicker.newChooseAccountIntent(
-					account, null, new String[]{ACCOUNT_TYPE}, false, null, null, null, null);
-		}
-		return null;
-	}
-
-	private boolean isAccountAvailable(Account account) {
-		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
-		for (Account availableAccount : accounts) {
-			if (account.equals(availableAccount)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public interface AuthenticatorCallback {
-		void onSuccess(String authToken);
-		void onUserInputRequired(Intent intent);
-		void onIOException(IOException e);
-		void onAuthenticatorException(AuthenticatorException e);
-		void onOperationCanceledException(OperationCanceledException e);
-	}
-
-	/**
-	 * For invoking from foreground.
-	 * Launches credentials prompt user hasn't approved service usage, and token cannot be issued.
-	 * If user approved, do nothing with the token (see {@link #authenticate()} for real authentication).
-	 *
-	 * Note that GoogleAuthUtil.getToken() is completely different from AccountManager.
-	 */
-	public void checkUserPermission(final LoginActivity activity, final AuthenticatorCallback callback) {
-		Account account = Application.preferences.getAccount();
-
-		// It may start activity asking user for permission.
-		AccountManagerCallback<Bundle> myCallback = new AccountManagerCallback<Bundle>() {
-			@Override
-			public void run(AccountManagerFuture<Bundle> future) {
-				try {
-					Bundle bundle = future.getResult();
-
-					Intent intent = (Intent) bundle.get(AccountManager.KEY_INTENT);
-					if (intent != null) {
-						callback.onUserInputRequired(intent);
-					}
-					callback.onSuccess(bundle.getString(AccountManager.KEY_AUTHTOKEN));
-				} catch (OperationCanceledException e) {
-					callback.onOperationCanceledException(e);
-				} catch (IOException e) {
-					callback.onIOException(e);
-				} catch (AuthenticatorException e) {
-					callback.onAuthenticatorException(e);
-				}
-			}
-		};
-		accountManager.getAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, Bundle.EMPTY, activity, myCallback, null);
-
-		//GetAuthTokenCallback callback = new GetAuthTokenCallback(activity);
-		//accountManager.getAuthToken(account, Constants.ANDROID_AUTH_SCOPE, Bundle.EMPTY, activity, callback, null);
-	}
+	private static final String TAG = GaeAuthenticator.class.getName();
 
 	/**
 	 * For invoking from background.
+	 *
+	 *
 	 * Invalidates token. Is called only when authentication fails, so probably token has expired.
 	 * Shows notification on auth failure.
 	 * @return authToken
@@ -129,21 +64,23 @@ public class Authenticator {
 	@Nullable
 	public String authenticate() {
 		Account account = checkNotNull(Application.preferences.getAccount());
-		String authToken;
+		String androidAuthToken;
 		try {
-			authToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
-			if (authToken != null) {
-				accountManager.invalidateAuthToken(ACCOUNT_TYPE, authToken);
-				authToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
+			AccountManager accountManager =
+					(AccountManager) Application.context.getSystemService(Context.ACCOUNT_SERVICE);
+			androidAuthToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
+			if (androidAuthToken != null) {
+				accountManager.invalidateAuthToken(AndroidAuthenticator.ACCOUNT_TYPE, androidAuthToken);
+				androidAuthToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
 			}
-			return fetchGaeAuthToken(authToken);
+			return fetchGaeAuthToken(androidAuthToken);
 		} catch (OperationCanceledException | IOException | AuthenticatorException e) {
 			Log.e(TAG, "Cannot get token", e);
 		}
 		return null;
 	}
 
-	private String fetchGaeAuthToken(String authToken) {
+	private String fetchGaeAuthToken(String androidAuthToken) {
 		Log.v(TAG, "fetchGaeAuthToken");
 
 		Account account = Application.preferences.getAccount();
@@ -166,10 +103,7 @@ public class Authenticator {
 				return authDevAppserver(account.name, httpClient, httpContext, cookieStore);
 			}
 
-			//URI uri = Application.SERVER_ROOT.resolve("https://www.google.com/accounts/ServiceLogin?service=ah&" +
-			//		"passive=true&amp;continue=https://appengine.google.com/_ah/conflogin%3Fcontinue%3D&amp;" +
-			//		"ltmpl=gm&amp;shdf= /_ah/login?auth=" + authToken + "&continue=http://0.0.0.0/");
-			URI uri = Application.SERVER_ROOT.resolve("/_ah/login?auth=" + authToken + "&continue=http://0.0.0.0/");
+			URI uri = Application.SERVER_ROOT.resolve("/_ah/login?auth=" + androidAuthToken + "&continue=http://0.0.0.0/");
 			HttpGet httpGet = new HttpGet(uri);
 			HttpResponse response = httpClient.execute(httpGet, httpContext);
 			HttpEntity entity = response.getEntity();
@@ -249,25 +183,4 @@ public class Authenticator {
 		Log.e(TAG, msg);
 		return null;
 	}
-
-
-	//private class GetAuthTokenCallback implements AccountManagerCallback<Bundle> {
-	//	private final LoginActivity activity;
-	//
-	//	public GetAuthTokenCallback(LoginActivity activity) {
-	//		this.activity = activity;
-	//	}
-	//
-	//	public void run(AccountManagerFuture<Bundle> future) {
-	//		Bundle bundle = getResult(future);
-	//
-	//		Intent intent = (Intent) bundle.get(AccountManager.KEY_INTENT);
-	//		if (intent != null) {
-	//			Log.i(TAG, "Intent is non-null, starting credentials prompt activity.");
-	//			// User input required
-	//			activity.startActivity(intent);
-	//		}
-	//	}
-	//}
-
 }
