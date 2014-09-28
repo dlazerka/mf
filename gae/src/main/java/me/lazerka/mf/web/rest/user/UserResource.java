@@ -1,6 +1,7 @@
 package me.lazerka.mf.web.rest.user;
 
 import com.googlecode.objectify.Objectify;
+import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.entity.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import javax.ws.rs.Produces;
  * @author Dzmitry Lazerka
  */
 @Path("/rest/user")
+@Produces(ApiConstants.APPLICATION_JSON)
 public class UserResource {
 	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
 

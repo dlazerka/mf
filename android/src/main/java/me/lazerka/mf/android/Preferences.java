@@ -4,9 +4,6 @@ import android.accounts.Account;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.util.Log;
 
@@ -23,8 +20,9 @@ public class Preferences {
 	private final String ACCOUNT_NAME = "account.name";
 	private final String ACCOUNT_TYPE = "account.type";
 
-	private final String FRIENDS = "mf.friends";
+	private final String GAE_AUTH_TOKEN = "gae.auth.token";
 
+	private final String FRIENDS = "mf.friends";
 	private final String GCM_APP_VERSION = "gcm.app.version";
 	private final String GCM_REGISTRATION_ID = "gcm.registration.id";
 	private final String GCM_SERVER_KNOWS = "gcm.server.knows";
@@ -104,53 +102,60 @@ public class Preferences {
 	}
 
 	@Nullable
-	public String getGcmRegistrationId() {
-		String result = preferences.getString(GCM_REGISTRATION_ID, null);
-		if (result == null) {
-			Log.i(TAG, "GCM Registration ID not found.");
-			return null;
-		} else {
-			// Do not log real registration ID as it should be private.
-			Log.v(TAG, "GCM Registration ID found.");
-		}
+	public String getGcmToken() {
+		synchronized (preferences) {
+			String result = preferences.getString(GCM_REGISTRATION_ID, null);
+			int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
 
-		// Check if app was updated; if so, it must clear the registration ID
-		// since the existing regID is not guaranteed to work with the new
-		// app version.
-		int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
-		int currentVersion = getAppVersion();
-		if (registeredVersion != currentVersion) {
-			Log.i(TAG, "App version changed.");
-			return null;
-		}
+			if (result == null) {
+				Log.i(TAG, "GCM Registration ID not found.");
+				return null;
+			} else {
+				// Do not log real registration ID as it should be private.
+				Log.v(TAG, "GCM Registration ID found.");
+			}
 
-		return result;
+			// Check if app was updated; if so, it must clear the registration ID
+			// since the existing regID is not guaranteed to work with the new
+			// app version.
+			int currentVersion = Application.getVersion();
+			if (registeredVersion != currentVersion) {
+				Log.i(TAG, "App version changed.");
+				return null;
+			}
+
+			return result;
+		}
 	}
 
 	/**
 	 * This should not be backed up when user uses Backup/Restore feature.
 	 * See MfBackupAgent for that.
 	 */
-	public void setGcmRegistrationId(@Nonnull String gcmRegistrationId) {
+	public void setGcmToken(@Nonnull String gcmRegistrationId) {
 		Log.v(TAG, "GCM Registration ID stored.");
 		preferences.edit()
 				.putString(GCM_REGISTRATION_ID, gcmRegistrationId)
-				.putInt(GCM_APP_VERSION, getAppVersion())
-				// TODO: storedOnServer
+				.putInt(GCM_APP_VERSION, Application.getVersion())
 				.apply();
+	}
+
+	public boolean getGcmServerKnowsToken() {
+		return preferences.getBoolean(GCM_SERVER_KNOWS, false);
 	}
 
 	/**
 	 * This should not be backed up when user uses Backup/Restore feature.
 	 * See MfBackupAgent for that.
-	 * @param gcmRegistrationId to compare with current and avoid race conditions.
+	 *
+	 * @param gcmToken to compare with current and avoid race conditions.
 	 * @return is current token equals given.
 	 */
-	public boolean setGcmRegistrationServerKnows(@Nonnull String gcmRegistrationId) {
+	public boolean setGcmServerKnowsToken(@Nonnull String gcmToken) {
 		Log.v(TAG, "GCM Registration ID stored.");
 		synchronized (preferences) {
 			String currentId = preferences.getString(GCM_REGISTRATION_ID, null);
-			if (!gcmRegistrationId.equals(currentId)) {
+			if (!gcmToken.equals(currentId)) {
 				return false;
 			}
 			preferences.edit()
@@ -160,23 +165,15 @@ public class Preferences {
 		}
 	}
 
-	public int getGcmAppVersion() {
-		return preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
+	@Nullable
+	public String getGaeAuthToken() {
+		return preferences.getString(GAE_AUTH_TOKEN, null);
 	}
 
-	/**
-	 * @return Application's version code from the {@code PackageManager}.
-	 */
-	private static int getAppVersion() {
-		String packageName = Application.context.getPackageName();
-		PackageManager packageManager = Application.context.getPackageManager();
-		try {
-			PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-			return packageInfo.versionCode;
-		} catch (NameNotFoundException e) {
-			// should never happen
-			throw new RuntimeException("Could not get package name: " + e);
-		}
+	public void setGaeAuthToken(@Nonnull String gaeAuthToken) {
+		preferences.edit()
+				.putString(GAE_AUTH_TOKEN, gaeAuthToken)
+				.apply();
 	}
 
 	public void onBeforeBackup() {
@@ -185,5 +182,4 @@ public class Preferences {
 				.remove(GCM_REGISTRATION_ID)
 				.apply();
 	}
-
 }

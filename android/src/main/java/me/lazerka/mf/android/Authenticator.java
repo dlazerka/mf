@@ -152,7 +152,7 @@ public class Authenticator {
 			return null;
 		}
 
-		String userAgent = "Android Pro GetGaeCookieTask " + Application.DEVICE_ID;
+		String userAgent = Application.USER_AGENT;
 		AndroidHttpClient httpClient = AndroidHttpClient.newInstance(userAgent, null);
 		// Don't follow redirects.
 		httpClient.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);

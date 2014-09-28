@@ -126,8 +126,5 @@ public class GcmResponse {
 					'}';
 
 		}
-		public void clearRegistrationId() {
-			registrationId = null;
-		}
 	}
 }

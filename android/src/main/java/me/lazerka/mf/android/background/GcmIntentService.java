@@ -10,8 +10,10 @@ import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
+import me.lazerka.mf.android.http.GcmRegistrationSender;
 
 /**
  * @author Dzmitry Lazerka
@@ -28,13 +30,29 @@ public class GcmIntentService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		if (intent.getAction().equals("com.google.android.c2dm.intent.REGISTRATION")) {
+			String gcmToken = intent.getStringExtra("registration_id");
+			Log.i(TAG, "Received registration id " + gcmToken);
+
+			// TODO: code duplication with MainActivity -- extract to a GcmAuthenticator.
+			if (gcmToken != null && !gcmToken.equals(Application.preferences.getGcmToken())) {
+				// You should send the registration ID to your server over HTTP,
+				// so it can use GCM/HTTP or CCS to send messages to your app.
+				new GcmRegistrationSender(gcmToken)
+						.send();
+
+				// Persist the regID - no need to register again.
+				Application.preferences.setGcmToken(gcmToken);
+			}
+		}
+
 		Bundle extras = intent.getExtras();
 		GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
 		// The getMessageType() intent parameter must be the intent you received
 		// in your BroadcastReceiver.
 		String messageType = gcm.getMessageType(intent);
 
-		if (!extras.isEmpty()) {  // has effect of unparcelling Bundle
+		if (messageType != null && !extras.isEmpty()) {  // has effect of unparcelling Bundle
             /*
              * Filter messages based on message type. Since it is likely that GCM
              * will be extended in the future with new message types, just ignore
@@ -46,20 +64,11 @@ public class GcmIntentService extends IntentService {
 					sendNotification("Send error: " + extras.toString());
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_DELETED:
-					sendNotification("Deleted messages on server: " +
-							extras.toString());
+					sendNotification("Deleted messages on server: " + extras.toString());
 					// If it's a regular GCM message, do some work.
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE:
-					// This loop represents the service doing some work.
-					for(int i = 0; i < 5; i++) {
-						Log.i(TAG, "Working... " + (i + 1)
-								+ "/5 @ " + SystemClock.elapsedRealtime());
-						try {
-							Thread.sleep(5000);
-						} catch (InterruptedException e) {
-						}
-					}
+					// TODO: handle incoming message.
 					Log.i(TAG, "Completed work @ " + SystemClock.elapsedRealtime());
 					// Post notification of received message.
 					sendNotification("Received: " + extras.toString());
@@ -67,6 +76,7 @@ public class GcmIntentService extends IntentService {
 					break;
 			}
 		}
+
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
 		GcmBroadcastReceiver.completeWakefulIntent(intent);
 	}
@@ -91,4 +101,24 @@ public class GcmIntentService extends IntentService {
 		mBuilder.setContentIntent(pendingIntent);
 		mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
 	}
+
+/*
+	private class LocationReceiver extends ApiResponseHandler {
+		@Override
+		protected void handleSuccess(@Nullable String json) {
+			Log.v(TAG, "handleSuccess");
+
+			Location location;
+			try {
+				ObjectMapper mapper = Application.jsonMapper;
+				location = mapper.readValue(json, Location.class);
+			} catch (IOException e) {
+				Log.w(TAG, e.getMessage(), e);
+				return;
+			}
+
+			MapFragment mapFragment = mTabsAdapter.getMapFragment();
+			mapFragment.showLocation(location);
+		}
+	}*/
 }

@@ -2,15 +2,17 @@ package me.lazerka.mf.android;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.util.Log;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import me.lazerka.mf.android.http.GaeRequestQueue;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.object.AcraException;
 import org.acra.ACRA;
@@ -35,8 +37,7 @@ public class Application extends android.app.Application {
 	public static final String VERSION = "1";
 	public static String TAG;
 
-	public static final String USER_AGENT = "Pro";
-	public static final String DEVICE_ID = Build.SERIAL;
+	public static String USER_AGENT;
 
 	public static final boolean IS_SERVER_LOCAL = true;
 	//public static final boolean IS_SERVER_LOCAL = false;
@@ -61,7 +62,7 @@ public class Application extends android.app.Application {
 	public static JsonMapper jsonMapper;
 	public static Preferences preferences;
 	public static Context context;
-	public static RequestQueue requestQueue;
+	public static GaeRequestQueue requestQueue;
 
 	public Application() {
 	}
@@ -71,6 +72,7 @@ public class Application extends android.app.Application {
 		super.onCreate();
 
 		TAG = getApplicationContext().getPackageName();
+		USER_AGENT = getApplicationContext().getPackageName();
 
 		if (!isDebugRun()) {
 			ACRA.init(this);
@@ -79,8 +81,7 @@ public class Application extends android.app.Application {
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 		preferences = new Preferences(this);
-		requestQueue = Volley.newRequestQueue(this);
-		requestQueue.start();
+		requestQueue = GaeRequestQueue.create();
 	}
 
 	private JsonMapper createJsonMapper() {
@@ -110,5 +111,20 @@ public class Application extends android.app.Application {
 
 	private boolean isDebugBuild() {
 		return ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) > 0);
+	}
+
+	/**
+	 * @return Application's version code from the {@code PackageManager}.
+	 */
+	public static int getVersion() {
+		String packageName = Application.context.getPackageName();
+		PackageManager packageManager = Application.context.getPackageManager();
+		try {
+			PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+			return packageInfo.versionCode;
+		} catch (NameNotFoundException e) {
+			// should never happen
+			throw new RuntimeException("Could not get package name: " + e);
+		}
 	}
 }

@@ -3,6 +3,8 @@ package me.lazerka.mf.web.rest.location;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.impl.Keys;
+import me.lazerka.mf.api.ApiConstants;
+import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
 import me.lazerka.mf.api.object.GcmRegistration;
 import me.lazerka.mf.entity.GcmRegistrationEntity;
 import me.lazerka.mf.entity.MfUser;
@@ -21,6 +23,7 @@ import java.util.List;
  * @author Dzmitry Lazerka
  */
 @Path(GcmRegistration.PATH)
+@Produces(ApiConstants.APPLICATION_JSON)
 public class GcmRegistrationResource {
 	private static final Logger logger = LoggerFactory.getLogger(GcmRegistrationResource.class);
 
@@ -37,14 +40,21 @@ public class GcmRegistrationResource {
 	@Named("now")
 	DateTime now;
 
+	/**
+	 * Adds the token to a collection of current user's tokens.
+	 * User can have multiple tokens -- one per device.
+	 *
+	 * Instead of the collection, we could have a map of (device_id -> token) to avoid keeping outdated tokens
+	 * for the same device, but we don't want to know device_id, so keep them all.
+	 * Outdated ones will be cleared when we try to send a message to them.
+	 */
 	@POST
 	@Consumes("application/json")
-	@Produces("text/plain")
-	public String save(GcmRegistration object) {
+	public GcmRegistrationResponse save(GcmRegistration bean) {
 		logger.trace("Saving GcmRegistration by {}", user.getEmail());
 
-		final GcmRegistrationEntity entity = new GcmRegistrationEntity(user, object.getToken(), now);
-		entity.setAppVersion(object.getAppVersion());
+		final GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getToken(), now);
+		entity.setAppVersion(bean.getAppVersion());
 
 		user = ofy.transactNew(10, new Work<MfUser>() {
 			@Override
@@ -65,7 +75,9 @@ public class GcmRegistrationResource {
 			}
 		});
 
-		return entity.getId();
+		GcmRegistrationResponse response = new GcmRegistrationResponse();
+		response.setId(entity.getId());
+		return response;
 	}
 
 	/** Doesn't throw 404 in case of not existent. */

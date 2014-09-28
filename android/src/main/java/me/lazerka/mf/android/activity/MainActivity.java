@@ -11,22 +11,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
-import com.android.volley.Response.ErrorListener;
-import com.android.volley.Response.Listener;
+import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.common.base.Joiner;
+import com.google.common.base.Charsets;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.login.LoginActivity;
-import me.lazerka.mf.android.activity.map.MapFragment;
 import me.lazerka.mf.android.adapter.TabsAdapter;
-import me.lazerka.mf.android.background.*;
-import me.lazerka.mf.api.object.GcmRegistration;
-import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.android.background.SenderService;
+import me.lazerka.mf.android.background.ServerConnection;
+import me.lazerka.mf.android.http.GcmRegistrationSender;
+import me.lazerka.mf.android.http.JsonRequester;
+import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationRequestResult;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
 
 	private GoogleCloudMessaging gcm;
 	private AtomicInteger msgId = new AtomicInteger();
-	private String gcmRegistrationId;
+	private String gcmToken;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +73,13 @@ public class MainActivity extends Activity {
 
 		if (checkPlayServices()) {
 			gcm = GoogleCloudMessaging.getInstance(this);
-			gcmRegistrationId = Application.preferences.getGcmRegistrationId();
+			gcmToken = Application.preferences.getGcmToken();
 
-			if (gcmRegistrationId == null) {
+			if (gcmToken == null) {
 				new GcmRegisterTask().execute();
+			} else if (!Application.preferences.getGcmServerKnowsToken()) {
+				new GcmRegistrationSender(gcmToken)
+						.send();
 			}
 		} else {
 			Log.e(TAG, "No valid Google Play Services APK found.");
@@ -154,29 +157,71 @@ public class MainActivity extends Activity {
 	}
 
 	public void showLocation(Set<String> emails) {
-		String commaSeparatedEmails = Joiner.on(',').join(emails);
-		ApiRequest apiRequest = ApiRequest.get(Location.PATH + "/" + commaSeparatedEmails, new LocationReceiver());
-		mServerConnection.send(apiRequest);
-
+		LocationRequest locationRequest = new LocationRequest();
+		locationRequest.setEmails(emails);
+		new LocationRequester(locationRequest)
+				.send();
 		mTabsAdapter.selectMapTab();
 	}
 
-	private class LocationReceiver extends ApiResponseHandler {
+	private class LocationRequester extends JsonRequester<LocationRequest, LocationRequestResult> {
+		public LocationRequester(@Nullable LocationRequest request) {
+			super(Method.POST, LocationRequest.PATH, request, LocationRequestResult.class);
+		}
+
 		@Override
-		protected void handleSuccess(@Nullable String json) {
-			Log.v(TAG, "handleSuccess");
-
-			Location location;
-			try {
-				ObjectMapper mapper = Application.jsonMapper;
-				location = mapper.readValue(json, Location.class);
-			} catch (IOException e) {
-				Log.w(TAG, e.getMessage(), e);
-				return;
+		public void onResponse(LocationRequestResult response) {
+			int devices = response.getResults().size();
+			if (devices == 1) {
+				String error = response.getResults().get(0).getError();
+				if (error == null) {
+					String msg = "Sent location request to " + response.getEmail();
+					Log.i(TAG, msg);
+					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
+							.show();
+				} else {
+					String msg = "Error sending location request to " + response.getEmail() + ": " + error;
+					Log.w(TAG, msg);
+					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
+							.show();
+				}
+			} else {
+				Toast.makeText(
+						MainActivity.this,
+						"Sent location request to " + devices + " devices of " + response.getEmail(),
+						Toast.LENGTH_LONG)
+						.show();
+				// TODO show nicer message to user in multiple devices case.
 			}
+		}
 
-			MapFragment mapFragment = mTabsAdapter.getMapFragment();
-			mapFragment.showLocation(location);
+		@Override
+		public void onErrorResponse(VolleyError error) {
+			super.onErrorResponse(error);
+
+			String msg;
+			if (error.networkResponse.statusCode == 404) {
+				if (getRequest().getEmails().size() > 1) {
+					msg = "None of your friend's email addresses were found in database. " +
+							"Did your friend installed the app?";
+				} else {
+					String email = getRequest().getEmails().iterator().next();
+					msg = email + " was found in database. " +
+							"Did your friend installed the app?";
+				}
+				Log.w(TAG, msg);
+
+			} else {
+				byte[] data = error.networkResponse.data;
+				if (data != null) {
+					String errorMessage = new String(data, Charsets.UTF_8);
+					msg = "Error requesting location: " + errorMessage;
+				} else {
+					msg = "Error requesting message: " + error.networkResponse.statusCode;
+				}
+				Log.e(TAG, msg);
+			}
+			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
 		}
 	}
 
@@ -194,21 +239,16 @@ public class MainActivity extends Activity {
 					gcm = GoogleCloudMessaging.getInstance(Application.context);
 				}
 				Log.i(TAG, "Calling GCM.register()");
-				gcmRegistrationId = gcm.register(SENDER_ID);
+				gcmToken = gcm.register(SENDER_ID);
 				Log.i(TAG, "GCM.register() successful");
 
 				// You should send the registration ID to your server over HTTP,
 				// so it can use GCM/HTTP or CCS to send messages to your app.
-				// The request to your server should be authenticated if your app
-				// is using accounts.
-				sendRegistrationIdToServer();
-
-				// For this demo: we don't need to send it because the device
-				// will send upstream messages to a server that echo back the
-				// message using the 'from' address in the message.
+				new GcmRegistrationSender(gcmToken)
+						.send();
 
 				// Persist the regID - no need to register again.
-				Application.preferences.setGcmRegistrationId(gcmRegistrationId);
+				Application.preferences.setGcmToken(gcmToken);
 
 				return "Device registered";
 			} catch (IOException e) {
@@ -230,31 +270,5 @@ public class MainActivity extends Activity {
 				Log.i(TAG, msg);
 			}
 		}
-	}
-
-	private void sendRegistrationIdToServer() {
-		GcmRegistration gcmRegistration = new GcmRegistration(
-				gcmRegistrationId,
-				Application.preferences.getGcmAppVersion());
-
-		JsonRequest<String> request = JsonRequest.post(
-				GcmRegistration.PATH,
-				gcmRegistration,
-				new Listener<String>() {
-					@Override
-					public void onResponse(String serverId) {
-						Log.i(TAG, "Server stored our registration ID as " + serverId);
-						Application.preferences.setGcmRegistrationServerKnows(gcmRegistrationId);
-					}
-				},
-				String.class,
-				new ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError error) {
-						Log.w(TAG, error.getMessage(), error);
-					}
-				}
-		);
-		Application.requestQueue.add(request);
 	}
 }

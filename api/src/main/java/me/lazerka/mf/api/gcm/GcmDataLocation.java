@@ -3,6 +3,11 @@ package me.lazerka.mf.api.gcm;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.DateTime;
 
+/**
+ * The `data` field of a request for location that comes to a friend's device.
+ *
+ * @author Dzmitry Lazerka
+ */
 public class GcmDataLocation {
 	/**
 	 * Who's asking for location.

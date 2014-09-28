@@ -5,14 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.api.urlfetch.FetchOptions.Builder;
 import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
+import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.gcm.GcmDataLocation;
 import me.lazerka.mf.api.gcm.GcmRequest;
 import me.lazerka.mf.api.gcm.GcmResponse;
 import me.lazerka.mf.api.gcm.GcmResponse.Result;
-import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationRequestResult;
+import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.entity.GcmRegistrationEntity;
 import me.lazerka.mf.entity.MfUser;
 import me.lazerka.mf.gae.Pair;
@@ -35,9 +37,10 @@ import java.util.List;
 /**
  * @author Dzmitry Lazerka
  */
-@Path(Location.PATH)
-public class GcmLocationResource {
-	private static final Logger logger = LoggerFactory.getLogger(GcmLocationResource.class);
+@Path(LocationRequest.PATH)
+@Produces(ApiConstants.APPLICATION_JSON)
+public class LocationRequestResource {
+	private static final Logger logger = LoggerFactory.getLogger(LocationRequestResource.class);
 
 	private static final String GCM_ENDPOINT_URL = "https://android.googleapis.com/gcm/send";
 
@@ -71,31 +74,42 @@ public class GcmLocationResource {
 	 * @return The GcmResponse received from GCM, but with removed registration IDs. User should not know
 	 *         his friend's registration ids.
 	 */
-	@GET
-	@Path("/{commaSeparatedEmails}")
-	@Produces("application/json")
-	public GcmResponse byEmail(@PathParam("commaSeparatedEmails") String commaSeparatedEmails) {
-		logger.trace("byEmail for {}", commaSeparatedEmails);
+	@POST
+	@Consumes("application/json")
+	public LocationRequestResult byEmail(LocationRequest locationRequest) {
+		logger.trace("byEmail for {}", locationRequest.getEmails());
 
-		MfUser recipientUser = getRecipientUser(commaSeparatedEmails);
+		ArrayList<String> emails = new ArrayList<>(locationRequest.getEmails());
+
+		MfUser recipientUser = getRecipientUser(emails);
 		List<String> registrationIds = getRegistrationIds(recipientUser);
 		GcmRequest gcmRequest = createGcmRequest(registrationIds);
-		GcmResponse gcmResponse = sendGcmRequest(commaSeparatedEmails, gcmRequest);
+		GcmResponse gcmResponse = sendGcmRequest(gcmRequest, emails);
 
 		PairedList<GcmRegistrationEntity, Result> pairs =
 				new PairedList<>(recipientUser.getGcmRegistrations(), gcmResponse.getResults());
+		List<GcmResult> gcmResults = new ArrayList<>();
 		for(Pair<GcmRegistrationEntity, Result> pair : pairs) {
+			GcmRegistrationEntity registration = pair.getFirst();
 			Result result = pair.getSecond();
 			String newRegistrationId = result.getRegistrationId();
 			if (newRegistrationId != null) {
-				GcmRegistrationEntity newEntity = new GcmRegistrationEntity(recipientUser, newRegistrationId, now);
-				recipientUser = replaceRegistrationId(recipientUser, pair.getFirst(), newEntity);
+				GcmRegistrationEntity newRegistration = new GcmRegistrationEntity(recipientUser, newRegistrationId, now);
+				recipientUser = replaceRegistrationId(recipientUser, registration, newRegistration);
+				registration = newRegistration;
 			}
 
-			result.clearRegistrationId();
+			GcmResult gcmResult = new GcmResult();
+			gcmResult.setMessageId(result.getMessageId());
+			gcmResult.setDeviceRegistrationHash(registration.getId());
+			gcmResult.setError(result.getError());
+			gcmResults.add(gcmResult);
 		}
 
-		return gcmResponse;
+		LocationRequestResult result = new LocationRequestResult();
+		result.setEmail(recipientUser.getEmail());
+		result.setResults(gcmResults);
+		return result;
 	}
 
 	private MfUser replaceRegistrationId(
@@ -130,7 +144,7 @@ public class GcmLocationResource {
 		});
 	}
 
-	private GcmResponse sendGcmRequest(String commaSeparatedEmails, GcmRequest gcmRequest) {
+	private GcmResponse sendGcmRequest(GcmRequest gcmRequest, List<String> emails) {
 		String requestJson = serializeToJson(gcmRequest);
 		logger.trace(requestJson);
 
@@ -149,7 +163,7 @@ public class GcmLocationResource {
 			if (httpResponse.getResponseCode() == 200) {
 				gcmResponse = objectMapper.readValue(responseContent, GcmResponse.class);
 			} else {
-				logger.error("Sending GCM message to {} failed: {}", commaSeparatedEmails, responseContent);
+				logger.error("Sending GCM message to {} failed: {}", emails, responseContent);
 				Response response = Response.status(Status.INTERNAL_SERVER_ERROR).entity("GCM sending error " + httpResponse
 						.getResponseCode()).build();
 				throw new WebApplicationException(response);
@@ -163,9 +177,7 @@ public class GcmLocationResource {
 		return gcmResponse;
 	}
 
-	private MfUser getRecipientUser(String commaSeparatedEmails) {
-		List<String> emails = Splitter.on(',').splitToList(commaSeparatedEmails);
-
+	private MfUser getRecipientUser(List<String> emails) {
 		// All emails must belong to only
 		MfUser otherUser = ofy.load()
 				.type(MfUser.class)
