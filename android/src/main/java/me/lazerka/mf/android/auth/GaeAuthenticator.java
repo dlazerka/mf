@@ -36,7 +36,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Authenticates our Android to GAE servers, using Google's default authentication mechanism.
+ * Authenticates our Android device to App Engine servers, using Google's default authentication mechanism.
  *
  * Essentially, exchanges Android-token (see {@link AndroidAuthenticator} for obtaining it)
  * for GAE-token. The GAE-token (or, simply auth-token) is then provided to our server as Cookie header,
@@ -44,7 +44,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * Google servers will validate the auth-token, and tell our server app that user is really who he is.
  *
- * Must be called from background thread, because does network operations.
+ * Must be called from background thread, because does network operations. Currently called only when old token is
+ * expired or non-existent.
  *
  * @see AndroidAuthenticator
  * @author Dzmitry Lazerka

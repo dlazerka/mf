@@ -10,10 +10,9 @@ import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
-import me.lazerka.mf.android.http.GcmRegistrationSender;
+import me.lazerka.mf.android.auth.GcmAuthenticator;
 
 /**
  * @author Dzmitry Lazerka
@@ -34,15 +33,9 @@ public class GcmIntentService extends IntentService {
 			String gcmToken = intent.getStringExtra("registration_id");
 			Log.i(TAG, "Received registration id " + gcmToken);
 
-			// TODO: code duplication with MainActivity -- extract to a GcmAuthenticator.
-			if (gcmToken != null && !gcmToken.equals(Application.preferences.getGcmToken())) {
-				// You should send the registration ID to your server over HTTP,
-				// so it can use GCM/HTTP or CCS to send messages to your app.
-				new GcmRegistrationSender(gcmToken)
-						.send();
+			if (gcmToken != null) {
+				GcmAuthenticator.storeGcmRegistration(gcmToken);
 
-				// Persist the regID - no need to register again.
-				Application.preferences.setGcmToken(gcmToken);
 			}
 		}
 

@@ -6,7 +6,7 @@ import android.net.http.AndroidHttpClient;
 import android.os.*;
 import android.util.Log;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import me.lazerka.mf.android.auth.GaeAuthenticator;
 import org.apache.http.params.HttpConnectionParams;
 
 /**
@@ -36,7 +36,7 @@ public class SenderService extends Service {
 		HandlerThread thread = new HandlerThread(getClass().getSimpleName());
 		thread.start();
 		looper = thread.getLooper();
-		handler = new HttpSenderOld(looper, httpClient, new AndroidAuthenticator());
+		handler = new HttpSenderOld(looper, httpClient, new GaeAuthenticator());
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 /**
- * My API for SharedPreferences, type-safe.
+ * Type-safe API for SharedPreferences, so that we have one place for them.
  */
 public class Preferences {
 	private final String TAG = getClass().getName();
@@ -24,7 +24,7 @@ public class Preferences {
 
 	private final String FRIENDS = "mf.friends";
 	private final String GCM_APP_VERSION = "gcm.app.version";
-	private final String GCM_REGISTRATION_ID = "gcm.registration.id";
+	private final String GCM_TOKEN = "gcm.token";
 	private final String GCM_SERVER_KNOWS = "gcm.server.knows";
 
 	private final SharedPreferences preferences;
@@ -104,7 +104,7 @@ public class Preferences {
 	@Nullable
 	public String getGcmToken() {
 		synchronized (preferences) {
-			String result = preferences.getString(GCM_REGISTRATION_ID, null);
+			String result = preferences.getString(GCM_TOKEN, null);
 			int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
 
 			if (result == null) {
@@ -135,13 +135,15 @@ public class Preferences {
 	public void setGcmToken(@Nonnull String gcmRegistrationId) {
 		Log.v(TAG, "GCM Registration ID stored.");
 		preferences.edit()
-				.putString(GCM_REGISTRATION_ID, gcmRegistrationId)
+				.putString(GCM_TOKEN, gcmRegistrationId)
 				.putInt(GCM_APP_VERSION, Application.getVersion())
+				.putBoolean(GCM_SERVER_KNOWS, false)
 				.apply();
 	}
 
-	public boolean getGcmServerKnowsToken() {
-		return preferences.getBoolean(GCM_SERVER_KNOWS, false);
+	public boolean getGcmServerKnowsToken(String gcmToken) {
+		Map<String, ?> all = preferences.getAll();
+		return gcmToken.equals(all.get(GCM_TOKEN)) && (Boolean) all.get(GCM_SERVER_KNOWS);
 	}
 
 	/**
@@ -154,11 +156,12 @@ public class Preferences {
 	public boolean setGcmServerKnowsToken(@Nonnull String gcmToken) {
 		Log.v(TAG, "GCM Registration ID stored.");
 		synchronized (preferences) {
-			String currentId = preferences.getString(GCM_REGISTRATION_ID, null);
-			if (!gcmToken.equals(currentId)) {
+			String currentToken = preferences.getString(GCM_TOKEN, null);
+			if (!gcmToken.equals(currentToken)) {
 				return false;
 			}
 			preferences.edit()
+					.putString(GCM_TOKEN, gcmToken)
 					.putBoolean(GCM_SERVER_KNOWS, true)
 					.apply();
 			return true;
@@ -179,7 +182,7 @@ public class Preferences {
 	public void onBeforeBackup() {
 		Log.v(TAG, "onBeforeBackup");
 		preferences.edit()
-				.remove(GCM_REGISTRATION_ID)
+				.remove(GCM_TOKEN)
 				.apply();
 	}
 }
