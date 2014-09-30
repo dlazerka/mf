@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -15,6 +14,8 @@ import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
 
 /**
+ * Handles messages from GCM. Basically, there's only one message -- if someone requests our location.
+ *
  * @author Dzmitry Lazerka
  */
 public class GcmIntentService extends IntentService {
@@ -29,20 +30,13 @@ public class GcmIntentService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		// Old deprecated way of receiving GCM Registration ID, but on Sony Xperia Ultra that's the only way.
 		if (intent.getAction().equals("com.google.android.c2dm.intent.REGISTRATION")) {
-			String gcmToken = intent.getStringExtra("registration_id");
-			Log.i(TAG, "Received registration id " + gcmToken);
-
-			if (gcmToken != null) {
-				GcmAuthenticator.storeGcmRegistration(gcmToken);
-
-			}
+			handleRegistrationId(intent);
 		}
 
 		Bundle extras = intent.getExtras();
 		GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
-		// The getMessageType() intent parameter must be the intent you received
-		// in your BroadcastReceiver.
 		String messageType = gcm.getMessageType(intent);
 
 		if (messageType != null && !extras.isEmpty()) {  // has effect of unparcelling Bundle
@@ -61,17 +55,28 @@ public class GcmIntentService extends IntentService {
 					// If it's a regular GCM message, do some work.
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE:
-					// TODO: handle incoming message.
-					Log.i(TAG, "Completed work @ " + SystemClock.elapsedRealtime());
-					// Post notification of received message.
-					sendNotification("Received: " + extras.toString());
-					Log.i(TAG, "Received: " + extras.toString());
+					processMessage(extras);
 					break;
 			}
 		}
 
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
 		GcmBroadcastReceiver.completeWakefulIntent(intent);
+	}
+
+	private void processMessage(Bundle extras) {
+		// TODO
+		Log.i(TAG, "Received message: " + extras.toString());
+	}
+
+	private void handleRegistrationId(Intent intent) {
+		Log.i(TAG, "Received com.google.android.c2dm.intent.REGISTRATION");
+		String gcmToken = intent.getStringExtra("registration_id");
+		if (gcmToken != null) {
+			GcmAuthenticator.storeGcmRegistration(gcmToken);
+		} else {
+			Log.w(TAG, "null registration id");
+		}
 	}
 
 	// Put the message into a notification and post it.
