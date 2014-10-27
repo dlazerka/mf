@@ -1,22 +1,38 @@
 package me.lazerka.mf.web;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Module;
+import com.squarespace.jersey2.guice.JerseyGuiceServletContextListener;
 import me.lazerka.mf.MainModule;
+import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+import java.util.List;
 
 /**
  * @author Dzmitry Lazerka
  */
-public class ServletContextListener implements javax.servlet.ServletContextListener {
+public class ServletContextListener extends JerseyGuiceServletContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ServletContextListener.class);
 
-	private static final String INJECTOR_NAME = Injector.class.getName();
+	@Override
+	public void contextInitialized(ServletContextEvent sce) {
 
+		sce.getServletContext().setAttribute(ServerProperties.PROVIDER_PACKAGES, "asd");
+
+
+		super.contextInitialized(sce);
+	}
+
+	@Override
+	protected List<? extends Module> modules() {
+		logger.trace("Lift off!");
+		return ImmutableList.of(new MainModule());
+	}
+
+	/*
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		logger.trace("contextInitialized");
@@ -28,7 +44,7 @@ public class ServletContextListener implements javax.servlet.ServletContextListe
 
 		ServletContext servletContext = servletContextEvent.getServletContext();
 
-		Injector injector = Guice.createInjector(new MainModule());
+		Injector injector = Guice.createInjector();
 		servletContext.setAttribute(INJECTOR_NAME, injector);
 	}
 
@@ -39,4 +55,5 @@ public class ServletContextListener implements javax.servlet.ServletContextListe
 		ServletContext servletContext = servletContextEvent.getServletContext();
 		servletContext.removeAttribute(INJECTOR_NAME);
 	}
+	*/
 }

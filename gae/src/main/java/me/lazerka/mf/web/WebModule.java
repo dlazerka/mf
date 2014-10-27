@@ -1,13 +1,10 @@
 package me.lazerka.mf.web;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.common.collect.Maps;
 import com.google.inject.Provides;
+import com.google.inject.servlet.ServletModule;
 import com.googlecode.objectify.ObjectifyFilter;
 import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
-import com.sun.jersey.api.core.PackagesResourceConfig;
-import com.sun.jersey.guice.JerseyServletModule;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -15,18 +12,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Web stuff configuration (servlets, filters, etc).
  *
  * @author Dzmitry Lazerka
  */
-public class WebModule extends JerseyServletModule {
+public class WebModule extends ServletModule {
 	private static final Logger logger = LoggerFactory.getLogger(WebModule.class);
 
 	@Override
@@ -39,8 +37,7 @@ public class WebModule extends JerseyServletModule {
 		filter("/*").through(ObjectifyFilter.class);
 
 		// Route all requests through GuiceContainer.
-		serve("/*").with(GuiceContainer.class, getJerseyParams());
-		serve("/_ah/*").with(GuiceContainer.class, getJerseyParams());
+		//serve("/*").with(GuiceContainer.class, getJerseyParams());
 		//serve("/image/blobstore-callback-dev").with(BlobstoreCallbackServlet.class);
 
 		bind(UnhandledExceptionMapper.class);
@@ -51,13 +48,16 @@ public class WebModule extends JerseyServletModule {
 	private void setUpJackson() {
 		// Handle "application/json" by Jackson.
 		JsonMapper mapper = new JsonMapper();
-		// Probably we don't want to serialize Ref in full, but as Key always.
+		// Probably we don't want to serialize Ref as it's object, but as Key always.
 		mapper.registerModule(new ObjectifyJacksonModule());
 
 		JacksonJsonProvider provider = new JacksonJsonProvider(mapper);
 
-		bind(JacksonJsonProvider.class).toInstance(provider);
+		 /* bind jackson converters for JAXB/JSON serialization */
+		bind(MessageBodyReader.class).toInstance(provider);
+		bind(MessageBodyWriter.class).toInstance(provider);
 	}
+	/*
 
 	private Map<String, String> getJerseyParams() {
 		Map<String,String> params = Maps.newHashMap();
@@ -76,6 +76,34 @@ public class WebModule extends JerseyServletModule {
 		//params.put("com.sun.jersey.config.feature.Trace", "true");
 		return params;
 	}
+
+
+	private Map<String, String> getJersey2Params() {
+
+		final ResourceConfig rc = new ResourceConfig().packages("com.example");
+
+		// create and start a new instance of grizzly http server
+		// exposing the Jersey application at BASE_URI
+		return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
+
+
+		Map<String,String> params = Maps.newHashMap();
+
+		params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.web");
+		// Read somewhere that it's needed for GAE.
+		params.put(PackagesResourceConfig.FEATURE_DISABLE_WADL, "true");
+
+		// This makes use of custom Auth+filters using OAuth2.
+		// Commented because using GAE default authentication.
+		// params.put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, AuthFilterFactory.class.getName());
+
+		//params.put("com.sun.jersey.spi.container.ContainerRequestFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
+		//params.put("com.sun.jersey.spi.container.ContainerResponseFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
+		//params.put("com.sun.jersey.config.feature.logging.DisableEntitylogging", "true");
+		//params.put("com.sun.jersey.config.feature.Trace", "true");
+		return params;
+	}
+	*/
 
 	@Provides
 	@Singleton

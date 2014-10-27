@@ -65,7 +65,6 @@ public class GcmIntentService extends IntentService {
 	}
 
 	private void processMessage(Bundle extras) {
-		// TODO
 		Log.i(TAG, "Received message: " + extras.toString());
 	}
 
