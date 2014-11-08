@@ -43,8 +43,6 @@ public class WebModule extends JerseyServletModule {
 		serve("/_ah/*").with(GuiceContainer.class, getJerseyParams());
 		//serve("/image/blobstore-callback-dev").with(BlobstoreCallbackServlet.class);
 
-		bind(UnhandledExceptionMapper.class);
-
 		setUpJackson();
 	}
 
