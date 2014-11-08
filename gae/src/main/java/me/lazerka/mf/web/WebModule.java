@@ -36,13 +36,15 @@ public class WebModule extends ServletModule {
 		bind(ObjectifyFilter.class).in(Singleton.class);
 		filter("/*").through(ObjectifyFilter.class);
 
-		// Route all requests through GuiceContainer.
-		//serve("/*").with(GuiceContainer.class, getJerseyParams());
+		setUpJackson();
+
+		// Jersey.
+
 		//serve("/image/blobstore-callback-dev").with(BlobstoreCallbackServlet.class);
 
-		bind(UnhandledExceptionMapper.class);
-
-		setUpJackson();
+		//filter("/*").through(ServletContainer.class, ImmutableMap.of(
+		//		ServletProperties.JAXRS_APPLICATION_CLASS, JerseyResourceConfig.class.getName()
+		//));
 	}
 
 	private void setUpJackson() {

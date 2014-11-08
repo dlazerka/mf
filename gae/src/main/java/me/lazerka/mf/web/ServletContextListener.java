@@ -1,38 +1,24 @@
 package me.lazerka.mf.web;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Module;
-import com.squarespace.jersey2.guice.JerseyGuiceServletContextListener;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceServletContextListener;
 import me.lazerka.mf.MainModule;
-import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import java.util.List;
 
 /**
  * @author Dzmitry Lazerka
  */
-public class ServletContextListener extends JerseyGuiceServletContextListener {
+public class ServletContextListener extends GuiceServletContextListener {
 	private static final Logger logger = LoggerFactory.getLogger(ServletContextListener.class);
 
-	@Override
-	public void contextInitialized(ServletContextEvent sce) {
 
-		sce.getServletContext().setAttribute(ServerProperties.PROVIDER_PACKAGES, "asd");
+	private static final String INJECTOR_NAME = Injector.class.getName();
 
-
-		super.contextInitialized(sce);
-	}
-
-	@Override
-	protected List<? extends Module> modules() {
-		logger.trace("Lift off!");
-		return ImmutableList.of(new MainModule());
-	}
-
-	/*
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		logger.trace("contextInitialized");
@@ -42,9 +28,13 @@ public class ServletContextListener extends JerseyGuiceServletContextListener {
 		//SLF4JBridgeHandler.removeHandlersForRootLogger();
 		//SLF4JBridgeHandler.install();
 
+
 		ServletContext servletContext = servletContextEvent.getServletContext();
 
-		Injector injector = Guice.createInjector();
+		Injector injector = Guice.createInjector(
+				//new HK2IntoGuiceBridge(serviceLocator),
+				new MainModule()
+		);
 		servletContext.setAttribute(INJECTOR_NAME, injector);
 	}
 
@@ -55,5 +45,10 @@ public class ServletContextListener extends JerseyGuiceServletContextListener {
 		ServletContext servletContext = servletContextEvent.getServletContext();
 		servletContext.removeAttribute(INJECTOR_NAME);
 	}
-	*/
+
+	@Override
+	protected Injector getInjector() {
+		logger.trace("Lift off! Creating Guice Injector.");
+		return Guice.createInjector(new MainModule());
+	}
 }

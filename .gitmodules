@@ -1,0 +1,3 @@
+[submodule "jersey2-guice"]
+	path = jersey2-guice
+	url = git@github.com:Squarespace/jersey2-guice.git

@@ -7,7 +7,8 @@
     <entry_points version="2.0" />
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
-    <file type="web" url="file://$PROJECT_DIR$/gae" />
+    <file type="web" url="file://$PROJECT_DIR$" />
+    <file type="web" url="file://$PROJECT_DIR$/jersey2-guice" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">

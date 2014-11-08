@@ -9,9 +9,11 @@
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
 
+	<!--
 	<listener>
 		<listener-class>me.lazerka.mf.web.ServletContextListener</listener-class>
 	</listener>
+	-->
 
 	<filter>
 		<filter-name>GuiceFilter</filter-name>
@@ -26,6 +28,19 @@
 		<filter-name>GuiceFilter</filter-name>
 		<url-pattern>*</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
+	</filter-mapping>
+
+	<filter>
+		<filter-name>jersey-filter</filter-name>
+		<filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
+		<init-param>
+			<param-name>javax.ws.rs.Application</param-name>
+			<param-value>me.lazerka.mf.web.JerseyResourceConfig</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>jersey-filter</filter-name>
+		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
 	<security-constraint>
