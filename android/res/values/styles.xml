@@ -1,0 +1,39 @@
+<resources>
+    <style name="AppTheme" parent="android:Theme.Holo.Light">
+	    <!--<item name="android:buttonStyle">@style/Button</item>-->
+	    <!--<item name="android:actionBarStyle">@style/ActionBar</item>-->
+    </style>
+
+	<style name="ActionBarText" parent="android:TextAppearance.Holo.Widget.ActionBar.Title">
+		<!--<item name="android:textSize">12sp</item>-->
+	</style>
+
+	<style name="ActionBar" parent="android:Widget.Holo.Light.ActionBar">
+		<item name="android:titleTextStyle">@style/ActionBarText</item>
+		<item name="android:backgroundSplit">#ffffffff</item>
+		<item name="android:displayOptions">showTitle</item>
+	</style>
+
+	<!--
+	<style name="Button" parent="android:Widget.Holo.Light.Button">
+		<item name="android:background">@drawable/gradient_purple</item>
+		<item name="android:textColor">#ffffff</item>
+		<item name="android:textSize">@dimen/button_text_size</item>
+		<item name="android:paddingLeft">@dimen/button_padding_left</item>
+		<item name="android:paddingRight">@dimen/button_padding_right</item>
+	</style>
+
+	<style name="BigButton" parent="Button">
+		<item name="android:textSize">@dimen/big_button_text_size</item>
+		<item name="android:lineSpacingExtra">9sp</item>
+
+		&lt;!&ndash; Per screen size. &ndash;&gt;
+		<item name="android:layout_height">@dimen/big_button_height</item>
+		<item name="android:layout_width">@dimen/big_button_width</item>
+
+		<item name="android:layout_margin">@dimen/big_button_margin</item>
+
+	</style>
+
+	-->
+</resources>

@@ -1,21 +1,24 @@
 package me.lazerka.mf.android.activity;
 
-import android.app.ActionBar;
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.*;
+import android.widget.AdapterView.OnItemClickListener;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.google.common.base.Charsets;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.login.LoginActivity;
-import me.lazerka.mf.android.adapter.TabsAdapter;
+import me.lazerka.mf.android.activity.map.MapFragment;
+import me.lazerka.mf.android.adapter.CursorAdapter;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
@@ -24,14 +27,23 @@ import me.lazerka.mf.api.object.LocationRequestResult;
 import javax.annotation.Nullable;
 import java.util.Set;
 
+import static android.view.Gravity.START;
+
 /**
  * @author Dzmitry Lazerka
  */
 public class MainActivity extends Activity {
 	private static final String TAG = MainActivity.class.getName();
 
-	private TabsAdapter mTabsAdapter;
-	private ActionBar mActionBar;
+	private DrawerLayout drawer;
+	private ListView drawerList;
+	private FrameLayout contentFrame;
+
+	private float offset;
+	private boolean flipped;
+
+	//private TabsAdapter mTabsAdapter;
+	//private ActionBar mActionBar;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,16 +51,42 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+		drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawerList = (ListView) findViewById(R.id.left_drawer);
 
-		mActionBar = getActionBar();
-		assert mActionBar != null; // Just to silence IDE warning.
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		CursorAdapter adapter = new CursorAdapter(this);
+		drawerList.setAdapter(adapter);
+		// Set the list's click listener
+		drawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-		mTabsAdapter = new TabsAdapter(getFragmentManager(), mActionBar, viewPager);
-		mTabsAdapter.init();
+		final ImageView drawerIcon = (ImageView) findViewById(R.id.drawer_indicator);
 
-		new GcmAuthenticator(this).checkRegistration();
+		drawerIcon.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (drawer.isDrawerVisible(START)) {
+					drawer.closeDrawer(START);
+				} else {
+					drawer.openDrawer(START);
+				}
+			}
+		});
+
+		//contentFrame = (FrameLayout) findViewById(R.id.content_frame);
+		FragmentManager fragmentManager = getFragmentManager();
+		fragmentManager.beginTransaction()
+				.add(R.id.content_frame, new MapFragment())
+				.commit();
+		//ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+
+		//mActionBar = getActionBar();
+		//assert mActionBar != null; // Just to silence IDE warning.
+		//mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		//
+		//mTabsAdapter = new TabsAdapter(getFragmentManager(), mActionBar, viewPager);
+		//mTabsAdapter.init();
+
+		//new GcmAuthenticator(this).checkRegistration();
 	}
 
 	@Override
@@ -91,7 +129,7 @@ public class MainActivity extends Activity {
 		locationRequest.setEmails(emails);
 		new LocationRequester(locationRequest)
 				.send();
-		mTabsAdapter.selectMapTab();
+		//mTabsAdapter.selectMapTab();
 	}
 
 	private class LocationRequester extends JsonRequester<LocationRequest, LocationRequestResult> {
@@ -152,6 +190,13 @@ public class MainActivity extends Activity {
 				Log.e(TAG, msg);
 			}
 			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+		}
+	}
+
+	private class DrawerItemClickListener implements OnItemClickListener {
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			Log.i(TAG, "Click" + id + ", " + position);
 		}
 	}
 }

@@ -2,6 +2,13 @@
 
 <resources>
 	<color name="transparent">#00000000</color>
+
+	<!-- Action bar -->
+	<color name="light_gray">#c2c7cb</color>
+	<color name="dark_gray">#3d454b</color>
+	<color name="dark_gray_pressed">#353e44</color>
+	<color name="darker_gray">#1e2126</color>
+
 	<!-- Doesn't work, draws black instead. -->
 	<color name="transparent_blue">#DAEAFF</color>
 	<color name="blue">#AA84B8FE</color>

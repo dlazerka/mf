@@ -10,6 +10,7 @@
 		android:layout_height="match_parent"
 	/>
 
+	<!--
 	<Button
 		android:id="@+id/send_my"
 		android:layout_height="wrap_content"
@@ -21,4 +22,5 @@
 		android:textSize="@dimen/bottom_button_font_size"
 		android:padding="@dimen/bottom_button_padding">
 	</Button>
+	-->
 </FrameLayout>

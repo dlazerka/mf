@@ -5,10 +5,9 @@
 	android:versionCode="1"
 	android:versionName="1.0">
 
-	<!-- See build.gradle also -->
-		<uses-sdk
-			android:targetSdkVersion="20"
-			android:minSdkVersion="19"/>
+	<uses-sdk
+		android:targetSdkVersion="21"
+		android:minSdkVersion="19"/>
 
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -22,7 +21,8 @@
 	<!-- To use Android account on this device and generate OAuth token, so server can verify you is really you. -->
 	<uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
-	<!-- Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
+	<!--
+	    Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
 		More at https://developer.android.com/google/gcm/client.html
 	-->
 	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
@@ -31,12 +31,14 @@
 	<uses-permission android:name="me.lazerka.mf.android.permission.C2D_MESSAGE" />
 	<permission android:name="me.lazerka.mf.android.permission.C2D_MESSAGE"
 				android:protectionLevel="signature" />
-	<!-- Needed for GcmBroadcastReceiver that processes incoming messages and transfers them to a Service,
+	<!--
+		Needed for GcmBroadcastReceiver that processes incoming messages and transfers them to a Service,
 		ensuring that the phone doesn't go to sleep in the meantime.
 	-->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 
-	<!-- To show account chooser at the start.
+	<!--
+		To show account chooser at the start.
 		Also needed by GCM if your Android is older than 4.0.4.
 	-->
 	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -50,6 +52,7 @@
 	<application
 		android:name=".Application"
 		android:allowBackup="true"
+		android:theme="@style/AppTheme"
 		android:label="@string/app_name"
 		android:icon="@drawable/ic_launcher"
 		android:backupAgent="MfBackupAgent">

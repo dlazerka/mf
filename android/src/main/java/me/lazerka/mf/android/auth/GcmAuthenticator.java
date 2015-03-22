@@ -122,6 +122,7 @@ public class GcmAuthenticator {
 
 				return "Device registered";
 			} catch (IOException e) {
+				// On Sony Xperia happens all the time, but fortunately GcmBroadcastReceiver receives the regId.
 				Log.i(TAG, "GCM.register() failed: " + e.getMessage());
 				return "Error: " + e.getMessage();
 				// If there is an error, don't just keep trying to register.

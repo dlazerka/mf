@@ -1,15 +1,11 @@
 package me.lazerka.mf.android.activity.map;
 
 import android.app.Fragment;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.Toast;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
@@ -64,6 +60,7 @@ public class MapFragment extends Fragment {
 		MapsInitializer.initialize(this.getActivity());
 
 		// Watch for button clicks.
+		/*
 		Button button = (Button) view.findViewById(R.id.send_my);
 		button.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -96,6 +93,7 @@ public class MapFragment extends Fragment {
 				startActivity(Intent.createChooser(sendIntent, url));
 			}
 		});
+		*/
 
 		// Updates the location and zoom of the MapView
 		//CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(43.1, -87.9), 10);

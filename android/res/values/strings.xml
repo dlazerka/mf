@@ -17,4 +17,5 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="delete_alt">Delete</string>
 	<string name="gmaps_url">https://www.google.com/maps/@%1$.7f,%2$.7f,%3$dz</string>
 	<string name="contact_no_emails">Contact doesn\'t have any emails.</string>
+	<string name="drawer_indicator_desc">left drawer</string>
 </resources>
