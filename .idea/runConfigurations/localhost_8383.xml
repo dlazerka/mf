@@ -7,6 +7,9 @@
       <option name="artifact" value="gae:war exploded" />
       <option name="port" value="8383" />
       <option name="serverParameters" value="--address=0.0.0.0" />
+      <port>8383</port>
+      <artifact>gae:war exploded</artifact>
+      <server-parameters>--address=0.0.0.0</server-parameters>
     </server-settings>
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
     <RunnerSettings RunnerId="Debug">
