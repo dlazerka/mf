@@ -1,5 +1,7 @@
 package me.lazerka.mf.android.activity;
 
+import java.util.LinkedHashSet;
+
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.ContentResolver;
@@ -20,9 +22,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.CursorAdapter;
-
-import java.util.LinkedHashSet;
+import me.lazerka.mf.android.adapter.FriendsListAdapter;
 
 /**
  * @author Dzmitry Lazerka
@@ -31,7 +31,7 @@ public class ContactsFragment extends Fragment {
 	private final int CONTACT_PICKER_RESULT = 1;
 	private static final String TAG = "ContactsFragment";
 	private ListView mContactsList;
-	private me.lazerka.mf.android.adapter.CursorAdapter mAdapter;
+	private FriendsListAdapter mAdapter;
 
 	// A UI Fragment must inflate its View
 	@Override
@@ -55,7 +55,7 @@ public class ContactsFragment extends Fragment {
 
 		mContactsList = (ListView) getActivity().findViewById(android.R.id.list);
 
-		mAdapter = new CursorAdapter(getActivity());
+		mAdapter = new FriendsListAdapter(getActivity());
 		mContactsList.setAdapter(mAdapter);
 		mContactsList.setOnItemClickListener(new OnItemClickListener());
 	}

@@ -1,5 +1,10 @@
 package me.lazerka.mf.android.adapter;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -13,18 +18,14 @@ import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Dzmitry Lazerka
  */
-public class CursorAdapter extends SimpleCursorAdapter {
+public class FriendsListAdapter extends SimpleCursorAdapter {
 	Context mContext;
 	Cursor mCursor;
 
-	public CursorAdapter(Context context) {
+	public FriendsListAdapter(Context context) {
 		super(
 				context,
 				R.layout.contacts_item,

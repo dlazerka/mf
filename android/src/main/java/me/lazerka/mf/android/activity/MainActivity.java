@@ -1,16 +1,30 @@
 package me.lazerka.mf.android.activity;
 
+import static android.view.Gravity.START;
+
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract.Contacts;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.*;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.google.common.base.Charsets;
@@ -18,16 +32,11 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.login.LoginActivity;
 import me.lazerka.mf.android.activity.map.MapFragment;
-import me.lazerka.mf.android.adapter.CursorAdapter;
+import me.lazerka.mf.android.adapter.FriendsListAdapter;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
-
-import javax.annotation.Nullable;
-import java.util.Set;
-
-import static android.view.Gravity.START;
 
 /**
  * @author Dzmitry Lazerka
@@ -35,8 +44,11 @@ import static android.view.Gravity.START;
 public class MainActivity extends Activity {
 	private static final String TAG = MainActivity.class.getName();
 
+	private final int CONTACT_PICKER_RESULT = 1;
+
 	private DrawerLayout drawer;
 	private ListView drawerList;
+	private Button addFriendButton;
 	private FrameLayout contentFrame;
 
 	private float offset;
@@ -53,24 +65,29 @@ public class MainActivity extends Activity {
 
 		drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawerList = (ListView) findViewById(R.id.left_drawer);
+		addFriendButton = (Button) findViewById(R.id.add_friend);
 
-		CursorAdapter adapter = new CursorAdapter(this);
+		addFriendButton.setOnClickListener(new OnAddFriendClickListener());
+
+		FriendsListAdapter adapter = new FriendsListAdapter(this);
 		drawerList.setAdapter(adapter);
 		// Set the list's click listener
 		drawerList.setOnItemClickListener(new DrawerItemClickListener());
 
 		final ImageView drawerIcon = (ImageView) findViewById(R.id.drawer_indicator);
 
-		drawerIcon.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (drawer.isDrawerVisible(START)) {
-					drawer.closeDrawer(START);
-				} else {
-					drawer.openDrawer(START);
+		drawerIcon.setOnClickListener(
+			new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if (drawer.isDrawerVisible(START)) {
+						drawer.closeDrawer(START);
+					} else {
+						drawer.openDrawer(START);
+					}
 				}
 			}
-		});
+		);
 
 		//contentFrame = (FrameLayout) findViewById(R.id.content_frame);
 		FragmentManager fragmentManager = getFragmentManager();
@@ -88,6 +105,31 @@ public class MainActivity extends Activity {
 
 		//new GcmAuthenticator(this).checkRegistration();
 	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode != CONTACT_PICKER_RESULT) {
+			Log.w(TAG, "Unknown request code: " + requestCode);
+			super.onActivityResult(requestCode, resultCode, data);
+		}
+
+		if (resultCode == Activity.RESULT_OK) {
+			Uri contactUri = data.getData();
+			Log.i(TAG, "Adding friend: " + contactUri);
+
+			//LinkedHashSet<String> contactEmails = getContactEmails(contactUri);
+			//if (contactEmails.isEmpty()) {
+			//	String msg = getActivity().getString(R.string.contact_no_emails);
+			//	Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG)
+			//		.show();
+			//	return;
+			//}
+            //
+			//Application.preferences.addFriend(contactUri);
+			//mAdapter.refresh();
+		}
+	}
+
 
 	@Override
 	protected void onResume() {
@@ -197,6 +239,14 @@ public class MainActivity extends Activity {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			Log.i(TAG, "Click" + id + ", " + position);
+		}
+	}
+
+	private class OnAddFriendClickListener implements OnClickListener {
+		@Override
+		public void onClick(View v) {
+			Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+			startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
 		}
 	}
 }
