@@ -1,4 +1,0 @@
-None of Gradle, Maven, Ant work in full, whatever I tried.
-Basically, I need them to generate IntelliJ/Eclipse project files
-(only dependencies). But none of them could do that properly.
-I'd be glad if you're able to make them work. For now I just stick with manual deps management in IDE.

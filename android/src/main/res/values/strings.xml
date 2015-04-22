@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Where My Friends</string>
+    <string name="action_logout">Logout</string>
+    <string name="action_quit">Quit</string>
+
+    <string name="send_my">Send My Location</string>
+    <string name="hello_world">Hello World</string>
+    <string name="add_friend">Add Friend</string>
+	<string name="my_location_message_text">%1$s
+I\'m here (via \"%2$s\" app)</string>
+	<string name="my_location_message_html"><![CDATA[%1$s<br/>
+<br/>
+via <a href=\"#\">%2$s</a> app]]></string>
+    <string name="my_location_subject">I\'m here</string>
+    <string name="userpic_alt">Userpic</string>
+    <string name="delete_alt">Delete</string>
+    <string name="gmaps_url">https://www.google.com/maps/@%1$.7f,%2$.7f,%3$dz</string>
+    <string name="contact_no_emails">Contact doesn\'t have any emails.</string>
+    <string name="drawer_indicator_desc">left drawer</string>
+</resources>

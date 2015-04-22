@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	package="me.lazerka.mf.android">
+
+
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<!-- Required by Maps API. -->
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+	<!-- To access Google+ APIs: -->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<!--
+	 To retrieve OAuth 2.0 tokens or invalidate tokens to disconnect a user. This disconnect
+	 option is required to comply with the Google+ Sign-In developer policies
+	-->
+	<uses-permission android:name="android.permission.USE_CREDENTIALS" />
+	<!-- To retrieve the account name (email) as part of sign-in: -->
+	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
+	<!-- To auto-complete the email text field in the login form with the user's emails -->
+	<uses-permission android:name="android.permission.READ_PROFILE" />
+	<!-- For adding friends from Android contacts. -->
+	<uses-permission android:name="android.permission.READ_CONTACTS" />
+
+	<!--
+		Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
+		More at https://developer.android.com/google/gcm/client.html
+	-->
+	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+	<permission
+		android:name="com.example.gcm.permission.C2D_MESSAGE"
+		android:protectionLevel="signature" />
+	<!--
+		Needed for GcmBroadcastReceiver that processes incoming messages and transfers them to a Service,
+		ensuring that the phone doesn't go to sleep in the meantime.
+	-->
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+
+	<uses-permission android:name="com.example.gcm.permission.C2D_MESSAGE" />
+
+	<application
+		android:name=".Application"
+		android:allowBackup="true"
+		android:icon="@mipmap/ic_launcher"
+		android:label="@string/app_name"
+		android:theme="@style/AppTheme"
+		android:backupAgent=".BackupAgent"
+		tools:replace="icon"
+		>
+		<activity
+			android:name=".activity.MainActivity"
+			android:label="@string/app_name"
+			android:windowSoftInputMode="adjustResize|stateHidden">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+
+		<meta-data
+			android:name="com.google.android.maps.v2.API_KEY"
+			android:value="AIzaSyDqQqo74HWVWDon-tTf7LcJmiC-yICJ0RU"/>
+		<meta-data
+			android:name="com.google.android.gms.version"
+			android:value="@integer/google_play_services_version" />
+
+		<!-- TODO backing up -->
+		<meta-data
+			android:name="com.google.android.backup.api_key"
+			android:value="AEdPqrEAAAAIa7dbTRQVuUzcdsYSq-lPAzc_gcC5q0MvGAMCbw" />
+
+		<!-- GcmBroadcastReceiver is deprecated, but seems that it's only working way for Sony Xperia Ultra -->
+		<receiver
+			android:name=".background.GcmBroadcastReceiver"
+			android:permission="com.google.android.c2dm.permission.RECEIVE"
+			>
+			<!-- We don't need android:permission="com.google.android.c2dm.permission.SEND" -->
+			<intent-filter>
+				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
+				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
+				<category android:name="me.lazerka.mf.android" />
+			</intent-filter>
+		</receiver>
+		<service
+			android:name=".background.GcmIntentService"
+			android:exported="false"
+			/>
+	</application>
+
+</manifest>

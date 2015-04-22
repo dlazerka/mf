@@ -1,15 +1,20 @@
 package me.lazerka.mf.android.auth;
 
-import android.accounts.*;
+import java.io.IOException;
+
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.accounts.AccountManagerCallback;
+import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import com.google.android.gms.common.AccountPicker;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.activity.login.LoginActivity;
+import me.lazerka.mf.android.activity.LoginActivity;
 import me.lazerka.mf.api.ApiConstants;
-
-import java.io.IOException;
 
 /**
  * Handles on-device authentication, i.e.obtains Android token.

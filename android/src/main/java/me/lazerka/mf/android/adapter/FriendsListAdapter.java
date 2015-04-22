@@ -1,10 +1,5 @@
 package me.lazerka.mf.android.adapter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -17,6 +12,10 @@ import android.widget.SimpleCursorAdapter;
 import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Dzmitry Lazerka

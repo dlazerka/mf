@@ -1,14 +1,11 @@
-# MacOS
 .DS_Store
 
-# IntelliJ
-/out
+.gradle
+/local.properties
 /.idea/workspace.xml
 /.idea/tasks.xml
 /.idea/dictionaries.xml
-
-# Android
-gen
-
-#Maven
-target
+/.idea/libraries
+.DS_Store
+build
+out

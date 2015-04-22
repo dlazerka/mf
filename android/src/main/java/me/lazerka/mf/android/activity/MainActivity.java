@@ -1,11 +1,5 @@
 package me.lazerka.mf.android.activity;
 
-import static android.view.Gravity.START;
-
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Intent;
@@ -18,25 +12,23 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
+import android.widget.*;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.google.common.base.Charsets;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.activity.login.LoginActivity;
-import me.lazerka.mf.android.activity.map.MapFragment;
 import me.lazerka.mf.android.adapter.FriendsListAdapter;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
+
+import javax.annotation.Nullable;
+import java.util.Set;
+
+import static android.view.Gravity.START;
 
 /**
  * @author Dzmitry Lazerka
@@ -92,8 +84,8 @@ public class MainActivity extends Activity {
 		//contentFrame = (FrameLayout) findViewById(R.id.content_frame);
 		FragmentManager fragmentManager = getFragmentManager();
 		fragmentManager.beginTransaction()
-				.add(R.id.content_frame, new MapFragment())
-				.commit();
+			.add(R.id.content_frame, new MapFragment())
+			.commit();
 		//ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
 
 		//mActionBar = getActionBar();
@@ -124,7 +116,7 @@ public class MainActivity extends Activity {
 			//		.show();
 			//	return;
 			//}
-            //
+			//
 			//Application.preferences.addFriend(contactUri);
 			//mAdapter.refresh();
 		}
@@ -170,7 +162,7 @@ public class MainActivity extends Activity {
 		LocationRequest locationRequest = new LocationRequest();
 		locationRequest.setEmails(emails);
 		new LocationRequester(locationRequest)
-				.send();
+			.send();
 		//mTabsAdapter.selectMapTab();
 	}
 
@@ -188,19 +180,19 @@ public class MainActivity extends Activity {
 					String msg = "Sent location request to " + response.getEmail();
 					Log.i(TAG, msg);
 					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
-							.show();
+						.show();
 				} else {
 					String msg = "Error sending location request to " + response.getEmail() + ": " + error;
 					Log.w(TAG, msg);
 					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
-							.show();
+						.show();
 				}
 			} else {
 				Toast.makeText(
-						MainActivity.this,
-						"Sent location request to " + devices + " devices of " + response.getEmail(),
-						Toast.LENGTH_LONG)
-						.show();
+					MainActivity.this,
+					"Sent location request to " + devices + " devices of " + response.getEmail(),
+					Toast.LENGTH_LONG)
+					.show();
 				// TODO show nicer message to user in multiple devices case.
 			}
 		}
@@ -213,11 +205,11 @@ public class MainActivity extends Activity {
 			if (error.networkResponse.statusCode == 404) {
 				if (getRequest().getEmails().size() > 1) {
 					msg = "None of your friend's email addresses were found in database. " +
-							"Did your friend installed the app?";
+						"Did your friend installed the app?";
 				} else {
 					String email = getRequest().getEmails().iterator().next();
 					msg = email + " was found in database. " +
-							"Did your friend installed the app?";
+						"Did your friend installed the app?";
 				}
 				Log.w(TAG, msg);
 

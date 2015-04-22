@@ -14,10 +14,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import me.lazerka.mf.android.http.GaeRequestQueue;
 import me.lazerka.mf.api.JsonMapper;
-import me.lazerka.mf.api.object.AcraException;
 import org.acra.ACRA;
-import org.acra.annotation.ReportsCrashes;
-import org.acra.sender.HttpSender.Method;
 
 import java.io.IOException;
 import java.net.URI;
@@ -27,12 +24,7 @@ import java.net.URI;
  *
  * @author Dzmitry
  */
-@ReportsCrashes(
-		formKey = "",
-		formUri = Application.SERVER_ADDRESS + AcraException.PATH,
-		sharedPreferencesName = "ACRA",
-		httpMethod = Method.PUT
-)
+
 public class Application extends android.app.Application {
 	public static final String VERSION = "1";
 	public static String TAG;
@@ -59,10 +51,10 @@ public class Application extends android.app.Application {
 	/**
 	 * Shared static instance, as it's a little expensive to create a new one each time.
 	 */
-	public static JsonMapper jsonMapper;
-	public static Preferences preferences;
-	public static Context context;
-	public static GaeRequestQueue requestQueue;
+    public static JsonMapper jsonMapper;
+    public static Preferences preferences;
+    public static Context context;
+    public static GaeRequestQueue requestQueue;
 
 	public Application() {
 	}
@@ -81,7 +73,7 @@ public class Application extends android.app.Application {
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 		preferences = new Preferences(this);
-		requestQueue = GaeRequestQueue.create();
+        requestQueue = GaeRequestQueue.create();
 	}
 
 	private JsonMapper createJsonMapper() {
