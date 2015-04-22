@@ -4,7 +4,9 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	package="me.lazerka.mf.android">
 
-
+	<!-- The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
+		Google Maps Android API v2, but are recommended.
+	-->
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 	<uses-permission android:name="android.permission.INTERNET"/>
@@ -33,6 +35,16 @@
 	<permission
 		android:name="com.example.gcm.permission.C2D_MESSAGE"
 		android:protectionLevel="signature" />
+	<!-- Not needed?
+		<uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+	-->
+
+	<!-- This notifies external services of the OpenGL ES requirement. In particular,
+		it has the effect of preventing Google Play Store from displaying your app on devices
+		that don't support OpenGL ES version 2.
+	-->
+	<uses-feature android:glEsVersion="0x00020000" android:required="true"/>
+
 	<!--
 		Needed for GcmBroadcastReceiver that processes incoming messages and transfers them to a Service,
 		ensuring that the phone doesn't go to sleep in the meantime.

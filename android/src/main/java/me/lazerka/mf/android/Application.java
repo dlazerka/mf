@@ -51,10 +51,10 @@ public class Application extends android.app.Application {
 	/**
 	 * Shared static instance, as it's a little expensive to create a new one each time.
 	 */
-    public static JsonMapper jsonMapper;
-    public static Preferences preferences;
-    public static Context context;
-    public static GaeRequestQueue requestQueue;
+	public static JsonMapper jsonMapper;
+	public static Preferences preferences;
+	public static Context context;
+	public static GaeRequestQueue requestQueue;
 
 	public Application() {
 	}
@@ -73,7 +73,7 @@ public class Application extends android.app.Application {
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 		preferences = new Preferences(this);
-        requestQueue = GaeRequestQueue.create();
+		requestQueue = GaeRequestQueue.create();
 	}
 
 	private JsonMapper createJsonMapper() {

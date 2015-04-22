@@ -149,7 +149,7 @@ public class GaeAuthenticator {
 			String email,
 			AndroidHttpClient httpClient,
 			HttpContext httpContext,
-	        CookieStore cookieStore
+			CookieStore cookieStore
 	) throws IOException {
 		int statusCode;
 		Log.i(TAG, "Status code 200, must be dev_appserver, sending regular form...");
