@@ -10,17 +10,18 @@
 		android:layout_height="match_parent"
 	/>
 
-	<!--
 	<Button
-		android:id="@+id/send_my"
-		android:layout_height="wrap_content"
-		android:layout_width="match_parent"
-		android:layout_marginLeft="100dp"
-		android:layout_marginRight="100dp"
-		android:layout_gravity="bottom"
-		android:text="@string/send_my"
-		android:textSize="@dimen/bottom_button_font_size"
-		android:padding="@dimen/bottom_button_padding">
-	</Button>
-	-->
+		style="?android:attr/buttonStyleSmall"
+		android:layout_width="56dp"
+		android:layout_height="56dp"
+		android:text="@string/add_plus"
+		android:textColor="@color/white"
+		android:textSize="40sp"
+		android:background="@drawable/ripple"
+		android:id="@+id/fab_add"
+		android:layout_margin="@dimen/activity_horizontal_margin"
+		android:elevation="3dp"
+		android:fontFamily="sans-serif-light"
+		android:paddingBottom="16dp"
+		android:layout_gravity="end|bottom" />
 </FrameLayout>
