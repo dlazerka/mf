@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_height="match_parent"
+	android:layout_width="match_parent"
+	android:orientation="vertical"
+	android:background="@color/white"
+	tools:context=".activity.ContactsActivity">
+	<ListView
+	   android:id="@android:id/list"
+	   android:layout_width="match_parent"
+	   android:layout_height="match_parent"
+	   android:layout_marginTop="8dp"
+	   android:layout_marginBottom="8dp"
+	/>
+
+	<ImageButton
+		style="?android:attr/buttonStyleSmall"
+		android:layout_width="56dp"
+		android:layout_height="56dp"
+		android:src="@mipmap/person_add_white"
+		android:contentDescription="@string/add_contact"
+		android:background="@drawable/ripple_oval_blue"
+		android:id="@+id/fab_add"
+		android:layout_margin="26dp"
+		android:elevation="@dimen/fab_elevation_resting"
+		android:paddingStart="12dp"
+		android:paddingEnd="14dp"
+		android:paddingTop="14dp"
+		android:paddingBottom="14dp"
+		android:layout_gravity="end|bottom"
+		android:scaleType="fitXY"
+		/>
+</FrameLayout>

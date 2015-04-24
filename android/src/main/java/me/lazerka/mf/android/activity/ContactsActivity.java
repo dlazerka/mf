@@ -1,7 +1,6 @@
-package me.lazerka.mf.android;
+package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,70 +9,89 @@ import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.AdapterView;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
-import me.lazerka.mf.android.adapter.FriendsListAdapter;
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.adapter.FriendListAdapter;
 
 import java.util.LinkedHashSet;
 
 /**
  * @author Dzmitry Lazerka
  */
-public class ContactsFragment extends Fragment {
-	private final int CONTACT_PICKER_RESULT = 1;
+public class ContactsActivity extends Activity {
 	private static final String TAG = "ContactsFragment";
-	private ListView mContactsList;
-	private FriendsListAdapter mAdapter;
 
-	// A UI Fragment must inflate its View
+	/** Result code of ContactPicker dialog. */
+	private final int CONTACT_PICKER_RESULT = 1;
+
+	private ListView friendList;
+	private FriendListAdapter friendListAdapter;
+
 	@Override
-	public View onCreateView(
-			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
+	protected void onCreate(Bundle savedInstanceState) {
+		Log.v(TAG, "onCreate");
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_contacts);
 
-		Button addButton = (Button) view.findViewById(R.id.add_friend);
-		addButton.setOnClickListener(new OnAddListener());
-		return view;
+		initFriendList();
+		initFloatingActionButton();
+
+		if (Application.preferences.getFriends().isEmpty()) {
+			openContactPicker();
+		}
 	}
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
+	private void initFriendList() {
+		friendList = (ListView) findViewById(android.R.id.list);
+
+		friendListAdapter = new FriendListAdapter(this);
+		friendList.setAdapter(friendListAdapter);
+		friendList.setOnItemClickListener(new OnItemClickListener());
 	}
 
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
+	private void initFloatingActionButton() {
+		ImageButton fab = (ImageButton) findViewById(R.id.fab_add);
+		fab.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
+		fab.setClipToOutline(true);
 
-		mContactsList = (ListView) getActivity().findViewById(android.R.id.list);
+		fab.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				openContactPicker();
+			}
+		});
+	}
 
-		mAdapter = new FriendsListAdapter(getActivity());
-		mContactsList.setAdapter(mAdapter);
-		mContactsList.setOnItemClickListener(new OnItemClickListener());
+	private void openContactPicker() {
+		Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+		startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
 	}
 
 	private class OnItemClickListener implements AdapterView.OnItemClickListener {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 			Log.d(TAG, "click " + id);
-			Uri contactUri = mAdapter.getContactAtPosition(position);
+			Uri contactUri = friendListAdapter.getContactAtPosition(position);
 			LinkedHashSet<String> emails = getContactEmails(contactUri);
 
-			me.lazerka.mf.android.activity.MainActivity activity = (me.lazerka.mf.android.activity.MainActivity) getActivity();
-			activity.showLocation(emails);
+			Intent intent = new Intent(getBaseContext(), MainActivity.class);
+			intent.putExtra(MainActivity.REQUEST_CONTACT_EMAILS, emails);
+			setResult(Activity.RESULT_OK, intent);
+			finish();
 		}
 	}
 
 	private LinkedHashSet<String> getContactEmails(Uri contactUri) {
 		String lookupKey = Uri.encode(contactUri.getPathSegments().get(2));
 
-		ContentResolver contentResolver = getActivity().getContentResolver();
+		ContentResolver contentResolver = getContentResolver();
 
 		Cursor cursor = contentResolver.query(
 				Email.CONTENT_URI,
@@ -89,6 +107,7 @@ public class ContactsFragment extends Fragment {
 			String email = cursor.getString(cursor.getColumnIndex(Email.ADDRESS));
 			result.add(email);
 		}
+		cursor.close();
 
 		return result;
 	}
@@ -106,22 +125,15 @@ public class ContactsFragment extends Fragment {
 
 			LinkedHashSet<String> contactEmails = getContactEmails(contactUri);
 			if (contactEmails.isEmpty()) {
-				String msg = getActivity().getString(R.string.contact_no_emails);
-				Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG)
+				String msg = getString(R.string.contact_no_emails);
+				Toast.makeText(ContactsActivity.this, msg, Toast.LENGTH_LONG)
 						.show();
 				return;
 			}
 
 			Application.preferences.addFriend(contactUri);
-			mAdapter.refresh();
+			friendListAdapter.refresh();
 		}
 	}
 
-	private class OnAddListener implements OnClickListener {
-		@Override
-		public void onClick(View v) {
-			Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
-			startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
-		}
-	}
 }

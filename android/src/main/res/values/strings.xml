@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Where We</string>
+	<string name="app_name">Find Us</string>
 	<string name="action_logout">Logout</string>
 	<string name="action_quit">Quit</string>
 
@@ -19,4 +19,6 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="contact_no_emails">Contact doesn\'t have any emails.</string>
 	<string name="drawer_indicator_desc">left drawer</string>
 	<string name="add_plus">+</string>
+	<string name="add_contact">Add contact</string>
+	<string name="choose_a_contact">Choose a contact</string>
 </resources>

@@ -2,16 +2,14 @@ package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.*;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.google.common.base.Charsets;
@@ -23,6 +21,7 @@ import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -31,24 +30,19 @@ import java.util.Set;
 public class MainActivity extends Activity {
 	private static final String TAG = MainActivity.class.getName();
 
-	private final int CONTACT_PICKER_RESULT = 1;
-
-	//private DrawerLayout drawer;
-	//private ListView drawerList;
-	//private Button addFriendButton;
-	//private FrameLayout contentFrame;
-
-	private float offset;
-	private boolean flipped;
-
-	//private TabsAdapter mTabsAdapter;
-	//private ActionBar mActionBar;
+	/** ContactActivity result code */
+	private final int CONTACT_ACTIVITY_RESULT = 1;
+	/** What users to show. */
+	public static final String REQUEST_CONTACT_EMAILS = "REQUEST_CONTACT_EMAILS";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.v(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		Button contactsButton = (Button) findViewById(R.id.choose_contact_btn);
+		contactsButton.setOnClickListener(new OnContactsClickListener());
 
 		/*
 		drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -94,30 +88,29 @@ public class MainActivity extends Activity {
 		//new GcmAuthenticator(this).checkRegistration();
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode != CONTACT_PICKER_RESULT) {
-			Log.w(TAG, "Unknown request code: " + requestCode);
-			super.onActivityResult(requestCode, resultCode, data);
-		}
-
-		if (resultCode == Activity.RESULT_OK) {
-			Uri contactUri = data.getData();
-			Log.i(TAG, "Adding friend: " + contactUri);
-
-			//LinkedHashSet<String> contactEmails = getContactEmails(contactUri);
-			//if (contactEmails.isEmpty()) {
-			//	String msg = getActivity().getString(R.string.contact_no_emails);
-			//	Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG)
-			//		.show();
-			//	return;
-			//}
-			//
-			//Application.preferences.addFriend(contactUri);
-			//mAdapter.refresh();
+	private class OnContactsClickListener
+			implements OnClickListener {
+		@Override
+		public void onClick(View v) {
+			Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
+			startActivityForResult(intent, CONTACT_ACTIVITY_RESULT);
 		}
 	}
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == CONTACT_ACTIVITY_RESULT) {
+			if (resultCode == Activity.RESULT_OK) {
+				Set<String> emails = new HashSet<>(data.getStringArrayListExtra(REQUEST_CONTACT_EMAILS));
+				Toast.makeText(this, "Requesting emails: " + emails, Toast.LENGTH_LONG)
+						.show();
+				showLocation(emails);
+			}
+		} else {
+			Log.w(TAG, "Unknown request code: " + requestCode);
+			super.onActivityResult(requestCode, resultCode, data);
+		}
+	}
 
 	@Override
 	protected void onResume() {
@@ -159,7 +152,6 @@ public class MainActivity extends Activity {
 		locationRequest.setEmails(emails);
 		new LocationRequester(locationRequest)
 			.send();
-		//mTabsAdapter.selectMapTab();
 	}
 
 	private class LocationRequester extends JsonRequester<LocationRequest, LocationRequestResult> {
@@ -220,21 +212,6 @@ public class MainActivity extends Activity {
 				Log.e(TAG, msg);
 			}
 			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
-		}
-	}
-
-	private class DrawerItemClickListener implements OnItemClickListener {
-		@Override
-		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-			Log.i(TAG, "Click" + id + ", " + position);
-		}
-	}
-
-	private class OnAddFriendClickListener implements OnClickListener {
-		@Override
-		public void onClick(View v) {
-			Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
-			startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
 		}
 	}
 }

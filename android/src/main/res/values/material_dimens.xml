@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<dimen name="fab_size_normal">56dp</dimen>
+	<dimen name="fab_size_mini">40dp</dimen>
+
+	<!-- http://www.google.com/design/spec/what-is-material/objects-in-3d-space.html -->
+	<dimen name="appbar_elevation_resting">4dp</dimen>
+	<dimen name="appbar_elevation_pressed">10dp</dimen>
+	<dimen name="fab_elevation_resting">6dp</dimen>
+	<dimen name="fab_elevation_pressed">12dp</dimen>
+	<dimen name="card_elevation_resting">2dp</dimen>
+	<dimen name="card_elevation_pressed">8dp</dimen>
+
+
+
+</resources>

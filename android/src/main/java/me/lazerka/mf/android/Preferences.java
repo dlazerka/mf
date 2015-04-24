@@ -58,8 +58,10 @@ public class Preferences {
 				.apply();
 	}
 
+	@Nonnull
 	public List<Uri> getFriends() {
 		Set<String> set = preferences.getStringSet(FRIENDS, Collections.<String>emptySet());
+		assert set != null;
 		List<Uri> result = new ArrayList<>(set.size());
 		for(String uriString : set) {
 			Uri parsed = Uri.parse(uriString);

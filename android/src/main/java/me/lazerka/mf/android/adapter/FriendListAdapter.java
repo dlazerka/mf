@@ -3,10 +3,12 @@ package me.lazerka.mf.android.adapter;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Outline;
 import android.net.Uri;
 import android.provider.ContactsContract.Contacts;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewOutlineProvider;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import com.google.common.base.Joiner;
@@ -20,11 +22,10 @@ import java.util.List;
 /**
  * @author Dzmitry Lazerka
  */
-public class FriendsListAdapter extends SimpleCursorAdapter {
-	Context mContext;
-	Cursor mCursor;
+public class FriendListAdapter extends SimpleCursorAdapter {
+	Context context;
 
-	public FriendsListAdapter(Context context) {
+	public FriendListAdapter(Context context) {
 		super(
 				context,
 				R.layout.contacts_item,
@@ -39,12 +40,12 @@ public class FriendsListAdapter extends SimpleCursorAdapter {
 				},// To
 				0
 		);
-		mContext = context;
+		this.context = context;
 		refresh();
 	}
 
 	public void refresh() {
-		mCursor = fetchDataCursor();
+		Cursor mCursor = fetchDataCursor();
 		swapCursor(mCursor);
 	}
 
@@ -71,7 +72,7 @@ public class FriendsListAdapter extends SimpleCursorAdapter {
 		String placeholders = Joiner.on(',').useForNull("?").join(new String[lookups.size()]);
 		String[] selectionArgs = lookups.toArray(new String[lookups.size()]);
 
-		ContentResolver contentResolver = mContext.getContentResolver();
+		ContentResolver contentResolver = context.getContentResolver();
 		return contentResolver.query(
 				Contacts.CONTENT_URI,
 				projection,
@@ -100,6 +101,15 @@ public class FriendsListAdapter extends SimpleCursorAdapter {
 		String lookup = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.LOOKUP_KEY));
 		Uri contactUri = Contacts.getLookupUri(id, lookup);
 
+		ImageView image = (ImageView) view.findViewById(R.id.userpic);
+		image.setOutlineProvider(new ViewOutlineProvider() {
+			@Override
+			public void getOutline(View view, Outline outline) {
+				outline.setOval(0, 0, view.getWidth(), view.getHeight());
+			}
+		});
+		image.setClipToOutline(true);
+
 		View removeButton = view.findViewById(R.id.remove);
 		removeButton.setOnClickListener(new OnDeleteListener(contactUri));
 		// Otherwise item doesn't catch click events http://stackoverflow.com/questions/7645880
@@ -107,8 +117,9 @@ public class FriendsListAdapter extends SimpleCursorAdapter {
 	}
 
 	public Uri getContactAtPosition(int position) {
-		String lookupKey = mCursor.getString(mCursor.getColumnIndex(Contacts.LOOKUP_KEY));
-		long contactId = mCursor.getLong(mCursor.getColumnIndex(Contacts._ID));
+		Cursor cursor = (Cursor) getItem(position);
+		String lookupKey = cursor.getString(cursor.getColumnIndex(Contacts.LOOKUP_KEY));
+		long contactId = cursor.getLong(cursor.getColumnIndex(Contacts._ID));
 		return Contacts.getLookupUri(contactId, lookupKey);
 	}
 

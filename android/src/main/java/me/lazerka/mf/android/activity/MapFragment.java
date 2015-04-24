@@ -2,13 +2,10 @@ package me.lazerka.mf.android.activity;
 
 import android.app.Fragment;
 import android.graphics.Color;
-import android.graphics.Outline;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
@@ -102,29 +99,7 @@ public class MapFragment extends Fragment {
 		//CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(43.1, -87.9), 10);
 		//map.animateCamera(cameraUpdate);
 
-		addFloatingActionButton(view);
-
 		return view;
-	}
-
-	private void addFloatingActionButton(View view) {
-		Button fab = (Button) view.findViewById(R.id.fab_add);
-		ViewOutlineProvider viewOutlineProvider = new ViewOutlineProvider() {
-			@Override
-			public void getOutline(View view, Outline outline) {
-				int size = getResources().getDimensionPixelSize(R.dimen.fab_size_normal);
-				outline.setOval(0, 0, size, size);
-			}
-		};
-		fab.setOutlineProvider(viewOutlineProvider);
-		fab.setClipToOutline(true);
-
-		fab.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-
-			}
-		});
 	}
 
 	@Override

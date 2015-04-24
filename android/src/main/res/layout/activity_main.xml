@@ -1,78 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="match_parent"
+	android:layout_width="match_parent">
 
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-          android:id="@+id/map"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent"
-          class="me.lazerka.mf.android.activity.MapFragment"/>
+	<fragment
+		android:id="@+id/map"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		class="me.lazerka.mf.android.activity.MapFragment"/>
 
-	<!--
-
-	<FrameLayout
+	<Button
+		android:id="@+id/choose_contact_btn"
 		android:layout_width="match_parent"
-		android:layout_height="@dimen/actionbar_dimen"
-		android:background="@android:color/background_light"
-		>
-
-		<ImageView
-			android:id="@+id/drawer_indicator"
-			android:layout_width="@dimen/actionbar_dimen"
-			android:layout_height="@dimen/actionbar_dimen"
-			android:scaleType="centerInside"
-			android:background="@mipmap/ic_action_group"
-			android:layout_gravity="start"
-			android:contentDescription="@string/drawer_indicator_desc"/>
-
-	</FrameLayout>
-
-
-	<android.support.v4.widget.DrawerLayout
-		xmlns:android="http://schemas.android.com/apk/res/android"
-		android:id="@+id/drawer_layout"
-		android:layout_width="match_parent"
-		android:layout_height="0dp"
-		android:layout_weight="1"
-		>
-
-		<FrameLayout
-			android:id="@+id/content_frame"
-			android:gravity="center_horizontal"
-			android:layout_width="match_parent"
-			android:layout_height="match_parent"
-			>
-Ap
-			&lt;!&ndash;
-			<android.support.v4.view.ViewPager
-				android:id="@+id/pager"
-				android:layout_width="match_parent"
-				android:layout_height="match_parent">
-			</android.support.v4.view.ViewPager>
-			&ndash;&gt;
-
-		</FrameLayout>
-
-		<Button
-			android:id="@+id/add_friend"
-			android:layout_height="wrap_content"
-			android:layout_width="wrap_content"
-			android:layout_marginLeft="100dp"
-			android:layout_marginRight="100dp"
-			android:layout_gravity="end"
-			android:layout_weight="0"
-			android:text="@string/add_friend"
-			android:textSize="@dimen/bottom_button_font_size"
-			android:padding="@dimen/bottom_button_padding">
-		</Button>
-
-
-		<ListView
-			android:id="@+id/left_drawer"
-			android:layout_width="240dp"
-			android:layout_height="match_parent"
-			android:layout_gravity="start"
-			android:choiceMode="singleChoice"
-			android:divider="@android:color/transparent"
-			android:dividerHeight="0dp"
-			android:background="#111"/>
-	</android.support.v4.widget.DrawerLayout>
-	-->
+		android:layout_height="38dp"
+		android:layout_marginTop="12dp"
+		android:layout_marginStart="16dp"
+		android:layout_marginEnd="60dp"
+		android:background="@drawable/ripple_rect_gray"
+		android:text="@string/choose_a_contact"
+		android:fontFamily="Roboto"
+		android:textAllCaps="false"
+		android:textColor="@color/secondary_text_disabled_material_light"
+		android:elevation="@dimen/card_elevation_resting"
+		android:gravity="center_vertical"
+		android:paddingStart="16dp"/>
+</FrameLayout>
