@@ -39,10 +39,9 @@ public class Application extends MultiDexApplication {
 			? "http://192.168.1.220:8383"
 			: "https://lazerka-mf.appspot.com";
 
-	public static final URI SERVER_ROOT = "generic".equals(Build.DEVICE)
-			? URI.create("http://10.0.2.2:8888")
+	public static final URI SERVER_ROOT = isInsideEmulator() // emulator
+			? URI.create("http://10.0.2.2:8383")
 			: URI.create(SERVER_ADDRESS);
-
 
 	// Static holders of singletons.
 	// Some people think that extending Application is discouraged,
@@ -75,6 +74,14 @@ public class Application extends MultiDexApplication {
 		context = getApplicationContext();
 		preferences = new Preferences(this);
 		requestQueue = GaeRequestQueue.create();
+	}
+
+	private static boolean isInsideEmulator() {
+		return Build.DEVICE.startsWith("generic");
+	}
+
+	public static boolean isServerDev() {
+		return IS_SERVER_LOCAL || isInsideEmulator();
 	}
 
 	private JsonMapper createJsonMapper() {

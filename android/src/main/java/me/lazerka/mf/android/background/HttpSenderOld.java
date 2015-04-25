@@ -1,5 +1,7 @@
 package me.lazerka.mf.android.background;
 
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.net.http.AndroidHttpClient;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GaeAuthenticator;
+import me.lazerka.mf.android.auth.GaeAuthenticator.AuthenticationException;
 import me.lazerka.mf.api.object.ApiObject;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -123,11 +126,12 @@ class HttpSenderOld extends Handler {
 
 			if (response.shouldAuthenticate()) {
 				Log.i(TAG, "Status code " + response.getStatusCode() + ", authenticating to resend.");
-				final String authToken = authenticator.authenticate();
-				if (authToken != null) {
+				final String authToken;
+				try {
+					authToken = authenticator.authenticate();
 					cookieStore.addCookie(new AuthTokenCookie(authToken));
 					response = execute(request);
-				} else {
+				} catch (AuthenticatorException | OperationCanceledException | AuthenticationException e) {
 					Log.w(TAG, "AuthToken is null, not resending " + request.getURI());
 					sendResponse(0, "Problem authenticating", apiRequest.getHandler());
 					return;

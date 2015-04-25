@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Outline;
+import android.graphics.drawable.shapes.OvalShape;
 import android.net.Uri;
 import android.provider.ContactsContract.Contacts;
 import android.view.View;
@@ -22,8 +23,11 @@ import java.util.List;
 /**
  * @author Dzmitry Lazerka
  */
-public class FriendListAdapter extends SimpleCursorAdapter {
-	Context context;
+public class FriendListAdapter
+		extends SimpleCursorAdapter {
+
+	private final Context context;
+	private Cursor cursor;
 
 	public FriendListAdapter(Context context) {
 		super(
@@ -31,7 +35,7 @@ public class FriendListAdapter extends SimpleCursorAdapter {
 				R.layout.contacts_item,
 				null,
 				new String[] {
-						Contacts.PHOTO_THUMBNAIL_URI, // See ViewBinder below.
+						Contacts.PHOTO_URI, // See ViewBinder below.
 						Contacts.DISPLAY_NAME_PRIMARY,
 				}, // From
 				new int[]{
@@ -45,8 +49,8 @@ public class FriendListAdapter extends SimpleCursorAdapter {
 	}
 
 	public void refresh() {
-		Cursor mCursor = fetchDataCursor();
-		swapCursor(mCursor);
+		cursor = fetchDataCursor();
+		swapCursor(cursor);
 	}
 
 	private Cursor fetchDataCursor() {
@@ -65,7 +69,7 @@ public class FriendListAdapter extends SimpleCursorAdapter {
 				Contacts._ID,
 				Contacts.LOOKUP_KEY,
 				Contacts.DISPLAY_NAME_PRIMARY,
-				Contacts.PHOTO_THUMBNAIL_URI,
+				Contacts.PHOTO_URI,
 		};
 
 		// "?,?,?,?"
@@ -87,9 +91,23 @@ public class FriendListAdapter extends SimpleCursorAdapter {
 		// Just to not try to bind null photo uri and spam log with warnings.
 		if (!value.isEmpty()) {
 			v.setImageURI(Uri.parse(value));
+			v.setOutlineProvider(new ViewOutlineProvider() {
+				@Override
+				public void getOutline(View view, Outline outline) {
+					outline.setOval(0, 0, view.getWidth(), view.getWidth());
+				}
+			});
+			v.setClipToOutline(true);
 		} else {
-			// To clear image of a newly added item.
-			v.setImageURI(null);
+			int id = cursor.getInt(0);
+			String displayName = cursor.getString(2);
+
+			char letter = displayName.charAt(0);
+			LetterDrawable drawable = new LetterDrawable(new OvalShape(), letter, id);
+			v.setImageDrawable(drawable);
+
+			// Even if you don't set anything, make sure to call with null, to clear image of a newly added item.
+			// v.setImageBitmap(null);
 		}
 	}
 
@@ -100,15 +118,6 @@ public class FriendListAdapter extends SimpleCursorAdapter {
 		int id = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts._ID));
 		String lookup = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.LOOKUP_KEY));
 		Uri contactUri = Contacts.getLookupUri(id, lookup);
-
-		ImageView image = (ImageView) view.findViewById(R.id.userpic);
-		image.setOutlineProvider(new ViewOutlineProvider() {
-			@Override
-			public void getOutline(View view, Outline outline) {
-				outline.setOval(0, 0, view.getWidth(), view.getHeight());
-			}
-		});
-		image.setClipToOutline(true);
 
 		View removeButton = view.findViewById(R.id.remove);
 		removeButton.setOnClickListener(new OnDeleteListener(contactUri));

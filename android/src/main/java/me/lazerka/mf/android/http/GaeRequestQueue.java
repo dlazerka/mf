@@ -1,5 +1,7 @@
 package me.lazerka.mf.android.http;
 
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.util.Log;
 import com.android.volley.*;
 import com.android.volley.toolbox.BasicNetwork;
@@ -8,9 +10,11 @@ import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.NoCache;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GaeAuthenticator;
+import me.lazerka.mf.android.auth.GaeAuthenticator.AuthenticationException;
 import org.apache.http.HttpStatus;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -121,12 +125,11 @@ public class GaeRequestQueue extends RequestQueue {
 		@Nonnull
 		private String obtainGaeAuthToken() throws AuthFailureError {
 			Log.i(TAG, "GaeAuthToken null, authenticating");
-			String result = authenticator.authenticate();
-			if (result == null) {
-				Log.e(TAG, "GaeAuthToken is null, something is wrong");
-				throw new AuthFailureError();
+			try {
+				return authenticator.authenticate();
+			} catch (IOException | AuthenticationException | OperationCanceledException | AuthenticatorException e) {
+				throw new AuthFailureError(e.getMessage(), e);
 			}
-			return result;
 		}
 	}
 

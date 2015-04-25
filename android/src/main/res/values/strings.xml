@@ -21,4 +21,5 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="add_plus">+</string>
 	<string name="add_contact">Add contact</string>
 	<string name="choose_a_contact">Choose a contact</string>
+	<string name="login">Sign In</string>
 </resources>

@@ -27,7 +27,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -62,8 +62,9 @@ public class GaeAuthenticator {
 	 * Shows notification on auth failure.
 	 * @return authToken
 	 */
-	@Nullable
-	public String authenticate() {
+	@Nonnull
+	public String authenticate()
+			throws IOException, AuthenticatorException, OperationCanceledException, AuthenticationException {
 		Account account = checkNotNull(Application.preferences.getAccount());
 		String androidAuthToken;
 		try {
@@ -75,19 +76,20 @@ public class GaeAuthenticator {
 				androidAuthToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
 			}
 			return fetchGaeAuthToken(androidAuthToken);
-		} catch (OperationCanceledException | IOException | AuthenticatorException e) {
+		} catch (OperationCanceledException | AuthenticatorException e) {
 			Log.e(TAG, "Cannot get token", e);
+			throw e;
 		}
-		return null;
 	}
 
-	private String fetchGaeAuthToken(String androidAuthToken) {
+	@Nonnull
+	private String fetchGaeAuthToken(String androidAuthToken) throws IOException, AuthenticationException {
 		Log.v(TAG, "fetchGaeAuthToken");
 
 		Account account = Application.preferences.getAccount();
 		if (account == null) {
 			Log.e(TAG, "Account is null?!");
-			return null;
+			throw new NoAccountException();
 		}
 
 		String userAgent = Application.USER_AGENT;
@@ -119,14 +121,15 @@ public class GaeAuthenticator {
 
 			// dev_appserver case.
 			if (statusCode == 200 && "text/html".equals(entity.getContentType().getValue())) {
-				Log.w(TAG, "StatusCode=200, looks like dev appserver, while should be not.");
-				return null;
+				String msg = "Auth response should be 302, but is 200, looks like dev appserver";
+				Log.w(TAG, msg);
+				throw new AuthenticationException(msg);
 			}
 
 			if (statusCode != 302) {
 				String msg = "GAE auth response code is not 302, but is " + statusCode;
 				Log.w(TAG, msg);
-				return null;
+				throw new AuthenticationException(msg);
 			}
 
 			for (Cookie cookie : cookieStore.getCookies()) {
@@ -135,14 +138,12 @@ public class GaeAuthenticator {
 					return cookie.getValue();
 				}
 			}
-			Log.e(TAG, "GAE auth response code is 302, but cookie ACSID not set.");
-		} catch (IOException e) {
-			Log.e(TAG, "Cannot request GAE cookie: " + e.getMessage());
-			//			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+			String msg = "GAE auth response code is 302, but cookie ACSID not set.";
+			Log.e(TAG, msg);
+			throw new AuthenticationException(msg);
 		} finally {
 			httpClient.close();
 		}
-		return null;
 	}
 
 	private String authDevAppserver(
@@ -150,7 +151,7 @@ public class GaeAuthenticator {
 			AndroidHttpClient httpClient,
 			HttpContext httpContext,
 			CookieStore cookieStore
-	) throws IOException {
+	) throws IOException, AuthenticationException {
 		int statusCode;
 		Log.i(TAG, "Status code 200, must be dev_appserver, sending regular form...");
 		URI uriDev = Application.SERVER_ROOT.resolve("/_ah/login");
@@ -169,7 +170,7 @@ public class GaeAuthenticator {
 		if (statusCode != 302) {
 			String msg = "GAE auth response code is not 302, but is " + statusCode;
 			Log.w(TAG, msg);
-			return null;
+			throw new AuthenticationException(msg);
 		}
 
 		for (Cookie cookie : cookieStore.getCookies()) {
@@ -182,6 +183,17 @@ public class GaeAuthenticator {
 
 		String msg = "GAE auth response code is 302, but cookie dev_appserver_login not set.";
 		Log.e(TAG, msg);
-		return null;
+		throw new AuthenticationException(msg);
+	}
+
+	public class AuthenticationException extends Exception {
+		public AuthenticationException() {}
+
+		public AuthenticationException(String detailMessage) {
+			super(detailMessage);
+		}
+	}
+
+	private class NoAccountException extends AuthenticationException {
 	}
 }

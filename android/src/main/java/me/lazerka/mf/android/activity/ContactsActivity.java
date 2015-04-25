@@ -13,13 +13,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewOutlineProvider;
 import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 /**
@@ -31,7 +32,6 @@ public class ContactsActivity extends Activity {
 	/** Result code of ContactPicker dialog. */
 	private final int CONTACT_PICKER_RESULT = 1;
 
-	private ListView friendList;
 	private FriendListAdapter friendListAdapter;
 
 	@Override
@@ -49,11 +49,11 @@ public class ContactsActivity extends Activity {
 	}
 
 	private void initFriendList() {
-		friendList = (ListView) findViewById(android.R.id.list);
+		GridView list = (GridView) findViewById(R.id.list);
 
 		friendListAdapter = new FriendListAdapter(this);
-		friendList.setAdapter(friendListAdapter);
-		friendList.setOnItemClickListener(new OnItemClickListener());
+		list.setAdapter(friendListAdapter);
+		list.setOnItemClickListener(new OnItemClickListener());
 	}
 
 	private void initFloatingActionButton() {
@@ -82,7 +82,7 @@ public class ContactsActivity extends Activity {
 			LinkedHashSet<String> emails = getContactEmails(contactUri);
 
 			Intent intent = new Intent(getBaseContext(), MainActivity.class);
-			intent.putExtra(MainActivity.REQUEST_CONTACT_EMAILS, emails);
+			intent.putStringArrayListExtra(MainActivity.REQUEST_CONTACT_EMAILS, new ArrayList<>(emails));
 			setResult(Activity.RESULT_OK, intent);
 			finish();
 		}
@@ -93,23 +93,23 @@ public class ContactsActivity extends Activity {
 
 		ContentResolver contentResolver = getContentResolver();
 
-		Cursor cursor = contentResolver.query(
+		try (Cursor cursor = contentResolver.query(
 				Email.CONTENT_URI,
-				null, // TODO: use projection
+				new String[] {Email.ADDRESS},
 				//null,
 				//null,
 				Email.LOOKUP_KEY + " = ?",
 				new String[] {lookupKey},
 				Email.SORT_KEY_PRIMARY
-		);
-		LinkedHashSet<String> result = new LinkedHashSet<>(cursor.getCount());
-		while (cursor.moveToNext()) {
-			String email = cursor.getString(cursor.getColumnIndex(Email.ADDRESS));
-			result.add(email);
-		}
-		cursor.close();
+		)) {
+			LinkedHashSet<String> result = new LinkedHashSet<>(cursor.getCount());
+			while (cursor.moveToNext()) {
+				String email = cursor.getString(0);
+				result.add(email);
+			}
 
-		return result;
+			return result;
+		}
 	}
 
 	@Override

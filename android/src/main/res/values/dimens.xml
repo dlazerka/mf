@@ -10,6 +10,8 @@
 
 	<dimen name="actionbar_dimen">56dp</dimen>
 
+	<dimen name="contact_column_width">138dp</dimen>
+
 	<!--
 	<dimen name="button_text_size">22sp</dimen>
 	<dimen name="button_padding_left">10sp</dimen>

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.google.common.base.Charsets;
@@ -21,7 +22,7 @@ import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -86,6 +87,10 @@ public class MainActivity extends Activity {
 		//mTabsAdapter.init();
 
 		//new GcmAuthenticator(this).checkRegistration();
+
+		// debug
+		Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
+		startActivityForResult(intent, CONTACT_ACTIVITY_RESULT);
 	}
 
 	private class OnContactsClickListener
@@ -101,7 +106,7 @@ public class MainActivity extends Activity {
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == CONTACT_ACTIVITY_RESULT) {
 			if (resultCode == Activity.RESULT_OK) {
-				Set<String> emails = new HashSet<>(data.getStringArrayListExtra(REQUEST_CONTACT_EMAILS));
+				Set<String> emails = new LinkedHashSet<>(data.getStringArrayListExtra(REQUEST_CONTACT_EMAILS));
 				Toast.makeText(this, "Requesting emails: " + emails, Toast.LENGTH_LONG)
 						.show();
 				showLocation(emails);
@@ -190,7 +195,13 @@ public class MainActivity extends Activity {
 			super.onErrorResponse(error);
 
 			String msg;
-			if (error.networkResponse.statusCode == 404) {
+			String errorMessage = error.getMessage() != null ? (": " + error.getMessage()) : "";
+			if (error instanceof AuthFailureError) {
+				Log.e(TAG, "AuthFailureError", error);
+				msg = "Authentication error" + errorMessage;
+			} else if (error.networkResponse == null) {
+				msg = "Error requesting location" + errorMessage;
+			} else if (error.networkResponse.statusCode == 404) {
 				if (getRequest().getEmails().size() > 1) {
 					msg = "None of your friend's email addresses were found in database. " +
 						"Did your friend installed the app?";
@@ -204,8 +215,8 @@ public class MainActivity extends Activity {
 			} else {
 				byte[] data = error.networkResponse.data;
 				if (data != null) {
-					String errorMessage = new String(data, Charsets.UTF_8);
-					msg = "Error requesting location: " + errorMessage;
+					String errorData = new String(data, Charsets.UTF_8);
+					msg = "Error requesting location: " + errorData;
 				} else {
 					msg = "Error requesting message: " + error.networkResponse.statusCode;
 				}

@@ -54,7 +54,8 @@ android {
 	productFlavors {
 	}
     dexOptions {
-        //incremental true // not supported with --multi-dex
+        // not supported with --multi-dex
+        //incremental true
     }
 }
 
