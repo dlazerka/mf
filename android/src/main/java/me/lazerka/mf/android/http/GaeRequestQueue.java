@@ -11,7 +11,6 @@ import com.android.volley.toolbox.NoCache;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GaeAuthenticator;
 import me.lazerka.mf.android.auth.GaeAuthenticator.AuthenticationException;
-import org.apache.http.HttpStatus;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -64,6 +63,7 @@ public class GaeRequestQueue extends RequestQueue {
 		public NetworkResponse performRequest(Request<?> req) throws VolleyError {
 			checkArgument(req instanceof JsonSerializingRequest);
 			JsonSerializingRequest<?> request = (JsonSerializingRequest<?>) req;
+			req.setRetryPolicy()
 
 			String gaeAuthToken = Application.preferences.getGaeAuthToken();
 			if (gaeAuthToken == null) {
@@ -119,16 +119,19 @@ public class GaeRequestQueue extends RequestQueue {
 		}
 
 		private boolean shouldAuthenticateResponse(int statusCode) {
-			return statusCode == HttpStatus.SC_FORBIDDEN || statusCode == HttpStatus.SC_MOVED_TEMPORARILY;
+			return statusCode == 403 // Forbidden
+					|| statusCode == 302; // Moved Temporarily
 		}
 
 		@Nonnull
-		private String obtainGaeAuthToken() throws AuthFailureError {
+		private String obtainGaeAuthToken() throws AuthFailureError, NetworkError {
 			Log.i(TAG, "GaeAuthToken null, authenticating");
 			try {
 				return authenticator.authenticate();
-			} catch (IOException | AuthenticationException | OperationCanceledException | AuthenticatorException e) {
+			} catch (AuthenticationException | AuthenticatorException e) {
 				throw new AuthFailureError(e.getMessage(), e);
+			} catch (IOException | OperationCanceledException e) {
+				throw new NetworkError(e);
 			}
 		}
 	}

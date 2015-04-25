@@ -20,7 +20,7 @@ import org.acra.ACRA;
 import java.io.IOException;
 import java.net.URI;
 
-/**
+/**b
  * Extension of {@link android.app.Application}.
  *
  * @author Dzmitry
@@ -36,11 +36,11 @@ public class Application extends MultiDexApplication {
 	//public static final boolean IS_SERVER_LOCAL = false;
 
 	public static final String SERVER_ADDRESS = IS_SERVER_LOCAL
-			? "http://192.168.1.220:8383"
+			? "http://192.168.1.220:8380"
 			: "https://lazerka-mf.appspot.com";
 
 	public static final URI SERVER_ROOT = isInsideEmulator() // emulator
-			? URI.create("http://10.0.2.2:8383")
+			? URI.create("http://10.0.2.2:8380")
 			: URI.create(SERVER_ADDRESS);
 
 	// Static holders of singletons.

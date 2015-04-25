@@ -23,7 +23,7 @@ public class LoginActivity extends Activity {
 	private final int ACCOUNT_PICKER = 0;
 	private final int USER_CONFIRMATION = 1;
 
-	private AndroidAuthenticator androidAuthenticator;
+	private final AndroidAuthenticator androidAuthenticator;
 
 	public LoginActivity() {
 		this.androidAuthenticator = new AndroidAuthenticator();

@@ -102,7 +102,7 @@ public class GaeAuthenticator {
 
 		try {
 
-			if (Application.SERVER_ROOT.getHost().contains("192.168.1")) {
+			if (Application.isServerDev()) {
 				return authDevAppserver(account.name, httpClient, httpContext, cookieStore);
 			}
 

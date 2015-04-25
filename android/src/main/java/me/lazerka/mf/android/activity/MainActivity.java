@@ -207,7 +207,7 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 				} else {
 					String email = getRequest().getEmails().iterator().next();
-					msg = email + " was found in database. " +
+					msg = email + " was not found in database. " +
 						"Did your friend installed the app?";
 				}
 				Log.w(TAG, msg);
