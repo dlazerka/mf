@@ -1,4 +1,4 @@
-package me.lazerka.mf.web.rest.location;
+package me.lazerka.mf.gae.web.rest.location;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,8 +15,8 @@ import me.lazerka.mf.api.gcm.GcmResponse.Result;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
-import me.lazerka.mf.entity.GcmRegistrationEntity;
-import me.lazerka.mf.entity.MfUser;
+import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
+import me.lazerka.mf.gae.entity.MfUser;
 import me.lazerka.mf.gae.Pair;
 import me.lazerka.mf.gae.PairedList;
 import org.joda.time.DateTime;
@@ -192,7 +192,7 @@ public class LocationRequestResource {
 
 	/**
 	 * Results unique, ensured by Datastore.
-	 * @see me.lazerka.mf.entity.GcmRegistrationEntity
+	 * @see me.lazerka.mf.gae.entity.GcmRegistrationEntity
 	 */
 	private List<String> getRegistrationIds(MfUser user) {
 		List<GcmRegistrationEntity> gcmRegistrations = user.getGcmRegistrations();

@@ -15,7 +15,11 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import me.lazerka.mf.android.http.GaeRequestQueue;
 import me.lazerka.mf.api.JsonMapper;
+import me.lazerka.mf.api.object.AcraException;
 import org.acra.ACRA;
+import org.acra.ACRAConfiguration;
+import org.acra.annotation.ReportsCrashes;
+import org.acra.sender.HttpSender.Method;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,6 +30,12 @@ import java.net.URI;
  * @author Dzmitry
  */
 
+@ReportsCrashes(
+		formKey = "",
+		formUri = Application.SERVER_ADDRESS + AcraException.PATH,
+		sharedPreferencesName = "ACRA",
+		httpMethod = Method.PUT
+)
 public class Application extends MultiDexApplication {
 	public static final String VERSION = "1";
 	public static String TAG;
@@ -36,7 +46,7 @@ public class Application extends MultiDexApplication {
 	//public static final boolean IS_SERVER_LOCAL = false;
 
 	public static final String SERVER_ADDRESS = IS_SERVER_LOCAL
-			? "http://192.168.1.220:8380"
+			? "http://192.168.1.219:8380"
 			: "https://lazerka-mf.appspot.com";
 
 	public static final URI SERVER_ROOT = isInsideEmulator() // emulator
@@ -56,9 +66,6 @@ public class Application extends MultiDexApplication {
 	public static Context context;
 	public static GaeRequestQueue requestQueue;
 
-	public Application() {
-	}
-
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -66,9 +73,12 @@ public class Application extends MultiDexApplication {
 		TAG = getApplicationContext().getPackageName();
 		USER_AGENT = getApplicationContext().getPackageName();
 
-		if (!isDebugRun()) {
-			ACRA.init(this);
-		}
+//		if (!isDebugRun()) {
+		ACRA.init(this);
+		ACRAConfiguration config = ACRA.getConfig();
+		// Unable to set that in annotation, because not constant.
+		config.setFormUri(SERVER_ROOT + AcraException.PATH);
+//		}
 
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();

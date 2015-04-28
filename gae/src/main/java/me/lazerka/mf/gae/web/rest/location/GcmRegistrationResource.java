@@ -1,4 +1,4 @@
-package me.lazerka.mf.web.rest.location;
+package me.lazerka.mf.gae.web.rest.location;
 
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
@@ -6,8 +6,8 @@ import com.googlecode.objectify.impl.Keys;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
 import me.lazerka.mf.api.object.GcmRegistration;
-import me.lazerka.mf.entity.GcmRegistrationEntity;
-import me.lazerka.mf.entity.MfUser;
+import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
+import me.lazerka.mf.gae.entity.MfUser;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

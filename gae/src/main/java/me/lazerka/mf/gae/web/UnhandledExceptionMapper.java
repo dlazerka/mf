@@ -1,4 +1,4 @@
-package me.lazerka.mf.web;
+package me.lazerka.mf.gae.web;
 
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.slf4j.Logger;

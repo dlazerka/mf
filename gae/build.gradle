@@ -52,6 +52,12 @@ appengine {
     appcfg {
         oauth2 = true
     }
+
+    // So that it's accessible from both localhost, LAN (192.168.*.*), and emulator (10.0.2.2).
+    httpAddress = '0.0.0.0'
+    httpPort = 8380
+    disableUpdateCheck = true
+
     //endpoints {
     //    getClientLibsOnBuild = true
     //    getDiscoveryDocsOnBuild = true

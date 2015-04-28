@@ -9,6 +9,7 @@ import android.view.*;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.api.object.Location;
@@ -18,10 +19,8 @@ import org.joda.time.Period;
 import java.util.Map;
 
 public class MapFragment extends Fragment {
-	private final int CONTACT_PICKER_RESULT = 1;
-
+	private static final String TAG = MapFragment.class.getName();
 	public static final String CAMERA_POSITION = "cameraPosition";
-	private final String TAG = getClass().getName();
 
 	private final int circleArea = Color.parseColor("#55DAEAFF");
 	private final int circleStroke = Color.parseColor("#FF84B8FE");
@@ -31,7 +30,8 @@ public class MapFragment extends Fragment {
 	// 1 -- world
 	// 10 -- bay area
 	// 14 -- max
-	private GoogleMap map;
+	@VisibleForTesting
+	GoogleMap map;
 
 	private final Map<String, Item> items = Maps.newHashMap();
 	private MapView mMapView;
@@ -127,7 +127,7 @@ public class MapFragment extends Fragment {
 		Display defaultDisplay = windowManager.getDefaultDisplay();
 		defaultDisplay.getMetrics(metrics);
 		int screenSize = Math.min(metrics.widthPixels, metrics.heightPixels);
-		double mpp = accuracy/screenSize;
+		double mpp = accuracy / screenSize;
 
 		long equatorInMeters = 40075004;
 		return (int) (((Math.log(equatorInMeters / (256 * mpp))) / Math.log(2)) + 1);
@@ -233,7 +233,7 @@ public class MapFragment extends Fragment {
 			int zoom = getNiceZoom(location.getAccuracy());
 			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom);
 			map.moveCamera(cameraUpdate);
-			map.setOnMyLocationButtonClickListener(null);
+			map.setOnMyLocationChangeListener(null);
 		}
 	}
 }

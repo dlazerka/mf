@@ -1,4 +1,4 @@
-package me.lazerka.mf.entity;
+package me.lazerka.mf.gae.entity;
 
 import com.google.appengine.api.users.User;
 import com.googlecode.objectify.Key;

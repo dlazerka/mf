@@ -1,8 +1,8 @@
-package me.lazerka.mf.web.rest.user;
+package me.lazerka.mf.gae.web.rest.user;
 
 import com.googlecode.objectify.Objectify;
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.entity.MfUser;
+import me.lazerka.mf.gae.entity.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

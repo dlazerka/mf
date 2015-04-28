@@ -1,7 +1,7 @@
-package me.lazerka.mf.web.rest.user;
+package me.lazerka.mf.gae.web.rest.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import me.lazerka.mf.entity.MfUser;
+import me.lazerka.mf.gae.entity.MfUser;
 
 /**
  * @author Dzmitry Lazerka

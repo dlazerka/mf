@@ -19,7 +19,7 @@
 
 
 # Not tested -- keep getters and setters used by Jackson off proguard.
--keep public class name.dlazerka.pro.api.** {
+-keep public class name.dlazerka.mf.api.** {
   public void set*(***);
   public *** get*();
 }

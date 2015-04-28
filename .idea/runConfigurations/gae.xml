@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="gae" type="AppEngineRunConfiguration" factoryName="App Engine DevAppServer" singleton="true">
     <module name="gae" />
-    <setting name="serverAddress" value="" />
-    <setting name="sdkPath" value="file://$USER_HOME$/opt/appengine-java-sdk-1.9.19" />
+    <setting name="serverAddress" value="0.0.0.0" />
+    <setting name="sdkPath" value="file://$USER_HOME$/.gradle/appengine-sdk/appengine-java-sdk-1.9.19" />
     <setting name="serverPort" value="8380" />
     <setting name="vmArgs" value="" />
     <setting name="warPath" value="$PROJECT_DIR$/gae/build/exploded-app" />

@@ -15,7 +15,7 @@ import java.util.*;
  * Type-safe API for SharedPreferences, so that we have one place for them.
  */
 public class Preferences {
-	private final String TAG = getClass().getName();
+	private static final String TAG = Preferences.class.getName();
 
 	private final String ACCOUNT_NAME = "account.name";
 	private final String ACCOUNT_TYPE = "account.type";

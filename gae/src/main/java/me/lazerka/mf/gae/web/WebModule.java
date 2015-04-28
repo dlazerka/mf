@@ -1,4 +1,4 @@
-package me.lazerka.mf.web;
+package me.lazerka.mf.gae.web;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.Maps;
@@ -60,7 +60,7 @@ public class WebModule extends JerseyServletModule {
 	private Map<String, String> getJerseyParams() {
 		Map<String,String> params = Maps.newHashMap();
 
-		params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.web");
+		params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.gae.web");
 		// Read somewhere that it's needed for GAE.
 		params.put(PackagesResourceConfig.FEATURE_DISABLE_WADL, "true");
 

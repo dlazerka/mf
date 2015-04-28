@@ -89,8 +89,8 @@ public class MainActivity extends Activity {
 		//new GcmAuthenticator(this).checkRegistration();
 
 		// debug
-		Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
-		startActivityForResult(intent, CONTACT_ACTIVITY_RESULT);
+//		Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
+//		startActivityForResult(intent, CONTACT_ACTIVITY_RESULT);
 	}
 
 	private class OnContactsClickListener

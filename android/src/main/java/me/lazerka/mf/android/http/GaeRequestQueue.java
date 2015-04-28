@@ -63,7 +63,6 @@ public class GaeRequestQueue extends RequestQueue {
 		public NetworkResponse performRequest(Request<?> req) throws VolleyError {
 			checkArgument(req instanceof JsonSerializingRequest);
 			JsonSerializingRequest<?> request = (JsonSerializingRequest<?>) req;
-			req.setRetryPolicy()
 
 			String gaeAuthToken = Application.preferences.getGaeAuthToken();
 			if (gaeAuthToken == null) {

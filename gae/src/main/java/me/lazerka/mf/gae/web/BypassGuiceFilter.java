@@ -1,4 +1,4 @@
-package me.lazerka.mf.web;
+package me.lazerka.mf.gae.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

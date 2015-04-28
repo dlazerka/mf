@@ -1,4 +1,4 @@
-package me.lazerka.mf.web;
+package me.lazerka.mf.gae.web;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
