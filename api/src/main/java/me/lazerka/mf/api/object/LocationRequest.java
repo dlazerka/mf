@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 
 /**
- * A request that user's device sends to our server.
+ * A request that requester user sends to our server.
  *
  * @author Dzmitry Lazerka
  */

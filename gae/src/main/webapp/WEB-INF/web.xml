@@ -28,10 +28,11 @@
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
 
+	<!-- We want unauthenticated requests to /acra -->
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>ALL</web-resource-name>
-			<url-pattern>/*</url-pattern>
+			<url-pattern>/rest/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>*</role-name>

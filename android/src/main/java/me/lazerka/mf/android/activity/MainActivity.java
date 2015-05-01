@@ -22,6 +22,7 @@ import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -86,7 +87,7 @@ public class MainActivity extends Activity {
 		//mTabsAdapter = new TabsAdapter(getFragmentManager(), mActionBar, viewPager);
 		//mTabsAdapter.init();
 
-		//new GcmAuthenticator(this).checkRegistration();
+
 
 		// debug
 //		Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
@@ -122,7 +123,8 @@ public class MainActivity extends Activity {
 		Log.v(TAG, "onResume");
 		super.onResume();
 
-		new GcmAuthenticator(this).checkPlayServices();
+		GcmAuthenticator gcmAuthenticator = new GcmAuthenticator(this);
+		gcmAuthenticator.checkRegistration();
 	}
 
 	@Override
@@ -207,8 +209,7 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 				} else {
 					String email = getRequest().getEmails().iterator().next();
-					msg = email + " was not found in database. " +
-						"Did your friend installed the app?";
+					msg = email + " not found: " + new String(error.networkResponse.data, StandardCharsets.UTF_8);
 				}
 				Log.w(TAG, msg);
 

@@ -1,13 +1,13 @@
 package me.lazerka.mf.gae.web.rest.location;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.api.urlfetch.FetchOptions.Builder;
 import com.google.common.base.Charsets;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.Work;
 import me.lazerka.mf.api.ApiConstants;
+import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.GcmDataLocation;
 import me.lazerka.mf.api.gcm.GcmRequest;
 import me.lazerka.mf.api.gcm.GcmResponse;
@@ -15,10 +15,10 @@ import me.lazerka.mf.api.gcm.GcmResponse.Result;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
-import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.entity.MfUser;
 import me.lazerka.mf.gae.Pair;
 import me.lazerka.mf.gae.PairedList;
+import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
+import me.lazerka.mf.gae.entity.MfUser;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class LocationRequestResource {
 	String gcmApiKey;
 
 	@Inject
-	ObjectMapper objectMapper;
+	JsonMapper objectMapper;
 
 	/**
 	 * Finds a user by given emails (must belong to only one user = google account),

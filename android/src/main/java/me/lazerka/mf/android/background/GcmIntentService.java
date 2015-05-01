@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -12,6 +13,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
+import me.lazerka.mf.api.gcm.GcmDataLocation;
+import me.lazerka.mf.api.object.Location;
 
 /**
  * Handles messages from GCM. Basically, there's only one message -- if someone requests our location.
@@ -48,10 +51,10 @@ public class GcmIntentService extends IntentService {
 			 */
 			switch (messageType) {
 				case GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR:
-					sendNotification("Send error: " + extras.toString());
+					sendNotification("Send error: " + extras.toString(), "GCM Notification");
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_DELETED:
-					sendNotification("Deleted messages on server: " + extras.toString());
+					sendNotification("Deleted messages on server: " + extras.toString(), "GCM Notification");
 					// If it's a regular GCM message, do some work.
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE:
@@ -59,14 +62,29 @@ public class GcmIntentService extends IntentService {
 					break;
 			}
 		}
-
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
 		GcmBroadcastReceiver.completeWakefulIntent(intent);
 	}
 
 	private void processMessage(Bundle extras) {
-		// TODO
 		Log.i(TAG, "Received message: " + extras.toString());
+		// Available fields:
+		// "sentAt", "requesterEmail" -- see GcmDataLocation
+		// "from" -- GAE Project Number
+		// "android.support.content.wakelockid" = set by GcmBroadcastReceiver at startWakefulService().
+		// "collapse_key" -- See http://developer.android.com/training/cloudsync/gcm.html#collapse
+
+		String requesterEmail = extras.getString(GcmDataLocation.REQUESTER_EMAIL);
+
+		String appName = getResources().getString(R.string.app_name);
+		sendNotification(requesterEmail + " requested your location", appName);
+
+		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		android.location.Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		Location location = new Location();
+		location.setAcc(lastKnownLocation.getAccuracy());
+		location.setLat(lastKnownLocation.getLatitude());
+		location.setLon(lastKnownLocation.getLongitude());
 	}
 
 	private void handleRegistrationId(Intent intent) {
@@ -82,9 +100,8 @@ public class GcmIntentService extends IntentService {
 	// Put the message into a notification and post it.
 	// This is just one simple example of what you might choose to do with
 	// a GCM message.
-	private void sendNotification(String msg) {
-		mNotificationManager = (NotificationManager)
-				this.getSystemService(Context.NOTIFICATION_SERVICE);
+	private void sendNotification(String msg, String contentTitle) {
+		mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 		Intent intent = new Intent(this, MainActivity.class);
 		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
@@ -92,7 +109,7 @@ public class GcmIntentService extends IntentService {
 		NotificationCompat.Builder mBuilder =
 				new NotificationCompat.Builder(this)
 						.setSmallIcon(R.mipmap.ic_launcher)
-						.setContentTitle("GCM Notification")
+						.setContentTitle(contentTitle)
 						.setStyle(new NotificationCompat.BigTextStyle().bigText(msg))
 						.setContentText(msg);
 

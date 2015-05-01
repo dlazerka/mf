@@ -9,18 +9,21 @@ import org.joda.time.DateTime;
  * @author Dzmitry Lazerka
  */
 public class GcmDataLocation {
+	public static final String SENT_AT = "sentAt";
+	public static final String REQUESTER_EMAIL = "requesterEmail";
+
 	/**
 	 * Who's asking for location.
 	 * User's email as given by Google authentication service.
 	 * Receiver smartphone must check if this user is a "friend".
 	 */
-	@JsonProperty
+	@JsonProperty(REQUESTER_EMAIL)
 	String requesterEmail;
 
 	/**
 	 * When the message was received by server from the requester.
 	 */
-	@JsonProperty
+	@JsonProperty(SENT_AT)
 	DateTime sentAt;
 
 	public String getRequesterEmail() {

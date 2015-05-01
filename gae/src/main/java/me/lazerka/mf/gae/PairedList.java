@@ -1,8 +1,7 @@
 package me.lazerka.mf.gae;
 
 import javax.annotation.Nonnull;
-import java.util.AbstractList;
-import java.util.List;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -31,6 +30,21 @@ public class PairedList<A, B> extends AbstractList<Pair<A, B>> {
 
 	@Override
 	public int size() {
-		return first.size() * 2;
+		return first.size();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+		PairedList<?, ?> that = (PairedList<?, ?>) o;
+		return Objects.equals(first, that.first) &&
+				Objects.equals(second, that.second);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), first, second);
 	}
 }

@@ -6,7 +6,6 @@
 -dontwarn com.fasterxml.jackson.databind.ext.DOMSerializer
 # Otherwise get java.lang.NoSuchFieldError: PUBLIC_ONLY at java.lang.Class.getDeclaredAnnotation
 -keepnames class com.fasterxml.jackson.** { *; }
--keepnames class org.acra.annotation.** { *; }
 
 # Otherwise java.lang.Enum#sharedConstantsCache@40 returns null.
 -keepclassmembers enum com.fasterxml.jackson.databind.* {
