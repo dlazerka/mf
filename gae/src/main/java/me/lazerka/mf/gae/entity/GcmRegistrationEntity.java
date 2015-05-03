@@ -1,10 +1,15 @@
 package me.lazerka.mf.gae.entity;
 
+import com.googlecode.objectify.Key;
+import com.googlecode.objectify.Ref;
+import com.googlecode.objectify.annotation.Cache;
+import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.Parent;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nonnull;
-
-import java.util.Objects;
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -13,21 +18,40 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
+@Entity
+@Cache
 public class GcmRegistrationEntity {
+	@Parent
+	private Ref<MfUser> user;
+
+	@Id
 	private String id;
 
 	private DateTime createdDate;
 
-	private int appVersion;
+	@Nullable
+	private Integer appVersion;
 
 	private GcmRegistrationEntity() {}
 
 	public GcmRegistrationEntity(
+			@Nonnull MfUser user,
 			@Nonnull String id,
-			@Nonnull DateTime createdDate
+			@Nonnull DateTime createdDate,
+			@Nullable Integer appVersion
 	) {
+		this.user = Ref.create(user);
 		this.id = checkNotNull(id);
-		this.createdDate = createdDate;
+		this.createdDate = checkNotNull(createdDate);
+		this.appVersion = appVersion;
+	}
+
+	public GcmRegistrationEntity(@Nonnull MfUser user, String id, DateTime createdDate) {
+		this(user, id, createdDate, null);
+	}
+
+	public Ref<MfUser> getUser() {
+		return user;
 	}
 
 	/** Long string, aka id. */
@@ -43,20 +67,12 @@ public class GcmRegistrationEntity {
 		this.appVersion = appVersion;
 	}
 
-	public int getAppVersion() {
+	@Nullable
+	public Integer getAppVersion() {
 		return appVersion;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		GcmRegistrationEntity that = (GcmRegistrationEntity) o;
-		return Objects.equals(id, that.id);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(id);
+	public static Key<GcmRegistrationEntity> key(MfUser user, String id) {
+		return Key.create(user.key(), GcmRegistrationEntity.class, id);
 	}
 }

@@ -5,6 +5,7 @@ import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
 import me.lazerka.mf.gae.entity.AcraExceptionEntity;
+import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.entity.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,5 +36,6 @@ public class ObjectifyModule extends AbstractModule {
 	private void registerEntities(ObjectifyFactory factory) {
 		factory.register(AcraExceptionEntity.class);
 		factory.register(MfUser.class);
+		factory.register(GcmRegistrationEntity.class);
 	}
 }

@@ -4,6 +4,8 @@ import com.google.appengine.api.urlfetch.HTTPRequest;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 import com.google.appengine.api.urlfetch.URLFetchService;
 import com.google.appengine.api.users.User;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.GcmConstants;
 import me.lazerka.mf.api.gcm.GcmPayload;
@@ -19,12 +21,15 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.googlecode.objectify.ObjectifyService.ofy;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +49,8 @@ public class GcmServiceTest extends GaeTest {
 	@Mock
 	GcmPayload payload;
 
-	GcmService unit;
 	MfUser recipient;
+	GcmService unit;
 
 	@BeforeMethod
 	public void setUpUnit() {
@@ -54,14 +59,14 @@ public class GcmServiceTest extends GaeTest {
 		unit.now = may1;
 		unit.objectMapper = new JsonMapper();
 		unit.urlFetchService = urlFetchService;
-		unit.user = new MfUser(new User("test@example.com", "example.com", "12345"));
+		unit.currentUser = user;
 	}
 
 	@BeforeMethod
 	public void setUpRecipient() {
-		recipient = new MfUser(new User("test@example.com", "example.com", "01325"));
-		recipient.getGcmRegistrationEntities().add(new GcmRegistrationEntity("gcmTestToken", may1.minusHours(1)));
-		ofy().save().entity(recipient);
+		recipient = new MfUser(new User("recipient@example.com", "example.com", "321recipient"));
+		ofy().save().entity(new GcmRegistrationEntity(recipient, "gcmTestToken", may1));
+		ofy().save().entity(recipient).now();
 	}
 
 	void initResponse(String fileName) throws Exception {
@@ -91,17 +96,18 @@ public class GcmServiceTest extends GaeTest {
 		List<GcmResult> results = unit.send(recipient, payload);
 
 		assertThat(results.get(0).getMessageId(), is("1:2342"));
-		assertThat(results.get(0).getDeviceRegistrationHash(), startsWith("e29c9c18"));
 		assertThat(results.get(0).getError(), nullValue());
 	}
 
 	@Test
 	public void testSendMultiple() throws Exception {
-		recipient.getGcmRegistrationEntities().add(new GcmRegistrationEntity("gcmTestToken2", may1.minusHours(1)));
-		recipient.getGcmRegistrationEntities().add(new GcmRegistrationEntity("gcmTestToken3", may1.minusHours(1)));
-		recipient.getGcmRegistrationEntities().add(new GcmRegistrationEntity("gcmTestToken4", may1.minusHours(1)));
-		recipient.getGcmRegistrationEntities().add(new GcmRegistrationEntity("gcmTestToken5", may1.minusHours(1)));
-		recipient.getGcmRegistrationEntities().add(new GcmRegistrationEntity("gcmTestToken6", may1.minusHours(1)));
+		List<GcmRegistrationEntity> registrations = ImmutableList.of(
+				new GcmRegistrationEntity(recipient, "gcmTestToken2", may1),
+				new GcmRegistrationEntity(recipient, "gcmTestToken3", may1),
+				new GcmRegistrationEntity(recipient, "gcmTestToken4", may1),
+				new GcmRegistrationEntity(recipient, "gcmTestToken5", may1),
+				new GcmRegistrationEntity(recipient, "gcmTestToken6", may1));
+		ofy().save().entities(registrations).now();
 
 		initResponse("GcmResponse.error.json");
 
@@ -120,13 +126,27 @@ public class GcmServiceTest extends GaeTest {
 		assertThat(results.get(3).getError(), nullValue());
 
 		assertThat(results.get(4).getMessageId(), is("1:2342"));
-		assertThat(results.get(4).getDeviceRegistrationHash(), startsWith("e29"));
 		assertThat(results.get(4).getError(), nullValue());
 
 		assertThat(results.get(5).getMessageId(), nullValue());
 		assertThat(results.get(5).getError(), is(GcmConstants.ERROR_NOT_REGISTERED));
 
-		List<String> ids = recipient.getGcmRegistrationIds();
-		assertThat(ids, not(contains("gcmTestToken6")));
+		List<GcmRegistrationEntity> newRegistrations =
+				ofy().load().type(GcmRegistrationEntity.class).ancestor(recipient).list();
+
+		ofy().flush();
+
+		Set<String> newIds = new HashSet<>();
+		for(GcmRegistrationEntity newRegistration : newRegistrations) {
+			newIds.add(newRegistration.getId());
+		}
+
+		Set<String> expected = ImmutableSet.of(
+				"gcmTestToken",
+				"gcmTestToken2",
+				"gcmTestToken4",
+				"32"
+		);
+		assertThat(newIds, is(expected));
 	}
 }

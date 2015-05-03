@@ -4,9 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.appengine.api.urlfetch.*;
 import com.google.appengine.api.urlfetch.FetchOptions.Builder;
 import com.google.common.base.Charsets;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.googlecode.objectify.Work;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.GcmConstants;
 import me.lazerka.mf.api.gcm.GcmPayload;
@@ -36,7 +33,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Dzmitry Lazerka
@@ -59,7 +55,7 @@ public class GcmService {
 	DateTime now;
 
 	@Inject
-	MfUser user;
+	MfUser currentUser;
 
 	/**
 	 * Sends given payload to given user through GCM.
@@ -72,8 +68,9 @@ public class GcmService {
 		GcmRequest gcmRequest = createGcmRequest(registrationIds, payload);
 		GcmResponse gcmResponse = sendGcmRequest(gcmRequest);
 
+		List<GcmRegistrationEntity> registrations = fetchGcmRegistrationEntities(recipient);
 		PairedList<GcmRegistrationEntity, Result> pairs =
-				new PairedList<>(recipient.getGcmRegistrationEntities(), gcmResponse.getResults());
+				new PairedList<>(registrations, gcmResponse.getResults());
 		List<GcmResult> gcmResults = new ArrayList<>(pairs.size());
 		Set<GcmRegistrationEntity> toRemove = new HashSet<>();
 		Set<GcmRegistrationEntity> toAdd = new HashSet<>();
@@ -85,28 +82,27 @@ public class GcmService {
 			String error = result.getError();
 			if (error != null) {
 				switch (error) {
+					case GcmConstants.ERROR_UNAVAILABLE:
+						logger.warn("GCM unavailable: {} for {}", error, recipient.getEmail());
+						// Not sure it makes sense to retry right away, probably let's client decide.
+						break;
 					case GcmConstants.ERROR_NOT_REGISTERED:
 					case GcmConstants.ERROR_INVALID_REGISTRATION:
 						logger.warn("Sending GCM failed: {} for {}", error, recipient.getEmail());
 						toRemove.add(registration);
 						break;
-					case GcmConstants.ERROR_MESSAGE_TOO_BIG:
+					default:
 						logger.error("Sending GCM failed: {} for {}", error, recipient.getEmail());
 				}
 			}
 			String newRegistrationId = result.getRegistrationId();
 			if (newRegistrationId != null) {
 				toRemove.add(registration);
-				toAdd.add(new GcmRegistrationEntity(newRegistrationId, now));
-				registration = new GcmRegistrationEntity(newRegistrationId, now);
+				registration = new GcmRegistrationEntity(recipient, newRegistrationId, now);
+				toAdd.add(registration);
 			}
 
-			HashCode hash = Hashing.sha256().hashString(registration.getId(), UTF_8);
-			GcmResult gcmResult = new GcmResult(
-					hash,
-					result.getMessageId(),
-					error
-			);
+			GcmResult gcmResult = new GcmResult(result.getMessageId(), error);
 			gcmResults.add(gcmResult);
 		}
 
@@ -166,7 +162,7 @@ public class GcmService {
 		gcmRequest.setRegistrationIds(registrationIds);
 		gcmRequest.setTimeToLiveSeconds(30);
 		gcmRequest.setData(payload);
-		gcmRequest.setCollapseKey(user.getEmail());
+		gcmRequest.setCollapseKey(currentUser.getEmail());
 		return gcmRequest;
 	}
 
@@ -175,7 +171,7 @@ public class GcmService {
 	 * @see GcmRegistrationEntity
 	 */
 	private List<String> getRegistrationIds(MfUser user) {
-		List<GcmRegistrationEntity> gcmRegistrationEntities = user.getGcmRegistrationEntities();
+		List<GcmRegistrationEntity> gcmRegistrationEntities = fetchGcmRegistrationEntities(user);
 		if (gcmRegistrationEntities.isEmpty()) {
 			throw new WebApplicationException(
 					Response.status(404).entity("User doesn't have any GCM registrations").build());
@@ -187,31 +183,25 @@ public class GcmService {
 		return registrationIds;
 	}
 
+	private List<GcmRegistrationEntity> fetchGcmRegistrationEntities(MfUser user) {
+		return ofy().load()
+				.type(GcmRegistrationEntity.class)
+				.ancestor(user)
+				.chunkAll()
+				.list();
+	}
 
-	private MfUser fixRegistrationIds(
+	private void fixRegistrationIds(
 			final MfUser recipientUser,
 			final Set<GcmRegistrationEntity> toRemove,
 			final Set<GcmRegistrationEntity> toAdd
 	) {
-		logger.info("Replacing tokens for user {}", recipientUser);
-		return ofy().transactNew(5, new Work<MfUser>() {
-					@Override
-					public MfUser run() {
-						// Current state of recipientUser entity.
-						MfUser currentState = ofy().load().entity(recipientUser).safe();
-
-						List<GcmRegistrationEntity> list = currentState.getGcmRegistrationEntities();
-						if (list.removeAll(toRemove)) {
-							logger.trace("Removed registration ids {}", toRemove);
-						}
-
-						if (list.addAll(toAdd)) {
-							logger.trace("Added registration ids {}", toAdd);
-						}
-
-						ofy().save().entity(currentState);
-						return currentState;
-					}
-				});
+		logger.info(
+				"Replacing tokens for user {}: adding {}, removing {}.",
+				recipientUser,
+				toAdd.size(),
+				toRemove.size());
+		ofy().defer().save().entities(toAdd);
+		ofy().defer().delete().entities(toRemove);
 	}
 }

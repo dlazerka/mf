@@ -7,8 +7,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,9 +25,6 @@ public class MfUser {
 	@Index User user;
 	@Index String email;
 
-	@Unindex
-	List<GcmRegistrationEntity> gcmRegistrationEntities = new ArrayList<>(2);
-
 	private MfUser() {}
 
 	public MfUser(@Nonnull User user) {
@@ -40,7 +35,6 @@ public class MfUser {
 
 	@OnSave
 	void onSave() {
-		checkNotNull(gcmRegistrationEntities);
 		checkNotNull(googleId);
 
 		if (createdDate == null) {
@@ -78,20 +72,7 @@ public class MfUser {
 		return user.getEmail();
 	}
 
-	@Nonnull
-	public List<GcmRegistrationEntity> getGcmRegistrationEntities() {
-		return gcmRegistrationEntities != null ? gcmRegistrationEntities : new ArrayList<GcmRegistrationEntity>();
-	}
-
 	public User getUser() {
 		return user;
-	}
-
-	public List<String> getGcmRegistrationIds() {
-		List<String> result = new ArrayList<>(gcmRegistrationEntities.size());
-		for(GcmRegistrationEntity gcmRegistrationEntity : gcmRegistrationEntities) {
-			result.add(gcmRegistrationEntity.getId());
-		}
-		return result;
 	}
 }

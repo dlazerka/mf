@@ -1,7 +1,6 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.hash.HashCode;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -40,13 +39,6 @@ public class LocationRequestResult {
 
 	public static class GcmResult {
 		/**
-		 * SHA-256 hash of all friends GCM Registration IDs.
-		 * User should not know others registration IDs, especially if they aren't friends.
-		 */
-		@JsonProperty
-		private final String deviceRegistrationHash;
-
-		/**
 		 * String representing the message when it was successfully processed.
 		 */
 		@JsonProperty("message_id")
@@ -61,14 +53,9 @@ public class LocationRequestResult {
 		@JsonProperty("error")
 		private final String error;
 
-		public GcmResult(@Nonnull HashCode deviceRegistrationHash, @Nonnull String messageId, @Nullable String error) {
-			this.deviceRegistrationHash = deviceRegistrationHash.toString();
+		public GcmResult(@Nonnull String messageId, @Nullable String error) {
 			this.messageId = messageId;
 			this.error = error;
-		}
-
-		public String getDeviceRegistrationHash() {
-			return deviceRegistrationHash;
 		}
 
 		public String getMessageId() {
