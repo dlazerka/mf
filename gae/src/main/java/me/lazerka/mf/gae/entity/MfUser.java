@@ -28,7 +28,7 @@ public class MfUser {
 	@Index String email;
 
 	@Unindex
-	List<GcmRegistrationEntity> gcmRegistrations = new ArrayList<>(2);
+	List<GcmRegistrationEntity> gcmRegistrationEntities = new ArrayList<>(2);
 
 	private MfUser() {}
 
@@ -40,7 +40,7 @@ public class MfUser {
 
 	@OnSave
 	void onSave() {
-		checkNotNull(gcmRegistrations);
+		checkNotNull(gcmRegistrationEntities);
 		checkNotNull(googleId);
 
 		if (createdDate == null) {
@@ -79,11 +79,19 @@ public class MfUser {
 	}
 
 	@Nonnull
-	public List<GcmRegistrationEntity> getGcmRegistrations() {
-		return gcmRegistrations != null ? gcmRegistrations : new ArrayList<GcmRegistrationEntity>();
+	public List<GcmRegistrationEntity> getGcmRegistrationEntities() {
+		return gcmRegistrationEntities != null ? gcmRegistrationEntities : new ArrayList<GcmRegistrationEntity>();
 	}
 
 	public User getUser() {
 		return user;
+	}
+
+	public List<String> getGcmRegistrationIds() {
+		List<String> result = new ArrayList<>(gcmRegistrationEntities.size());
+		for(GcmRegistrationEntity gcmRegistrationEntity : gcmRegistrationEntities) {
+			result.add(gcmRegistrationEntity.getId());
+		}
+		return result;
 	}
 }

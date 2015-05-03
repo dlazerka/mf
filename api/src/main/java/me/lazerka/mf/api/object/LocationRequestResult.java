@@ -1,7 +1,10 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.hash.HashCode;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -41,13 +44,13 @@ public class LocationRequestResult {
 		 * User should not know others registration IDs, especially if they aren't friends.
 		 */
 		@JsonProperty
-		private String deviceRegistrationHash;
+		private final String deviceRegistrationHash;
 
 		/**
 		 * String representing the message when it was successfully processed.
 		 */
 		@JsonProperty("message_id")
-		private String messageId;
+		private final String messageId;
 
 		/**
 		 * String describing an error that occurred while processing the message for that recipient.
@@ -56,30 +59,25 @@ public class LocationRequestResult {
 		 * recipient, so it could be retried).
 		 */
 		@JsonProperty("error")
-		private String error;
+		private final String error;
+
+		public GcmResult(@Nonnull HashCode deviceRegistrationHash, @Nonnull String messageId, @Nullable String error) {
+			this.deviceRegistrationHash = deviceRegistrationHash.toString();
+			this.messageId = messageId;
+			this.error = error;
+		}
 
 		public String getDeviceRegistrationHash() {
 			return deviceRegistrationHash;
-		}
-
-		public void setDeviceRegistrationHash(String deviceRegistrationHash) {
-			this.deviceRegistrationHash = deviceRegistrationHash;
 		}
 
 		public String getMessageId() {
 			return messageId;
 		}
 
-		public void setMessageId(String messageId) {
-			this.messageId = messageId;
-		}
-
+		@Nullable
 		public String getError() {
 			return error;
-		}
-
-		public void setError(String error) {
-			this.error = error;
 		}
 	}
 

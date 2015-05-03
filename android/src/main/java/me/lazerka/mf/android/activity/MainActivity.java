@@ -3,6 +3,7 @@ package me.lazerka.mf.android.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -155,8 +156,8 @@ public class MainActivity extends Activity {
 	}
 
 	public void showLocation(Set<String> emails) {
-		LocationRequest locationRequest = new LocationRequest();
-		locationRequest.setEmails(emails);
+		String requestId = String.valueOf(SystemClock.uptimeMillis());
+		LocationRequest locationRequest = new LocationRequest(requestId, emails);
 		new LocationRequester(locationRequest)
 			.send();
 	}

@@ -1,13 +1,10 @@
-package me.lazerka.mf;
+package me.lazerka.mf.gae;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
 import me.lazerka.mf.gae.entity.AcraExceptionEntity;
-import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.entity.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,22 +35,5 @@ public class ObjectifyModule extends AbstractModule {
 	private void registerEntities(ObjectifyFactory factory) {
 		factory.register(AcraExceptionEntity.class);
 		factory.register(MfUser.class);
-		factory.register(GcmRegistrationEntity.class);
 	}
-
-	@Provides
-	private Objectify provideOfy() {
-		return ObjectifyService.ofy();
-	}
-
-	@Provides
-	private ObjectifyFactory provideObjectifyFactory() {
-		return ObjectifyService.factory();
-	}
-
-	@Provides
-	private com.googlecode.objectify.impl.Keys provideKeys() {
-		return ObjectifyService.factory().keys();
-	}
-
 }

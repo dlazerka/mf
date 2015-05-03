@@ -1,4 +1,4 @@
-package me.lazerka.mf;
+package me.lazerka.mf.gae;
 
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
@@ -20,7 +20,7 @@ import com.google.appengine.api.users.UserServiceFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.Objectify;
+import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Work;
 import com.googlecode.objectify.impl.Keys;
 import me.lazerka.mf.gae.entity.MfUser;
@@ -31,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+
+import static com.googlecode.objectify.ObjectifyService.ofy;
 
 /**
  * Main project configuration.
@@ -71,7 +73,9 @@ public class MainModule extends AbstractModule {
 	 * Returns current user, creating entity if doesn't exist.
 	 */
 	@Provides
-	private MfUser provideUser(UserService userService, final Objectify ofy, Keys keys) {
+	private MfUser provideUser(UserService userService) {
+		Keys keys = ObjectifyService.factory().keys();
+
 		if (!userService.isUserLoggedIn()) {
 			throw new IllegalStateException("User is not logged in");
 		}
@@ -79,15 +83,15 @@ public class MainModule extends AbstractModule {
 		final User user = userService.getCurrentUser();
 		final Key<MfUser> key = keys.keyOf(new MfUser(user));
 
-		return ofy.transact(new Work<MfUser>() {
+		return ofy().transact(new Work<MfUser>() {
 			@Override
 			public MfUser run() {
-				MfUser mfUser = ofy.load().key(key).now();
+				MfUser mfUser = ofy().load().key(key).now();
 				if (mfUser != null) {
 					return mfUser;
 				}
 				mfUser = new MfUser(user);
-				ofy.save().entity(mfUser).now();
+				ofy().save().entity(mfUser).now();
 				return mfUser;
 			}
 		});

@@ -2,7 +2,7 @@ package me.lazerka.mf.gae.web;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import me.lazerka.mf.MainModule;
+import me.lazerka.mf.gae.MainModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

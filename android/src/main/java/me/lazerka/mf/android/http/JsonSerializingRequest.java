@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Own implementation of Volley's JsonRequest to hide JSON [de]serialization] inside,
+ * Own implementation of Volley's JsonRequest to hide JSON [de]serialization inside,
  * and to do serialization in a background thread.
  *
  * @author Dzmitry Lazerka

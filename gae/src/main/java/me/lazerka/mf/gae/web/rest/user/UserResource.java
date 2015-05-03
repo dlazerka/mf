@@ -1,6 +1,5 @@
 package me.lazerka.mf.gae.web.rest.user;
 
-import com.googlecode.objectify.Objectify;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.gae.entity.MfUser;
 import org.slf4j.Logger;
@@ -20,14 +19,10 @@ public class UserResource {
 	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
 
 	@Inject
-	Objectify ofy;
-
-	@Inject
 	MfUser user;
 
 	@GET
 	@Path("/me")
-	@Produces("application/json")
 	public UserBean me() {
 		return new UserBean(user);
 	}

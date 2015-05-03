@@ -7,14 +7,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
+import com.android.volley.Request.Method;
+import com.android.volley.VolleyError;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
-import me.lazerka.mf.api.gcm.GcmDataLocation;
+import me.lazerka.mf.android.http.JsonRequester;
+import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.api.object.MyLocation;
+import me.lazerka.mf.api.object.MyLocationResponse;
+
+import javax.annotation.Nullable;
 
 /**
  * Handles messages from GCM. Basically, there's only one message -- if someone requests our location.
@@ -69,12 +78,12 @@ public class GcmIntentService extends IntentService {
 	private void processMessage(Bundle extras) {
 		Log.i(TAG, "Received message: " + extras.toString());
 		// Available fields:
-		// "sentAt", "requesterEmail" -- see GcmDataLocation
+		// "sentAt", "requesterEmail" -- see LocationRequestGcmPayload
 		// "from" -- GAE Project Number
 		// "android.support.content.wakelockid" = set by GcmBroadcastReceiver at startWakefulService().
 		// "collapse_key" -- See http://developer.android.com/training/cloudsync/gcm.html#collapse
 
-		String requesterEmail = extras.getString(GcmDataLocation.REQUESTER_EMAIL);
+		String requesterEmail = extras.getString(LocationRequestGcmPayload.REQUESTER_EMAIL);
 
 		String appName = getResources().getString(R.string.app_name);
 		sendNotification(requesterEmail + " requested your location", appName);
@@ -85,6 +94,11 @@ public class GcmIntentService extends IntentService {
 		location.setAcc(lastKnownLocation.getAccuracy());
 		location.setLat(lastKnownLocation.getLatitude());
 		location.setLon(lastKnownLocation.getLongitude());
+
+		String requestId = String.valueOf(SystemClock.uptimeMillis());
+		MyLocation myLocation = new MyLocation(requestId, location, requesterEmail);
+
+		new LocationSender(myLocation).send();
 	}
 
 	private void handleRegistrationId(Intent intent) {
@@ -117,23 +131,25 @@ public class GcmIntentService extends IntentService {
 		mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
 	}
 
-/*
-	private class LocationReceiver extends ApiResponseHandler {
-		@Override
-		protected void handleSuccess(@Nullable String json) {
-			Log.v(TAG, "handleSuccess");
 
-			Location location;
-			try {
-				ObjectMapper mapper = Application.jsonMapper;
-				location = mapper.readValue(json, Location.class);
-			} catch (IOException e) {
-				Log.w(TAG, e.getMessage(), e);
-				return;
-			}
-
-			MapFragment mapFragment = mTabsAdapter.getMapFragment();
-			mapFragment.showLocation(location);
+	private class LocationSender extends JsonRequester<MyLocation, MyLocationResponse> {
+		public LocationSender(@Nullable MyLocation request) {
+			super(Method.POST, MyLocation.PATH, request, MyLocationResponse.class);
 		}
-	}*/
+
+		@Override
+		public void onResponse(MyLocationResponse response) {
+			Log.d(TAG, "onResponse: " + response.toString());
+		}
+
+		@Override
+		public void onErrorResponse(VolleyError error) {
+			super.onErrorResponse(error);
+
+			String errorMessage = error.getMessage() != null ? (": " + error.getMessage()) : "";
+			String msg = "Network error " + errorMessage;
+			Log.e(TAG, msg);
+			Toast.makeText(GcmIntentService.this, msg, Toast.LENGTH_LONG).show();
+		}
+	}
 }

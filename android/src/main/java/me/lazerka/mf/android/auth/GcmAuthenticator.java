@@ -148,7 +148,7 @@ public class GcmAuthenticator {
 	 *
 	 * @author Dzmitry Lazerka
 	 */
-	public static class GcmRegistrationSender extends JsonRequester<GcmRegistration, GcmRegistrationResponse> {
+	private static class GcmRegistrationSender extends JsonRequester<GcmRegistration, GcmRegistrationResponse> {
 		private final String TAG = getClass().getName();
 
 		public GcmRegistrationSender(@Nonnull String gcmRegistrationId) {
@@ -161,9 +161,9 @@ public class GcmAuthenticator {
 
 		@Override
 		public void onResponse(GcmRegistrationResponse response) {
-			Log.i(TAG, "Server stored our registration ID as " + response.getId());
+			Log.i(TAG, "Server stored our registration ID");
 			GcmRegistration request = getRequest();
-			Application.preferences.setGcmServerKnowsToken(request.getToken());
+			Application.preferences.setGcmServerKnowsToken(request.getId());
 		}
 	}
 }

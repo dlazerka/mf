@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 /**
  * @author Dzmitry Lazerka
  */
-public class GcmRegistration implements ApiObject {
+public class GcmRegistration {
 	public static final String PATH = "/rest/gcm/registration";
 
 	/**
@@ -29,7 +29,7 @@ public class GcmRegistration implements ApiObject {
 		this.appVersion = appVersion;
 	}
 
-	public String getToken() {
+	public String getId() {
 		return id;
 	}
 

@@ -6,7 +6,6 @@ import com.google.appengine.api.mail.MailService.Message;
 import com.google.appengine.api.users.UserService;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.googlecode.objectify.Objectify;
 import me.lazerka.mf.api.object.AcraException;
 import me.lazerka.mf.gae.entity.AcraExceptionEntity;
 import org.slf4j.Logger;
@@ -25,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static com.googlecode.objectify.ObjectifyService.ofy;
+
 /**
  * @author Dzmitry Lazerka
  */
@@ -38,9 +39,6 @@ public class AcraExceptionResource {
 	@Inject
 	UserService userService;
 
-	@Inject
-	Objectify ofy;
-
 	// Expected response will be logged, see org.acra.util.HttpRequest
 	@PUT
 	@Produces("text/plain")
@@ -52,7 +50,7 @@ public class AcraExceptionResource {
 
 		// Save to Datastore.
 		AcraExceptionEntity entity = new AcraExceptionEntity(reportId, exceptionMessage, report);
-		ofy.save().entity(entity);
+		ofy().save().entity(entity);
 
 		// Send email;
 		Message message = new Message();
