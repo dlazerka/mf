@@ -25,6 +25,9 @@
 	<!-- For adding friends from Android contacts. -->
 	<uses-permission android:name="android.permission.READ_CONTACTS" />
 
+	<!-- To continue listening for requests after reboot. -->
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
 	<!--
 		Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
 		More at https://developer.android.com/google/gcm/client.html
@@ -102,9 +105,14 @@
 			android:name=".background.GcmIntentService"
 			android:exported="false"
 			/>
+		<service
+			android:name=".background.BootReceiver$GcmCheckService"
+			android:exported="false"
+			/>
 		<receiver android:name=".background.BootReceiver">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED"/>
+				<action android:name="android.intent.action.QUICKBOOT_POWERON"/>
 			</intent-filter>
 		</receiver>
 	</application>

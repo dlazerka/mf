@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
-import android.widget.Toast;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
 
 /**
@@ -18,7 +18,7 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		Log.d(TAG, "onReceive");
+		Log.v(TAG, "onReceive");
 
 		// Explicitly specify service that will handle the intent.
 		intent.setComponent(new ComponentName(context, GcmCheckService.class));
@@ -29,9 +29,9 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 	}
 
 	/**
-	 * Check GCM registration in background.
+	 * Makes sure GCM registration is active in background.
 	 */
-	private static class GcmCheckService extends IntentService {
+	public static class GcmCheckService extends IntentService {
 		private final String TAG = getClass().getName();
 
 		public GcmCheckService() {
@@ -41,11 +41,14 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 		@Override
 		protected void onHandleIntent(Intent intent) {
 			Log.v(TAG, "onHandleIntent");
-			Toast.makeText(this, "TEST test", Toast.LENGTH_LONG).show();
-			// Make sure we're listening GCM.
+
+			if (Application.preferences.getAccount() == null) {
+				Log.w(TAG, "Account is null, no use registering for GCM");
+				return;
+			}
+
 			GcmAuthenticator gcmAuthenticator = new GcmAuthenticator(this);
 			gcmAuthenticator.checkRegistration();
-
 		}
 	}
 }
