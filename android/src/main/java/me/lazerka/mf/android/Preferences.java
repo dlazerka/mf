@@ -1,6 +1,7 @@
 package me.lazerka.mf.android;
 
 import android.accounts.Account;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -120,6 +121,7 @@ public class Preferences {
 			// Check if app was updated; if so, it must clear the registration ID
 			// since the existing regID is not guaranteed to work with the new
 			// app version.
+			// See build.gradle where it's defined
 			int currentVersion = Application.getVersion();
 			if (registeredVersion != currentVersion) {
 				Log.i(TAG, "App version changed.");
@@ -170,6 +172,15 @@ public class Preferences {
 		}
 	}
 
+	@SuppressLint("CommitPrefEdits")
+	public void clearGcmToken() {
+		preferences.edit()
+				.remove(GCM_TOKEN)
+				.remove(GCM_SERVER_KNOWS)
+				.remove(GCM_APP_VERSION)
+				.commit();
+	}
+
 	@Nullable
 	public String getGaeAuthToken() {
 		return preferences.getString(GAE_AUTH_TOKEN, null);
@@ -183,8 +194,6 @@ public class Preferences {
 
 	public void onBeforeBackup() {
 		Log.v(TAG, "onBeforeBackup");
-		preferences.edit()
-				.remove(GCM_TOKEN)
-				.apply();
+		clearGcmToken();
 	}
 }

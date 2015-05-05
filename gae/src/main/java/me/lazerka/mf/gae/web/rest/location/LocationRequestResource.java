@@ -1,8 +1,6 @@
 package me.lazerka.mf.gae.web.rest.location;
 
-import com.google.appengine.api.urlfetch.URLFetchService;
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
@@ -31,24 +29,12 @@ import java.util.List;
 public class LocationRequestResource {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestResource.class);
 
-	private static final String GCM_ENDPOINT_URL = "https://android.googleapis.com/gcm/send";
-
 	@Inject
 	MfUser user;
 
 	@Inject
 	@Named("now")
 	DateTime now;
-
-	@Inject
-	URLFetchService urlFetchService;
-
-	@Inject
-	@Named("gcm.api.key")
-	String gcmApiKey;
-
-	@Inject
-	JsonMapper objectMapper;
 
 	@Inject
 	MfUserService mfUserService;
@@ -82,9 +68,10 @@ public class LocationRequestResource {
 
 		List<GcmResult> gcmResults = gcmService.send(recipientUser, payload);
 
-		LocationRequestResult result = new LocationRequestResult();
-		result.setEmail(recipientUser.getEmail());
-		result.setResults(gcmResults);
+		LocationRequestResult result = new LocationRequestResult(
+				recipientUser.getEmail(),
+				gcmResults
+		);
 		return result;
 	}
 }

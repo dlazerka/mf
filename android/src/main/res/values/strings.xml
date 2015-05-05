@@ -2,6 +2,7 @@
 <resources>
 	<string name="app_name">Find Us</string>
 	<string name="action_logout">Logout</string>
+	<string name="action_clear_token">Refresh GCM Token</string>
 	<string name="action_quit">Quit</string>
 
 	<string name="send_my">Send My Location</string>
@@ -22,4 +23,5 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="add_contact">Add contact</string>
 	<string name="choose_a_contact">Choose a contact</string>
 	<string name="login">Sign In</string>
+	<string name="acra_toast_text">Uncaught Exception happened</string>
 </resources>

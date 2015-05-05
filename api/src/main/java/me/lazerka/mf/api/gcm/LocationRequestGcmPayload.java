@@ -17,7 +17,7 @@ public class LocationRequestGcmPayload extends GcmPayload {
 	public static final String REQUESTER_EMAIL = "requesterEmail";
 
 	@JsonProperty(REQUEST_ID)
-	private final String requestId;
+	private String requestId;
 
 	/**
 	 * Who's asking for location.
@@ -25,13 +25,16 @@ public class LocationRequestGcmPayload extends GcmPayload {
 	 * Receiver smartphone must check if this user is a "friend".
 	 */
 	@JsonProperty(REQUESTER_EMAIL)
-	private final String requesterEmail;
+	private String requesterEmail;
 
 	/**
 	 * When the message was received by server from the requester.
 	 */
 	@JsonProperty(SENT_AT)
-	private final DateTime sentAt;
+	private DateTime sentAt;
+
+	// For Jackson.
+	private LocationRequestGcmPayload() {}
 
 	public LocationRequestGcmPayload(String requestId, String requesterEmail, DateTime sentAt) {
 		this.requestId = requestId;

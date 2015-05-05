@@ -67,6 +67,7 @@ public class GaeRequestQueue extends RequestQueue {
 			String gaeAuthToken = Application.preferences.getGaeAuthToken();
 			if (gaeAuthToken == null) {
 				gaeAuthToken = obtainGaeAuthToken();
+				Application.preferences.setGaeAuthToken(gaeAuthToken);
 			}
 
 			setAuthCookie(gaeAuthToken, request);

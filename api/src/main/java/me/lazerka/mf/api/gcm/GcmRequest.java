@@ -1,8 +1,12 @@
 package me.lazerka.mf.api.gcm;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * GCM message that is sent to GCM.
@@ -11,6 +15,7 @@ import java.util.List;
  *
  * @author Dzmitry Lazerka
  */
+@JsonInclude(Include.NON_DEFAULT)
 public class GcmRequest {
 	@JsonProperty("registration_ids")
 	private List<String> registrationIds;
@@ -19,7 +24,7 @@ public class GcmRequest {
 	private String collapseKey;
 
 	@JsonProperty("data")
-	private Object data;
+	private Map<String, GcmPayload> data = new HashMap<>();
 
 	@JsonProperty("time_to_live")
 	private int timeToLiveSeconds;
@@ -38,8 +43,8 @@ public class GcmRequest {
 		this.collapseKey = collapseKey;
 	}
 
-	public void setData(Object data) {
-		this.data = data;
+	public void putPayload(GcmPayload payload) {
+		data.put(payload.getType(), payload);
 	}
 
 	public void setTimeToLiveSeconds(int timeToLiveSeconds) {

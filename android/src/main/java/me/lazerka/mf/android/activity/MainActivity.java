@@ -12,6 +12,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import com.google.common.base.Charsets;
@@ -23,9 +24,10 @@ import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Dzmitry Lazerka
@@ -46,53 +48,6 @@ public class MainActivity extends Activity {
 
 		Button contactsButton = (Button) findViewById(R.id.choose_contact_btn);
 		contactsButton.setOnClickListener(new OnContactsClickListener());
-
-		/*
-		drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		drawerList = (ListView) findViewById(R.id.left_drawer);
-		addFriendButton = (Button) findViewById(R.id.add_friend);
-
-		addFriendButton.setOnClickListener(new OnAddFriendClickListener());
-
-		FriendsListAdapter adapter = new FriendsListAdapter(this);
-		drawerList.setAdapter(adapter);
-		// Set the list's click listener
-		drawerList.setOnItemClickListener(new DrawerItemClickListener());
-
-		final ImageView drawerIcon = (ImageView) findViewById(R.id.drawer_indicator);
-
-		drawerIcon.setOnClickListener(
-			new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					if (drawer.isDrawerVisible(START)) {
-						drawer.closeDrawer(START);
-					} else {
-						drawer.openDrawer(START);
-					}
-				}
-			}
-		);
-*/
-		//contentFrame = (FrameLayout) findViewById(R.id.content_frame);
-		//FragmentManager fragmentManager = getFragmentManager();
-		//fragmentManager.beginTransaction()
-		//	.add(R.id.content_frame, new MapFragment())
-		//	.commit();
-		//ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-
-		//mActionBar = getActionBar();
-		//assert mActionBar != null; // Just to silence IDE warning.
-		//mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-		//
-		//mTabsAdapter = new TabsAdapter(getFragmentManager(), mActionBar, viewPager);
-		//mTabsAdapter.init();
-
-
-
-		// debug
-//		Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
-//		startActivityForResult(intent, CONTACT_ACTIVITY_RESULT);
 	}
 
 	private class OnContactsClickListener
@@ -147,6 +102,11 @@ public class MainActivity extends Activity {
 				Application.preferences.clearAccount();
 				intent = new Intent(this, LoginActivity.class);
 				startActivity(intent);
+				finish();
+				break;
+			case R.id.clear_token:
+				Application.preferences.clearGcmToken();
+				recreate();
 				break;
 			case R.id.action_quit:
 				this.finish();
@@ -164,7 +124,7 @@ public class MainActivity extends Activity {
 
 	private class LocationRequester extends JsonRequester<LocationRequest, LocationRequestResult> {
 		public LocationRequester(@Nullable LocationRequest request) {
-			super(Method.POST, LocationRequest.PATH, request, LocationRequestResult.class);
+			super(Method.POST, LocationRequest.PATH, request, LocationRequestResult.class, MainActivity.this);
 		}
 
 		@Override
@@ -210,7 +170,7 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 				} else {
 					String email = getRequest().getEmails().iterator().next();
-					msg = email + " not found: " + new String(error.networkResponse.data, StandardCharsets.UTF_8);
+					msg = email + " not found: " + new String(error.networkResponse.data, UTF_8);
 				}
 				Log.w(TAG, msg);
 
@@ -225,6 +185,17 @@ public class MainActivity extends Activity {
 				Log.e(TAG, msg);
 			}
 			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+		}
+
+		@Override
+		protected String getMessage404(NetworkResponse networkResponse) {
+			if (getRequest().getEmails().size() > 1) {
+				return "None of your friend's email addresses were found in database. " +
+						"Did your friend installed the app?";
+			} else {
+				String email = getRequest().getEmails().iterator().next();
+				return email + " not found: " + new String(networkResponse.data, UTF_8);
+			}
 		}
 	}
 }

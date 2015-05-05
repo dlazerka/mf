@@ -15,10 +15,13 @@ public class MyLocationGcmPayload extends GcmPayload {
 	public static final String REQUEST_ID = "requestId";
 
 	@JsonProperty(REQUEST_ID)
-	private final String requestId;
+	private String requestId;
 
 	@JsonProperty(LOCATION)
-	private final Location location;
+	private Location location;
+
+	// For Jackson.
+	private MyLocationGcmPayload() {}
 
 	public MyLocationGcmPayload(String requestId, Location location) {
 		this.requestId = requestId;
@@ -28,6 +31,10 @@ public class MyLocationGcmPayload extends GcmPayload {
 	@Override
 	public String getType() {
 		return TYPE;
+	}
+
+	public Location getLocation() {
+		return location;
 	}
 
 	@Override

@@ -6,6 +6,12 @@
 		app:showAsAction="never"
 		android:title="@string/action_logout"
 		/>
+	<item
+		android:id="@+id/clear_token"
+		android:orderInCategory="200"
+		app:showAsAction="never"
+		android:title="@string/action_clear_token"
+		/>
 
 	<item
 		android:id="@+id/action_quit"

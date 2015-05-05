@@ -3,6 +3,12 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	package="me.lazerka.mf.android">
 
+	<!-- Add these above to get rid of build warnings.
+		xmlns:tools="http://schemas.android.com/tools"
+	tools:replace="android:icon,android:theme"
+
+	-->
+
 	<!--<uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />-->
 
 </manifest>

@@ -5,6 +5,7 @@ import me.lazerka.mf.gae.entity.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -17,7 +18,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 public class MfUserService {
 	private static final Logger logger = LoggerFactory.getLogger(MfUserService.class);
 
-	public MfUser getUserByEmail(String email) {
+	public MfUser getUserByEmail(@Nonnull String email) {
 		return getUserByEmails(ImmutableList.of(email));
 	}
 
@@ -31,6 +32,7 @@ public class MfUserService {
 				.first()
 				.now();
 		if (otherUser == null) {
+			logger.warn("No user found by emails: {}", emails);
 			throw new WebApplicationException(Response.status(404).entity("User not found").build());
 		}
 		return otherUser;

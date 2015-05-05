@@ -30,12 +30,6 @@ public class JsonSerializingRequest<T> extends com.android.volley.toolbox.JsonRe
 	private final String TAG = JsonSerializingRequest.class.getName() + "-" + SystemClock.uptimeMillis();
 	private final Map<String, String> headers = new LinkedHashMap<>();
 
-	/**
-	 * Authentication token for server (GAE). Should be shared between requests to not authenticate each time.
-	 * I have a mixed feeling of storing it in a static
-	 */
-	private static String gaeAuthToken;
-
 	private final Object requestObject;
 	private final Class<T> responseClass;
 

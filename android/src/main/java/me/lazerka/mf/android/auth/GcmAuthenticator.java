@@ -1,6 +1,7 @@
 package me.lazerka.mf.android.auth;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
@@ -12,6 +13,7 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
 import me.lazerka.mf.api.object.GcmRegistration;
+import org.acra.ACRA;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -32,10 +34,10 @@ public class GcmAuthenticator {
 
 	private GoogleCloudMessaging gcm;
 	private String gcmToken;
-	private final Activity activity;
+	private final Context context;
 
-	public GcmAuthenticator(Activity activity) {
-		this.activity = activity;
+	public GcmAuthenticator(Context context) {
+		this.context = context;
 	}
 
 	/**
@@ -60,7 +62,7 @@ public class GcmAuthenticator {
 
 	public void checkRegistration() {
 		if (checkPlayServices()) {
-			gcm = GoogleCloudMessaging.getInstance(activity);
+			gcm = GoogleCloudMessaging.getInstance(context);
 			gcmToken = Application.preferences.getGcmToken();
 
 			if (gcmToken == null) {
@@ -71,10 +73,8 @@ public class GcmAuthenticator {
 			}
 		} else {
 			Log.e(TAG, "No valid Google Play Services APK found.");
-			Toast.makeText(activity, "Please install Google Play Services", Toast.LENGTH_LONG)
+			Toast.makeText(context, "Please install Google Play Services", Toast.LENGTH_LONG)
 					.show();
-
-			activity.finish();
 		}
 	}
 
@@ -84,16 +84,25 @@ public class GcmAuthenticator {
 	 * it doesn't, display a dialog that allows users to download the APK from
 	 * the Google Play Store or enable it in the device's system settings.
 	 */
-	public boolean checkPlayServices() {
-		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(activity);
+	private boolean checkPlayServices() {
+		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
 		if (resultCode != ConnectionResult.SUCCESS) {
 			Log.w(TAG, "Google Play Services unavailable: " + resultCode);
 			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-				GooglePlayServicesUtil.getErrorDialog(resultCode, activity, PLAY_SERVICES_RESOLUTION_REQUEST)
-						.show();
+				if (context instanceof Activity) {
+					GooglePlayServicesUtil.getErrorDialog(
+							resultCode,
+							(Activity) context,
+							PLAY_SERVICES_RESOLUTION_REQUEST
+					)
+					.show();
+				} else {
+					String msg = "Play Services unavailable, but cannot show error dialog to user.";
+					Log.e(TAG, msg);
+					ACRA.getErrorReporter().handleException(new Exception(msg), true);
+				}
 			} else {
 				Log.i(TAG, "This device is not supported.");
-				activity.finish();
 			}
 			return false;
 		}
@@ -135,7 +144,7 @@ public class GcmAuthenticator {
 		protected void onPostExecute(String msg) {
 			if (msg.contains("Error")) {
 				Log.w(TAG, msg);
-				Toast.makeText(activity, "Google Cloud Messaging " + msg, Toast.LENGTH_LONG)
+				Toast.makeText(context, "Google Cloud Messaging " + msg, Toast.LENGTH_LONG)
 						.show();
 			} else {
 				Log.i(TAG, msg);

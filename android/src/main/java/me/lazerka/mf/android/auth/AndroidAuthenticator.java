@@ -1,13 +1,6 @@
 package me.lazerka.mf.android.auth;
 
-import java.io.IOException;
-
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
+import android.accounts.*;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,6 +8,8 @@ import com.google.android.gms.common.AccountPicker;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.activity.LoginActivity;
 import me.lazerka.mf.api.ApiConstants;
+
+import java.io.IOException;
 
 /**
  * Handles on-device authentication, i.e.obtains Android token.
@@ -37,7 +32,15 @@ public class AndroidAuthenticator {
 		Account account = Application.preferences.getAccount();
 		if (account == null || !isAccountAvailable(account)) {
 			return AccountPicker.newChooseAccountIntent(
-					account, null, new String[]{ACCOUNT_TYPE}, false, null, null, null, null);
+					account, // selectedAccount
+					null, // allowable accounts
+					new String[]{ACCOUNT_TYPE}, // allowable account types
+					false, // alwaysPromptForAccount
+					null, // descriptionOverrideText
+					null, // addAccountAuthTokenType
+					null, // addAccountRequiredFeatures
+					null // addAccountOptions
+			);
 		}
 		return null;
 	}

@@ -40,6 +40,8 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 public class GcmService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmService.class);
 
+	private static final int TIME_TO_LIVE_SECONDS = 60;
+
 	@Inject
 	URLFetchService urlFetchService;
 
@@ -160,8 +162,8 @@ public class GcmService {
 		// Compose request to GCM.
 		GcmRequest gcmRequest = new GcmRequest();
 		gcmRequest.setRegistrationIds(registrationIds);
-		gcmRequest.setTimeToLiveSeconds(30);
-		gcmRequest.setData(payload);
+		gcmRequest.setTimeToLiveSeconds(TIME_TO_LIVE_SECONDS);
+		gcmRequest.putPayload(payload);
 		gcmRequest.setCollapseKey(currentUser.getEmail());
 		return gcmRequest;
 	}

@@ -9,7 +9,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class MyLocationResponse {
 	@JsonProperty
-	private final String requestId;
+	private String requestId;
+
+	// For Jackson.
+	private MyLocationResponse() {}
 
 	public MyLocationResponse(String requestId) {
 		this.requestId = requestId;

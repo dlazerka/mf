@@ -24,7 +24,15 @@ public class Location {
 	@JsonProperty
 	private float acc;
 
-	public Location() {
+	// For Jackson.
+	private Location() {}
+
+	public Location(DateTime when, String email, double lat, double lon, float acc) {
+		this.when = when;
+		this.email = email;
+		this.lat = lat;
+		this.lon = lon;
+		this.acc = acc;
 	}
 
 	public DateTime getWhen() {
@@ -47,28 +55,16 @@ public class Location {
 		return lat;
 	}
 
-	public void setLat(double lat) {
-		this.lat = lat;
-	}
-
 	public double getLon() {
 		return lon;
-	}
-
-	public void setLon(double lon) {
-		this.lon = lon;
 	}
 
 	public float getAcc() {
 		return acc;
 	}
 
-	public void setAcc(float acc) {
-		this.acc = acc;
-	}
-
 	@Override
 	public String toString() {
-		return email + ":" + lat + "," + lon +"," + acc;
+		return email + ":" + lat + "," + lon + "," + acc + "," + when;
 	}
 }

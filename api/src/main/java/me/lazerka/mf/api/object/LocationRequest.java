@@ -14,10 +14,13 @@ public class LocationRequest {
 	public static final String PATH = "/rest/locationRequest";
 
 	@JsonProperty
-	private final String requestId;
+	private String requestId;
 
 	@JsonProperty
-	private final Set<String> emails;
+	private Set<String> emails;
+
+	// For Jackson.
+	private LocationRequest() {}
 
 	public LocationRequest(String requestId, Set<String> emails) {
 		this.requestId = requestId;

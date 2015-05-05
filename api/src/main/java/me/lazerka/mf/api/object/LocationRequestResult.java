@@ -21,20 +21,22 @@ public class LocationRequestResult {
 	@JsonProperty
 	private List<GcmResult> results;
 
+	// For Jackson.
+	private LocationRequestResult() {}
+
+	public LocationRequestResult(String email, List<GcmResult> results) {
+		this.email = email;
+		this.results = results;
+	}
+
+	@Nullable
 	public String getEmail() {
 		return email;
 	}
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
+	@Nullable
 	public List<GcmResult> getResults() {
 		return results;
-	}
-
-	public void setResults(List<GcmResult> results) {
-		this.results = results;
 	}
 
 	public static class GcmResult {
@@ -42,7 +44,7 @@ public class LocationRequestResult {
 		 * String representing the message when it was successfully processed.
 		 */
 		@JsonProperty("message_id")
-		private final String messageId;
+		private String messageId;
 
 		/**
 		 * String describing an error that occurred while processing the message for that recipient.
@@ -51,13 +53,17 @@ public class LocationRequestResult {
 		 * recipient, so it could be retried).
 		 */
 		@JsonProperty("error")
-		private final String error;
+		private String error;
+
+		// For Jackson.
+		private GcmResult() {}
 
 		public GcmResult(@Nonnull String messageId, @Nullable String error) {
 			this.messageId = messageId;
 			this.error = error;
 		}
 
+		@Nullable
 		public String getMessageId() {
 			return messageId;
 		}
