@@ -1,0 +1,3 @@
+[submodule "android/libs/two-way-gridview"]
+	path = android/libs/two-way-gridview
+	url = git@github.com:jess-anders/two-way-gridview.git

@@ -99,11 +99,10 @@ public class FriendListAdapter
 			});
 			v.setClipToOutline(true);
 		} else {
-			int id = cursor.getInt(0);
 			String displayName = cursor.getString(2);
 
 			char letter = displayName.charAt(0);
-			LetterDrawable drawable = new LetterDrawable(new OvalShape(), letter, id);
+			LetterDrawable drawable = new LetterDrawable(new OvalShape(), letter, displayName.hashCode());
 			v.setImageDrawable(drawable);
 
 			// Even if you don't set anything, make sure to call with null, to clear image of a newly added item.

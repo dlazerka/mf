@@ -7,9 +7,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.Toast;
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
@@ -22,9 +19,10 @@ import me.lazerka.mf.android.auth.GcmAuthenticator;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
+import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 
 import javax.annotation.Nullable;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -35,8 +33,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class MainActivity extends Activity {
 	private static final String TAG = MainActivity.class.getName();
 
-	/** ContactActivity result code */
-	private final int CONTACT_ACTIVITY_RESULT = 1;
 	/** What users to show. */
 	public static final String REQUEST_CONTACT_EMAILS = "REQUEST_CONTACT_EMAILS";
 
@@ -45,33 +41,6 @@ public class MainActivity extends Activity {
 		Log.v(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		Button contactsButton = (Button) findViewById(R.id.choose_contact_btn);
-		contactsButton.setOnClickListener(new OnContactsClickListener());
-	}
-
-	private class OnContactsClickListener
-			implements OnClickListener {
-		@Override
-		public void onClick(View v) {
-			Intent intent = new Intent(getBaseContext(), ContactsActivity.class);
-			startActivityForResult(intent, CONTACT_ACTIVITY_RESULT);
-		}
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == CONTACT_ACTIVITY_RESULT) {
-			if (resultCode == Activity.RESULT_OK) {
-				Set<String> emails = new LinkedHashSet<>(data.getStringArrayListExtra(REQUEST_CONTACT_EMAILS));
-				Toast.makeText(this, "Requesting emails: " + emails, Toast.LENGTH_LONG)
-						.show();
-				showLocation(emails);
-			}
-		} else {
-			Log.w(TAG, "Unknown request code: " + requestCode);
-			super.onActivityResult(requestCode, resultCode, data);
-		}
 	}
 
 	@Override
@@ -120,6 +89,10 @@ public class MainActivity extends Activity {
 		LocationRequest locationRequest = new LocationRequest(requestId, emails);
 		new LocationRequester(locationRequest)
 			.send();
+
+		// Todo change to UI text instead of a Toast.
+		Toast.makeText(this, "Requesting emails: " + emails, Toast.LENGTH_LONG)
+				.show();
 	}
 
 	private class LocationRequester extends JsonRequester<LocationRequest, LocationRequestResult> {
@@ -129,9 +102,21 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void onResponse(LocationRequestResult response) {
-			int devices = response.getResults().size();
-			if (devices == 1) {
-				String error = response.getResults().get(0).getError();
+			List<GcmResult> results = response.getResults();
+			if (results == null || results.isEmpty()) {
+				Log.w(TAG, "Empty results list in LocationRequestResult " + results);
+			} else {
+
+				// If at least one result is successful -- show it, otherwise show any error.
+				GcmResult oneResult = results.get(0);
+				for(GcmResult result : results) {
+					if (result.getError() == null) {
+						oneResult = result;
+						break;
+					}
+				}
+
+				String error = oneResult.getError();
 				if (error == null) {
 					String msg = "Sent location request to " + response.getEmail();
 					Log.i(TAG, msg);
@@ -143,13 +128,6 @@ public class MainActivity extends Activity {
 					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
 						.show();
 				}
-			} else {
-				Toast.makeText(
-					MainActivity.this,
-					"Sent location request to " + devices + " devices of " + response.getEmail(),
-					Toast.LENGTH_LONG)
-					.show();
-				// TODO show nicer message to user in multiple devices case.
 			}
 		}
 

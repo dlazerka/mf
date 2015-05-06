@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--<ScrollView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_height="match_parent"
+	android:layout_width="78dp"
+	android:background="@color/white"
+	tools:context=".activity.ContactsFragment">-->
+<!--
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:orientation="vertical"
+		>
+-->
+
+		<GridView
+			xmlns:android="http://schemas.android.com/apk/res/android"
+			android:id="@+id/contacts_list"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:elevation="@dimen/card_elevation_resting"
+			android:verticalSpacing="4dp"
+			android:horizontalSpacing="4dp"
+			android:padding="4dp"
+			android:background="@drawable/stroke"
+			android:orientation="horizontal"
+			xmlns:tools="http://schemas.android.com/tools"
+			tools:listitem="@android:layout/simple_list_item_1"
+			/>
+
+<!--
+		<ImageButton
+			style="?android:attr/buttonStyleSmall"
+			android:layout_width="56dp"
+			android:layout_height="56dp"
+			android:src="@mipmap/person_add_white"
+			android:contentDescription="@string/add_contact"
+			android:background="@drawable/ripple_oval_blue"
+			android:id="@+id/fab_add"
+			android:layout_margin="16dp"
+			android:elevation="@dimen/fab_elevation_resting"
+			android:paddingStart="12dp"
+			android:paddingEnd="14dp"
+			android:paddingTop="14dp"
+			android:paddingBottom="14dp"
+			android:layout_gravity="center"
+			android:scaleType="fitXY"
+			/>
+			-->
+	<!--</LinearLayout>-->
+
+
+<!--</ScrollView>-->

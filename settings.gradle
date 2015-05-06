@@ -1,1 +1,1 @@
-include ':api', ':android', ':backend', ':gae'
+include ':api', ':android', ':gae'

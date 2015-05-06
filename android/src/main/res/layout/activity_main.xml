@@ -1,28 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_height="match_parent"
-	android:layout_width="match_parent">
+	android:layout_width="match_parent"
+	android:orientation="vertical"
+	>
 
 	<fragment
+		class="me.lazerka.mf.android.activity.MapFragment"
+		tools:layout="@layout/fragment_map"
 		android:id="@+id/map"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		class="me.lazerka.mf.android.activity.MapFragment"/>
-
-	<Button
-		android:id="@+id/choose_contact_btn"
 		android:layout_width="match_parent"
-		android:layout_height="38dp"
-		android:layout_marginTop="12dp"
-		android:layout_marginStart="16dp"
-		android:layout_marginEnd="60dp"
-		android:background="@drawable/ripple_rect_gray"
-		android:text="@string/choose_a_contact"
-		android:fontFamily="Roboto"
-		android:textAllCaps="false"
-		android:textColor="@color/secondary_text_disabled_material_light"
-		android:elevation="@dimen/card_elevation_resting"
-		android:gravity="center_vertical"
-		android:paddingStart="16dp"/>
-</FrameLayout>
+		android:layout_height="0dp"
+		android:layout_weight="1"/>
+
+	<fragment
+		class="me.lazerka.mf.android.activity.ContactsFragment"
+		android:id="@+id/contacts"
+		android:layout_height="78dp"
+		android:layout_width="match_parent"
+		tools:layout="@layout/contacts_item"/>
+
+</LinearLayout>

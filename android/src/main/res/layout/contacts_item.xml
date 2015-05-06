@@ -2,10 +2,10 @@
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_height="match_parent"
-	android:layout_width="match_parent"
+	android:layout_height="76dp"
+	android:layout_width="76dp"
 	android:orientation="vertical"
-	tools:context=".activity.ContactsActivity"
+	tools:context=".activity.ContactsFragment"
 	>
 
 	<!-- Height and width will be set programmatically. -->
@@ -18,11 +18,8 @@
 
 	<LinearLayout
 		android:layout_width="match_parent"
-		android:layout_height="48dp"
+		android:layout_height="match_parent"
 	    android:layout_gravity="bottom"
-	    android:paddingTop="16dp"
-	    android:paddingStart="16dp"
-	    android:paddingEnd="16dp"
 		>
 		<TextView
 			android:id="@+id/name"

@@ -21,7 +21,6 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="drawer_indicator_desc">left drawer</string>
 	<string name="add_plus">+</string>
 	<string name="add_contact">Add contact</string>
-	<string name="choose_a_contact">Choose a contact</string>
 	<string name="login">Sign In</string>
 	<string name="acra_toast_text">Uncaught Exception happened</string>
 </resources>
