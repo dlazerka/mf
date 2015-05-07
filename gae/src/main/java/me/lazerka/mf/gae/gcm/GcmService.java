@@ -152,7 +152,7 @@ public class GcmService {
 			return objectMapper.writeValueAsString(gcmRequest);
 		} catch (JsonProcessingException e) {
 			Response response = Response.status(Status.INTERNAL_SERVER_ERROR)
-					.entity("Unable to serialize to JSON")
+					.entity("Unable to serialize to JSON: " + e.getMessage())
 					.build();
 			throw new WebApplicationException(response);
 		}
@@ -169,7 +169,7 @@ public class GcmService {
 	}
 
 	/**
-	 * Results are unique, ensured by Datastore.
+	 * Resul1s are unique, ensured by Datastore.
 	 * @see GcmRegistrationEntity
 	 */
 	private List<String> getRegistrationIds(MfUser user) {

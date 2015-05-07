@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.GcmConstants;
 import me.lazerka.mf.api.gcm.GcmPayload;
+import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.gae.GaeTest;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
@@ -46,11 +47,11 @@ public class GcmServiceTest extends GaeTest {
 	@Mock(answer = Answers.CALLS_REAL_METHODS)
 	HTTPResponse httpResponse;
 
-	@Mock
+	GcmService unit;
+
 	GcmPayload payload;
 
 	MfUser recipient;
-	GcmService unit;
 
 	@BeforeMethod
 	public void setUpUnit() {
@@ -67,6 +68,8 @@ public class GcmServiceTest extends GaeTest {
 		recipient = new MfUser(new User("recipient@example.com", "example.com", "321recipient"));
 		ofy().save().entity(new GcmRegistrationEntity(recipient, "gcmTestToken", may1));
 		ofy().save().entity(recipient).now();
+
+		payload = new LocationRequestGcmPayload("testRequestId", user.getEmail(), may1);
 	}
 
 	void initResponse(String fileName) throws Exception {

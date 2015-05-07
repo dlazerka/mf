@@ -71,3 +71,10 @@ appengine {
 test {
     useTestNG()
 }
+
+// Android Studio doesn't copy test resources when running tests from IDE.
+// Invoke this task at test "Before launch" actions.
+task copyTestResources(type: Copy) {
+    from sourceSets.test.resources
+    into sourceSets.test.output.classesDir
+}

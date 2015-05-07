@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * GCM message that is sent to GCM.
  *
@@ -44,7 +46,8 @@ public class GcmRequest {
 	}
 
 	public void putPayload(GcmPayload payload) {
-		data.put(payload.getType(), payload);
+		String type = checkNotNull(payload.getType());
+		data.put(type, payload);
 	}
 
 	public void setTimeToLiveSeconds(int timeToLiveSeconds) {
