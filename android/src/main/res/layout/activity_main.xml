@@ -18,8 +18,8 @@
 	<fragment
 		class="me.lazerka.mf.android.activity.ContactsFragment"
 		android:id="@+id/contacts"
-		android:layout_height="78dp"
+		android:layout_height="96dp"
 		android:layout_width="match_parent"
-		tools:layout="@layout/contacts_item"/>
+		tools:layout="@layout/item_contacts"/>
 
 </LinearLayout>

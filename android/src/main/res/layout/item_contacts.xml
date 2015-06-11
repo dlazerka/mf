@@ -4,7 +4,7 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_height="76dp"
 	android:layout_width="76dp"
-	android:orientation="vertical"
+	android:orientation="horizontal"
 	tools:context=".activity.ContactsFragment"
 	>
 

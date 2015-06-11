@@ -32,7 +32,7 @@ public class FriendListAdapter
 	public FriendListAdapter(Context context) {
 		super(
 				context,
-				R.layout.contacts_item,
+				R.layout.item_contacts,
 				null,
 				new String[] {
 						Contacts.PHOTO_URI, // See ViewBinder below.
