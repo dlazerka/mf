@@ -9,7 +9,6 @@ import com.android.volley.NetworkResponse;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
-import com.google.common.base.Charsets;
 import me.lazerka.mf.android.Application;
 
 import javax.annotation.Nonnull;
@@ -70,12 +69,11 @@ public abstract class JsonRequester<REQ, RESP> implements Listener<RESP>, ErrorL
 			msg = getMessage404(error.networkResponse);
 			Log.w(TAG, msg);
 		} else {
-			byte[] data = error.networkResponse.data;
-			if (data != null && data.length != 0) {
-				String errorData = new String(data, Charsets.UTF_8);
-				msg = "Server error: " + errorData;
-			} else {
+			String errorData = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, TAG);
+			if (errorData.isEmpty()) {
 				msg = "Server error: " + error.networkResponse.statusCode;
+			} else {
+				msg = "Server error: " + errorData;
 			}
 			Log.e(TAG, msg);
 		}

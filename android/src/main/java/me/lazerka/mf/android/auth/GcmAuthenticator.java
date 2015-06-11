@@ -68,6 +68,7 @@ public class GcmAuthenticator {
 			if (gcmToken == null) {
 				new GcmRegisterTask().execute();
 			} else if (!Application.preferences.getGcmServerKnowsToken(gcmToken)) {
+				Log.i(TAG, "Server doesn't know our GCM token, sending...");
 				new GcmRegistrationSender(gcmToken)
 						.send();
 			}

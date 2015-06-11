@@ -74,7 +74,7 @@ public class GaeRequestQueue extends RequestQueue {
 
 			NetworkResponse response = super.performRequest(request);
 
-			if (shouldAuthenticateResponse(response.statusCode)) {
+			if (shouldAuthenticateResponse(response)) {
 				Log.i(TAG, "Should authenticate request #" + request.getSequence());
 				gaeAuthToken = obtainGaeAuthToken();
 
@@ -86,7 +86,7 @@ public class GaeRequestQueue extends RequestQueue {
 				Log.v(TAG, "Sending request #" + request.getSequence() + " again.");
 				response = super.performRequest(request);
 
-				if (shouldAuthenticateResponse(response.statusCode)) {
+				if (shouldAuthenticateResponse(response)) {
 					Log.i(TAG, "Still not authenticated request #" + request.getSequence() + ", aborting.");
 					throw new AuthFailureError("Unable to authenticate: " + response.statusCode);
 				}
@@ -118,9 +118,28 @@ public class GaeRequestQueue extends RequestQueue {
 			request.setHeader("Cookie", name + "=" + gaeAuthToken);
 		}
 
-		private boolean shouldAuthenticateResponse(int statusCode) {
-			return statusCode == 403 // Forbidden
-					|| statusCode == 302; // Moved Temporarily
+		/**
+		 * Previusly, Google returned 403 or 302 for authentication, but today it seems to return 200 along with
+		 * authentication form.
+		 */
+		private boolean shouldAuthenticateResponse(NetworkResponse response) {
+			boolean result = response.statusCode == 403 // Forbidden
+					|| response.statusCode == 302; // Moved Temporarily
+			if (result) {
+				Log.v(TAG, "Status code indicates we should re-authenticate: " + response.statusCode);
+			} else {
+				String contentType = response.headers.get("Content-Type");
+				if (contentType == null || contentType.isEmpty()) {
+					Log.w(TAG, "Content-Type is empty: " + contentType);
+					// We're not sure we need to authenticate this.
+					return false;
+				}
+				if (contentType.startsWith("text/html")) {
+					Log.v(TAG, "Content-Type is '" + contentType + "', authenticating.");
+					return true;
+				}
+			}
+			return result;
 		}
 
 		@Nonnull

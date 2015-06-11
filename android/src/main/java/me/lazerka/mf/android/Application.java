@@ -46,6 +46,7 @@ public class Application extends MultiDexApplication {
 //	public static final boolean IS_SERVER_LOCAL = true;
 	public static final boolean IS_SERVER_LOCAL = false;
 
+	// Public for @ReportsCrashes above.
 	public static final String SERVER_ADDRESS = IS_SERVER_LOCAL
 			? "http://192.168.1.219:8380"
 			: "https://lazerka-mf.appspot.com";

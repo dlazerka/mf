@@ -55,7 +55,7 @@ public class JsonSerializingRequest<T> extends com.android.volley.toolbox.JsonRe
 	@Override
 	protected Response<T> parseNetworkResponse(NetworkResponse response) {
 		try {
-			String responseContent = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+			String responseContent = HttpUtils.decodeNetworkResponseCharset(response, TAG);
 
 			if (response.statusCode == 200) {
 				Log.v(TAG, "Request successful, parsing.");

@@ -12,10 +12,10 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
-import com.google.common.base.Charsets;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
+import me.lazerka.mf.android.http.HttpUtils;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
@@ -24,8 +24,6 @@ import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Dzmitry Lazerka
@@ -148,15 +146,15 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 				} else {
 					String email = getRequest().getEmails().iterator().next();
-					msg = email + " not found: " + new String(error.networkResponse.data, UTF_8);
+					String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, TAG);
+					msg = email + " not found: " + responseContent;
 				}
 				Log.w(TAG, msg);
 
 			} else {
-				byte[] data = error.networkResponse.data;
-				if (data != null) {
-					String errorData = new String(data, Charsets.UTF_8);
-					msg = "Error requesting location: " + errorData;
+				String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, TAG);
+				if (!responseContent.isEmpty()) {
+					msg = "Error requesting location: " + responseContent;
 				} else {
 					msg = "Error requesting message: " + error.networkResponse.statusCode;
 				}
@@ -172,7 +170,8 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 			} else {
 				String email = getRequest().getEmails().iterator().next();
-				return email + " not found: " + new String(networkResponse.data, UTF_8);
+				String responseContent = HttpUtils.decodeNetworkResponseCharset(networkResponse, TAG);
+				return email + " not found: " + responseContent;
 			}
 		}
 	}
