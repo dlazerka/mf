@@ -10,19 +10,22 @@ import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
+import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.ImageButton;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.FriendListAdapter;
+import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.adapter.FriendListAdapter2;
 
-import java.util.LinkedHashSet;
+import java.util.*;
 
 /**
  * @author Dzmitry Lazerka
@@ -34,7 +37,8 @@ public class ContactsFragment extends Fragment {
 	/** Result code of ContactPicker dialog. */
 	private final int CONTACT_PICKER_RESULT = 1;
 
-	private FriendListAdapter friendListAdapter;
+	private FriendListAdapter2 friendListAdapter;
+	private FriendsLoader friendsLoader;
 
 	@Nullable
 	@Override
@@ -43,9 +47,19 @@ public class ContactsFragment extends Fragment {
 	) {
 		Log.v(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
-		initFriendList(view);
+		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.contacts_list);
 
-//		initFloatingActionButton(view);
+		LinearLayoutManager layoutManager
+			= new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+		recyclerView.setLayoutManager(layoutManager);
+
+		friendListAdapter = new FriendListAdapter2(new OnItemClickListener());
+		recyclerView.setAdapter(friendListAdapter);
+
+		List<String> lookupUris = getFriendsLookupUris();
+		friendsLoader = new FriendsLoader(this, lookupUris, friendListAdapter);
+		friendsLoader.run();
+
 
 //		if (Application.preferences.getFriends().isEmpty()) {
 //			openContactPicker();
@@ -54,21 +68,18 @@ public class ContactsFragment extends Fragment {
 		return view;
 	}
 
-	private void initFriendList(View view) {
-		AbsListView list = (AbsListView) view.findViewById(R.id.contacts_list);
-
-		friendListAdapter = new FriendListAdapter(this.getActivity());
-		list.setAdapter(friendListAdapter);
-		list.setOnItemClickListener(new OnItemClickListener());
-		list.setOnTouchListener(
-				new OnTouchListener() {
-					@Override
-					public boolean onTouch(View v, MotionEvent event) {
-						// Disallow the touch request for parent scroll on touch of child view
-						v.getParent().requestDisallowInterceptTouchEvent(true);
-						return false;
-					}
-				});
+	private static List<String> getFriendsLookupUris() {
+		List<Uri> friends = Application.preferences.getFriends();
+		List<String> lookups = new ArrayList<>(friends.size());
+		for(Uri uri : friends) {
+			// Uri is like content://com.android.contacts/contacts/lookup/822ig%3A105666563920567332652/2379
+			// Last segment is "_id" (unstable), and before that is "lookup" (stable).
+			List<String> pathSegments = uri.getPathSegments();
+			// Need to encode, because they're stored that way.
+			String lookup = Uri.encode(pathSegments.get(2));
+			lookups.add(lookup);
+		}
+		return lookups;
 	}
 
 	private void initFloatingActionButton(View view) {
@@ -76,24 +87,22 @@ public class ContactsFragment extends Fragment {
 		fab.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
 		fab.setClipToOutline(true);
 
-		fab.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
-				startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
-			}
-		});
+		fab.setOnClickListener(
+				new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+						startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
+					}
+				});
 	}
 
-	private class OnItemClickListener implements AdapterView.OnItemClickListener {
+	private class OnItemClickListener implements FriendListAdapter2.OnFriendClickListener {
 		@Override
-		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-			Log.d(TAG, "click " + id);
-			Uri contactUri = friendListAdapter.getContactAtPosition(position);
-			LinkedHashSet<String> emails = getContactEmails(contactUri);
-
+		public void onClick(FriendInfo friendInfo) {
+			Log.d(TAG, "click " + friendInfo.displayName);
 			MainActivity activity = (MainActivity) getActivity();
-			activity.showLocation(emails);
+			activity.showLocation(friendInfo.emails);
 		}
 	}
 
@@ -141,7 +150,9 @@ public class ContactsFragment extends Fragment {
 			}
 
 			Application.preferences.addFriend(contactUri);
-			friendListAdapter.refresh();
+
+			// FriendsLoader must handle this automatically by resetting the loader. TODO: test
+			//friendListAdapter.refresh();
 		}
 	}
 

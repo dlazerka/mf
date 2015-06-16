@@ -58,9 +58,10 @@ public class LetterDrawable extends ShapeDrawable {
 		textPaint.setTypeface(typeface);
 		textPaint.setTextAlign(Paint.Align.CENTER);
 
-		// drawable paint color
+		// Fill background.
 		Paint paint = getPaint();
 		paint.setColor(color);
+		getShape().draw(canvas, paint);
 
 		Rect r = getBounds();
 		int count = canvas.save();

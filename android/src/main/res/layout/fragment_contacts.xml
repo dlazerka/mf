@@ -15,6 +15,16 @@
 		>
 -->
 
+<android.support.v7.widget.RecyclerView
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/contacts_list"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	>
+
+</android.support.v7.widget.RecyclerView>
+
+<!--
 		<GridView
 			xmlns:android="http://schemas.android.com/apk/res/android"
 			android:id="@+id/contacts_list"
@@ -30,6 +40,7 @@
 			tools:listitem="@android:layout/simple_list_item_1"
 			/>
 
+-->
 <!--
 		<ImageButton
 			style="?android:attr/buttonStyleSmall"
