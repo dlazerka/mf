@@ -110,6 +110,7 @@ public class FriendListAdapter
 		}
 	}
 
+/*
 	@Override
 	public void bindView(@Nonnull View view, Context context, @Nonnull Cursor cursor) {
 		super.bindView(view, context, cursor);
@@ -123,6 +124,7 @@ public class FriendListAdapter
 		// Otherwise item doesn't catch click events http://stackoverflow.com/questions/7645880
 		removeButton.setFocusable(false);
 	}
+*/
 
 	public Uri getContactAtPosition(int position) {
 		Cursor cursor = (Cursor) getItem(position);

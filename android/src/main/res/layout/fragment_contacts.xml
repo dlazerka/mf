@@ -1,28 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--<ScrollView
+
+<LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_height="match_parent"
-	android:layout_width="78dp"
-	android:background="@color/white"
-	tools:context=".activity.ContactsFragment">-->
-<!--
-
-	<LinearLayout
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:orientation="vertical"
-		>
--->
-
-<android.support.v7.widget.RecyclerView
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/contacts_list"
 	android:layout_width="match_parent"
-	android:layout_height="wrap_content"
+	android:layout_height="match_parent"
+	android:orientation="horizontal"
+	tools:context=".activity.ContactsFragment"
 	>
 
-</android.support.v7.widget.RecyclerView>
+	<android.support.v7.widget.RecyclerView
+		android:id="@+id/contacts_list"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginEnd="@dimen/contact_cell_size"
+		android:layout_weight="1"
+		/>
 
 <!--
 		<GridView
@@ -39,9 +32,8 @@
 			xmlns:tools="http://schemas.android.com/tools"
 			tools:listitem="@android:layout/simple_list_item_1"
 			/>
-
 -->
-<!--
+
 		<ImageButton
 			style="?android:attr/buttonStyleSmall"
 			android:layout_width="56dp"
@@ -59,8 +51,4 @@
 			android:layout_gravity="center"
 			android:scaleType="fitXY"
 			/>
-			-->
-	<!--</LinearLayout>-->
-
-
-<!--</ScrollView>-->
+	</LinearLayout>

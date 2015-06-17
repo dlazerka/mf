@@ -10,6 +10,8 @@
 
 	<dimen name="actionbar_dimen">56dp</dimen>
 
+	<dimen name="contact_cell_size">76dp</dimen>
+
 	<dimen name="contact_column_width">138dp</dimen>
 
 	<!--

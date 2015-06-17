@@ -53,6 +53,9 @@ public class ContactsFragment extends Fragment {
 			= new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
 		recyclerView.setLayoutManager(layoutManager);
 
+		// Optimization
+		//recyclerView.setHasFixedSize(true);
+
 		friendListAdapter = new FriendListAdapter2(new OnItemClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
