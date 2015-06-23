@@ -2,12 +2,9 @@ package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,8 +21,6 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter2;
-
-import java.util.*;
 
 /**
  * @author Dzmitry Lazerka
@@ -47,22 +42,9 @@ public class ContactsFragment extends Fragment {
 	) {
 		Log.v(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
-		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.contacts_list);
 
-		LinearLayoutManager layoutManager
-			= new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
-		recyclerView.setLayoutManager(layoutManager);
-
-		// Optimization
-		//recyclerView.setHasFixedSize(true);
-
-		friendListAdapter = new FriendListAdapter2(new OnItemClickListener());
-		recyclerView.setAdapter(friendListAdapter);
-
-		List<String> lookupUris = getFriendsLookupUris();
-		friendsLoader = new FriendsLoader(this, lookupUris, friendListAdapter);
-		friendsLoader.run();
-
+		initList(view);
+		initAddButton(view);
 
 //		if (Application.preferences.getFriends().isEmpty()) {
 //			openContactPicker();
@@ -71,21 +53,7 @@ public class ContactsFragment extends Fragment {
 		return view;
 	}
 
-	private static List<String> getFriendsLookupUris() {
-		List<Uri> friends = Application.preferences.getFriends();
-		List<String> lookups = new ArrayList<>(friends.size());
-		for(Uri uri : friends) {
-			// Uri is like content://com.android.contacts/contacts/lookup/822ig%3A105666563920567332652/2379
-			// Last segment is "_id" (unstable), and before that is "lookup" (stable).
-			List<String> pathSegments = uri.getPathSegments();
-			// Need to encode, because they're stored that way.
-			String lookup = Uri.encode(pathSegments.get(2));
-			lookups.add(lookup);
-		}
-		return lookups;
-	}
-
-	private void initFloatingActionButton(View view) {
+	private void initAddButton(View view) {
 		ImageButton fab = (ImageButton) view.findViewById(R.id.fab_add);
 		fab.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
 		fab.setClipToOutline(true);
@@ -100,36 +68,36 @@ public class ContactsFragment extends Fragment {
 				});
 	}
 
+	private void initList(View view) {
+		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.contacts_list);
+
+		LinearLayoutManager layoutManager
+			= new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+		recyclerView.setLayoutManager(layoutManager);
+
+		// Optimization
+		//recyclerView.setHasFixedSize(true);
+
+		friendListAdapter = new FriendListAdapter2(new OnItemClickListener());
+		recyclerView.setAdapter(friendListAdapter);
+
+		friendsLoader = new FriendsLoader(this, friendListAdapter);
+		friendsLoader.run();
+	}
+
 	private class OnItemClickListener implements FriendListAdapter2.OnFriendClickListener {
 		@Override
 		public void onClick(FriendInfo friendInfo) {
 			Log.d(TAG, "click " + friendInfo.displayName);
 			MainActivity activity = (MainActivity) getActivity();
-			activity.showLocation(friendInfo.emails);
-		}
-	}
 
-	private LinkedHashSet<String> getContactEmails(Uri contactUri) {
-		String lookupKey = Uri.encode(contactUri.getPathSegments().get(2));
-
-		ContentResolver contentResolver = getActivity().getContentResolver();
-
-		try (Cursor cursor = contentResolver.query(
-				Email.CONTENT_URI,
-				new String[] {Email.ADDRESS},
-				//null,
-				//null,
-				Email.LOOKUP_KEY + " = ?",
-				new String[] {lookupKey},
-				Email.SORT_KEY_PRIMARY
-		)) {
-			LinkedHashSet<String> result = new LinkedHashSet<>(cursor.getCount());
-			while (cursor.moveToNext()) {
-				String email = cursor.getString(0);
-				result.add(email);
+			if (!friendInfo.emails.isEmpty()) {
+				activity.showLocation(friendInfo.emails);
+			} else {
+				String msg = getString(R.string.contact_no_emails);
+				Toast.makeText(ContactsFragment.this.getActivity(), msg, Toast.LENGTH_LONG)
+						.show();
 			}
-
-			return result;
 		}
 	}
 
@@ -144,18 +112,9 @@ public class ContactsFragment extends Fragment {
 			Uri contactUri = data.getData();
 			Log.i(TAG, "Adding friend: " + contactUri);
 
-			LinkedHashSet<String> contactEmails = getContactEmails(contactUri);
-			if (contactEmails.isEmpty()) {
-				String msg = getString(R.string.contact_no_emails);
-				Toast.makeText(ContactsFragment.this.getActivity(), msg, Toast.LENGTH_LONG)
-						.show();
-				return;
-			}
-
 			Application.preferences.addFriend(contactUri);
 
-			// FriendsLoader must handle this automatically by resetting the loader. TODO: test
-			//friendListAdapter.refresh();
+			friendsLoader.run();
 		}
 	}
 

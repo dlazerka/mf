@@ -26,7 +26,6 @@ public class Preferences {
 	private final String FRIENDS = "mf.friends";
 	private final String GCM_APP_VERSION = "gcm.app.version";
 	private final String GCM_TOKEN = "gcm.token";
-	private final String GCM_SERVER_KNOWS = "gcm.server.knows";
 
 	private final SharedPreferences preferences;
 
@@ -141,42 +140,13 @@ public class Preferences {
 		preferences.edit()
 				.putString(GCM_TOKEN, gcmRegistrationId)
 				.putInt(GCM_APP_VERSION, Application.getVersion())
-				.putBoolean(GCM_SERVER_KNOWS, false)
 				.apply();
-	}
-
-	public boolean getGcmServerKnowsToken(String gcmToken) {
-		Map<String, ?> all = preferences.getAll();
-		return gcmToken.equals(all.get(GCM_TOKEN)) && (Boolean) all.get(GCM_SERVER_KNOWS);
-	}
-
-	/**
-	 * This should not be backed up when user uses Backup/Restore feature.
-	 * See MfBackupAgent for that.
-	 *
-	 * @param gcmToken to compare with current and avoid race conditions.
-	 * @return is current token equals given.
-	 */
-	public boolean setGcmServerKnowsToken(@Nonnull String gcmToken) {
-		Log.v(TAG, "GCM Registration ID stored.");
-		synchronized (preferences) {
-			String currentToken = preferences.getString(GCM_TOKEN, null);
-			if (!gcmToken.equals(currentToken)) {
-				return false;
-			}
-			preferences.edit()
-					.putString(GCM_TOKEN, gcmToken)
-					.putBoolean(GCM_SERVER_KNOWS, true)
-					.apply();
-			return true;
-		}
 	}
 
 	@SuppressLint("CommitPrefEdits")
 	public void clearGcmToken() {
 		preferences.edit()
 				.remove(GCM_TOKEN)
-				.remove(GCM_SERVER_KNOWS)
 				.remove(GCM_APP_VERSION)
 				.commit();
 	}

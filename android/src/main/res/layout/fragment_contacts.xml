@@ -13,7 +13,6 @@
 		android:id="@+id/contacts_list"
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"
-		android:layout_marginEnd="@dimen/contact_cell_size"
 		android:layout_weight="1"
 		/>
 

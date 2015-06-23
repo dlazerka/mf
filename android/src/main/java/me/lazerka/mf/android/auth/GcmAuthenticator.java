@@ -46,10 +46,6 @@ public class GcmAuthenticator {
 	 * @param gcmToken to store.
 	 */
 	public static void storeGcmRegistration(String gcmToken) {
-		if (Application.preferences.getGcmServerKnowsToken(gcmToken)) {
-			return;
-		}
-
 		// Persist the regID - no need to register again.
 		Application.preferences.setGcmToken(gcmToken);
 
@@ -67,8 +63,9 @@ public class GcmAuthenticator {
 
 			if (gcmToken == null) {
 				new GcmRegisterTask().execute();
-			} else if (!Application.preferences.getGcmServerKnowsToken(gcmToken)) {
-				Log.i(TAG, "Server doesn't know our GCM token, sending...");
+			} else {
+				// Unconditionally send gcmToken, because server might have removed it, even if we sent it before.
+				Log.v(TAG, "Sending GCM token to server");
 				new GcmRegistrationSender(gcmToken)
 						.send();
 			}
@@ -171,9 +168,8 @@ public class GcmAuthenticator {
 
 		@Override
 		public void onResponse(GcmRegistrationResponse response) {
-			Log.i(TAG, "Server stored our registration ID");
 			GcmRegistration request = getRequest();
-			Application.preferences.setGcmServerKnowsToken(request.getId());
+			Log.i(TAG, "Server stored our registration ID: " + request.getId());
 		}
 	}
 }

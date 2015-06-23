@@ -5,14 +5,17 @@ import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 import com.google.common.base.Joiner;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter2;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +24,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Chained loader of Contacts and their Emails.
+ *
+ * TODO: Consider implementing custom Loader and load FriendInfo-s directly, instead of Cursors.
  *
  * @author Dzmitry Lazerka
  */
@@ -31,17 +36,32 @@ class FriendsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 	private static final int FRIENDS_EMAILS_LOADER_ID = 1;
 
 	private final Fragment fragment;
-	private final List<String> lookupUris;
 	private final FriendListAdapter2 friendListAdapter;
 
-	FriendsLoader(Fragment fragment, List<String> lookupUris, FriendListAdapter2 friendListAdapter) {
+	private List<String> lookupUris;
+
+	FriendsLoader(Fragment fragment, FriendListAdapter2 friendListAdapter) {
 		this.fragment = checkNotNull(fragment);
-		this.lookupUris = checkNotNull(lookupUris);
 		this.friendListAdapter = checkNotNull(friendListAdapter);
 	}
 
 	public void run() {
+		lookupUris = getFriendsLookupUris();
 		fragment.getLoaderManager().initLoader(FRIENDS_CONTACTS_LOADER_ID, null, this);
+	}
+
+	private static List<String> getFriendsLookupUris() {
+		List<Uri> friends = Application.preferences.getFriends();
+		List<String> lookups = new ArrayList<>(friends.size());
+		for(Uri uri : friends) {
+			// Uri is like content://com.android.contacts/contacts/lookup/822ig%3A105666563920567332652/2379
+			// Last segment is "_id" (unstable), and before that is "lookup" (stable).
+			List<String> pathSegments = uri.getPathSegments();
+			// Need to encode, because they're stored that way.
+			String lookup = Uri.encode(pathSegments.get(2));
+			lookups.add(lookup);
+		}
+		return lookups;
 	}
 
 	/** @return "?,?,?,?" as many as there are lookupUris */
