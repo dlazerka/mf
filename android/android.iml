@@ -115,8 +115,8 @@
     <orderEntry type="library" exported="" name="play-services-plus-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-datatype-joda-2.4.4" level="project" />
-    <orderEntry type="library" exported="" name="jackson-core-2.4.4" level="project" />
     <orderEntry type="library" exported="" name="jackson-databind-2.4.4" level="project" />
+    <orderEntry type="library" exported="" name="jackson-core-2.4.4" level="project" />
     <orderEntry type="library" exported="" name="play-services-panorama-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-safetynet-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-location-7.0.0" level="project" />
@@ -132,8 +132,8 @@
     <orderEntry type="library" exported="" name="joda-time-2.6" level="project" />
     <orderEntry type="library" exported="" name="play-services-wearable-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-wallet-7.0.0" level="project" />
-    <orderEntry type="library" exported="" name="acra-4.6.2" level="project" />
     <orderEntry type="library" exported="" name="jackson-annotations-2.4.4" level="project" />
+    <orderEntry type="library" exported="" name="acra-4.6.2" level="project" />
     <orderEntry type="library" exported="" name="recyclerview-v7-21.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-cast-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-maps-7.0.0" level="project" />

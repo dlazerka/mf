@@ -29,8 +29,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-class FriendsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
-	private static final String TAG = FriendsLoader.class.getName();
+class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+	private static final String TAG = FriendsLoaderCallbacks.class.getName();
 
 	private static final int FRIENDS_CONTACTS_LOADER_ID = 0;
 	private static final int FRIENDS_EMAILS_LOADER_ID = 1;
@@ -40,7 +40,7 @@ class FriendsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 
 	private List<String> lookupUris;
 
-	FriendsLoader(Fragment fragment, FriendListAdapter2 friendListAdapter) {
+	FriendsLoaderCallbacks(Fragment fragment, FriendListAdapter2 friendListAdapter) {
 		this.fragment = checkNotNull(fragment);
 		this.friendListAdapter = checkNotNull(friendListAdapter);
 	}
@@ -76,7 +76,7 @@ class FriendsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 	@Override
 	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
 		if (loaderId != FRIENDS_CONTACTS_LOADER_ID) {
-			Log.v(TAG, "FriendsLoader: loaderId " + loaderId + " not mine.");
+			Log.v(TAG, "FriendsLoaderCallbacks: loaderId " + loaderId + " not mine.");
 			return null;
 		}
 
@@ -137,7 +137,7 @@ class FriendsLoader implements LoaderManager.LoaderCallbacks<Cursor> {
 		@Override
 		public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
 			if (loaderId != FRIENDS_EMAILS_LOADER_ID) {
-				Log.v(TAG, "FriendsLoader: loaderId " + loaderId + " not mine.");
+				Log.v(TAG, "FriendsLoaderCallbacks: loaderId " + loaderId + " not mine.");
 				return null;
 			}
 

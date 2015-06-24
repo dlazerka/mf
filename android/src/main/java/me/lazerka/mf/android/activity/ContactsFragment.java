@@ -33,7 +33,7 @@ public class ContactsFragment extends Fragment {
 	private final int CONTACT_PICKER_RESULT = 1;
 
 	private FriendListAdapter2 friendListAdapter;
-	private FriendsLoader friendsLoader;
+	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 
 	@Nullable
 	@Override
@@ -81,8 +81,8 @@ public class ContactsFragment extends Fragment {
 		friendListAdapter = new FriendListAdapter2(new OnItemClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
-		friendsLoader = new FriendsLoader(this, friendListAdapter);
-		friendsLoader.run();
+		friendsLoaderCallbacks = new FriendsLoaderCallbacks(this, friendListAdapter);
+		friendsLoaderCallbacks.run();
 	}
 
 	private class OnItemClickListener implements FriendListAdapter2.OnFriendClickListener {
@@ -114,7 +114,7 @@ public class ContactsFragment extends Fragment {
 
 			Application.preferences.addFriend(contactUri);
 
-			friendsLoader.run();
+			friendsLoaderCallbacks.run();
 		}
 	}
 
