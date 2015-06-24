@@ -20,7 +20,7 @@ import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
-import me.lazerka.mf.android.adapter.FriendListAdapter2;
+import me.lazerka.mf.android.adapter.FriendListAdapter;
 
 /**
  * @author Dzmitry Lazerka
@@ -33,7 +33,7 @@ public class ContactsFragment extends Fragment {
 	/** Result code of ContactPicker dialog. */
 	private final int CONTACT_PICKER_RESULT = 1;
 
-	private FriendListAdapter2 friendListAdapter;
+	private FriendListAdapter friendListAdapter;
 	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 
 	@Nullable
@@ -79,7 +79,7 @@ public class ContactsFragment extends Fragment {
 		// Optimization
 		//recyclerView.setHasFixedSize(true);
 
-		friendListAdapter = new FriendListAdapter2(new OnItemClickListener());
+		friendListAdapter = new FriendListAdapter(new OnItemClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
 		friendsLoaderCallbacks = new FriendsLoaderCallbacks(this, friendListAdapter);
@@ -94,7 +94,7 @@ public class ContactsFragment extends Fragment {
 				});
 	}
 
-	private class OnItemClickListener implements FriendListAdapter2.OnFriendClickListener {
+	private class OnItemClickListener implements FriendListAdapter.OnFriendClickListener {
 		@Override
 		public void onClick(FriendInfo friendInfo) {
 			Log.d(TAG, "click " + friendInfo.displayName);

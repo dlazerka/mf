@@ -18,14 +18,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author Dzmitry Lazerka
  */
-public class FriendListAdapter2
-		extends RecyclerView.Adapter<FriendViewHolder> {
-	private static final String TAG = FriendListAdapter2.class.getName();
+public class FriendListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
+	private static final String TAG = FriendListAdapter.class.getName();
 
 	private final List<FriendInfo> data = new ArrayList<>();
 	private final OnFriendClickListener onFriendClickListener;
 
-	public FriendListAdapter2(OnFriendClickListener onFriendClickListener) {
+	public FriendListAdapter(OnFriendClickListener onFriendClickListener) {
 		super();
 		this.onFriendClickListener = checkNotNull(onFriendClickListener);
 	}

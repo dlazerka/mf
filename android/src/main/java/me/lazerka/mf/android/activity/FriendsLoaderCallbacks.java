@@ -6,7 +6,7 @@ import android.content.Loader;
 import android.os.Bundle;
 import android.util.Log;
 import me.lazerka.mf.android.adapter.FriendInfo;
-import me.lazerka.mf.android.adapter.FriendListAdapter2;
+import me.lazerka.mf.android.adapter.FriendListAdapter;
 
 import java.util.List;
 
@@ -21,9 +21,9 @@ class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<Frien
 	private static final String TAG = FriendsLoaderCallbacks.class.getName();
 
 	private final Fragment fragment;
-	private final FriendListAdapter2 friendListAdapter;
+	private final FriendListAdapter friendListAdapter;
 
-	FriendsLoaderCallbacks(Fragment fragment, FriendListAdapter2 friendListAdapter) {
+	FriendsLoaderCallbacks(Fragment fragment, FriendListAdapter friendListAdapter) {
 		this.fragment = checkNotNull(fragment);
 		this.friendListAdapter = checkNotNull(friendListAdapter);
 	}
