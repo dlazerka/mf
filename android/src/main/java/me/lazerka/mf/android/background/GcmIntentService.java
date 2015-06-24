@@ -20,7 +20,7 @@ import java.util.Map;
  * @author Dzmitry Lazerka
  */
 public class GcmIntentService extends IntentService {
-	private final String TAG = getClass().getName();
+	private static final String TAG = GcmIntentService.class.getName();
 
 	/**
 	 * Message Bundle key that contains our payload from GCM.
@@ -40,6 +40,7 @@ public class GcmIntentService extends IntentService {
 
 	@Override
 	public void onCreate() {
+		Log.v(TAG, "onCreate");
 		super.onCreate();
 
 		// Mostly for calling from BootReceiver.

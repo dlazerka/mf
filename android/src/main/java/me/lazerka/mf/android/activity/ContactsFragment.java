@@ -28,6 +28,7 @@ import me.lazerka.mf.android.adapter.FriendListAdapter2;
  */
 public class ContactsFragment extends Fragment {
 	private static final String TAG = "ContactsFragment";
+	static final int FRIENDS_LOADER_ID = 12345;
 
 	/** Result code of ContactPicker dialog. */
 	private final int CONTACT_PICKER_RESULT = 1;
@@ -82,7 +83,15 @@ public class ContactsFragment extends Fragment {
 		recyclerView.setAdapter(friendListAdapter);
 
 		friendsLoaderCallbacks = new FriendsLoaderCallbacks(this, friendListAdapter);
-		friendsLoaderCallbacks.run();
+		getLoaderManager().initLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
+
+		view.setOnClickListener(
+				new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
+					}
+				});
 	}
 
 	private class OnItemClickListener implements FriendListAdapter2.OnFriendClickListener {
@@ -114,7 +123,7 @@ public class ContactsFragment extends Fragment {
 
 			Application.preferences.addFriend(contactUri);
 
-			friendsLoaderCallbacks.run();
+			getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 		}
 	}
 
