@@ -20,6 +20,7 @@ import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
+import org.acra.ACRA;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -159,6 +160,7 @@ public class MainActivity extends Activity {
 					msg = "Error requesting message: " + error.networkResponse.statusCode;
 				}
 				Log.e(TAG, msg);
+				ACRA.getErrorReporter().handleException(new IllegalStateException(TAG + ": " + msg));
 			}
 			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
 		}

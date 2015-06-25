@@ -14,6 +14,7 @@ import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.MyLocation;
 import me.lazerka.mf.api.object.MyLocationResponse;
+import org.acra.ACRA;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
@@ -42,7 +43,9 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 
 		GcmIntentService service = serviceRef.get();
 		if (service == null) {
-			Log.e(TAG, "Service is GCed, not sending my location");
+			String msg = "Service is GCed, not sending my location";
+			Log.e(TAG, msg);
+			ACRA.getErrorReporter().handleException(new RuntimeException(TAG + ": " + msg));
 			return;
 		}
 

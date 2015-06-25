@@ -14,8 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
-import android.widget.ImageButton;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
@@ -45,28 +43,12 @@ public class ContactsFragment extends Fragment {
 		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
 
 		initList(view);
-		initAddButton(view);
 
 //		if (Application.preferences.getFriends().isEmpty()) {
 //			openContactPicker();
 //		}
 
 		return view;
-	}
-
-	private void initAddButton(View view) {
-		ImageButton fab = (ImageButton) view.findViewById(R.id.fab_add);
-		fab.setOutlineProvider(ViewOutlineProvider.BACKGROUND);
-		fab.setClipToOutline(true);
-
-		fab.setOnClickListener(
-				new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
-						startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
-					}
-				});
 	}
 
 	private void initList(View view) {
@@ -77,21 +59,13 @@ public class ContactsFragment extends Fragment {
 		recyclerView.setLayoutManager(layoutManager);
 
 		// Optimization
-		//recyclerView.setHasFixedSize(true);
+		recyclerView.setHasFixedSize(true);
 
-		friendListAdapter = new FriendListAdapter(new OnItemClickListener());
+		friendListAdapter = new FriendListAdapter(new OnItemClickListener(), new OnAddFriendClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
 		friendsLoaderCallbacks = new FriendsLoaderCallbacks(this, friendListAdapter);
 		getLoaderManager().initLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
-
-		view.setOnClickListener(
-				new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
-					}
-				});
 	}
 
 	private class OnItemClickListener implements FriendListAdapter.OnFriendClickListener {
@@ -127,4 +101,11 @@ public class ContactsFragment extends Fragment {
 		}
 	}
 
+	private class OnAddFriendClickListener implements OnClickListener {
+		@Override
+		public void onClick(View v) {
+			Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+			startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
+		}
+	}
 }

@@ -1,12 +1,14 @@
 package me.lazerka.mf.android.adapter;
 
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import me.lazerka.mf.android.R;
+import org.acra.ACRA;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -18,47 +20,87 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author Dzmitry Lazerka
  */
-public class FriendListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
+public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	private static final String TAG = FriendListAdapter.class.getName();
 
 	private final List<FriendInfo> data = new ArrayList<>();
 	private final OnFriendClickListener onFriendClickListener;
+	private final OnClickListener onAddFriendClickListener;
 
-	public FriendListAdapter(OnFriendClickListener onFriendClickListener) {
+	public FriendListAdapter(
+			OnFriendClickListener onFriendClickListener,
+			OnClickListener onAddFriendClickListener
+	) {
 		super();
 		this.onFriendClickListener = checkNotNull(onFriendClickListener);
+		this.onAddFriendClickListener = checkNotNull(onAddFriendClickListener);
 	}
 
 	@Override
-	public FriendViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		View itemView = LayoutInflater.from(parent.getContext())
-				.inflate(R.layout.item_contacts, parent, false);
-		return new FriendViewHolder(itemView);
-	}
-
-	@Override
-	public void onBindViewHolder(FriendViewHolder holder, int position) {
-		if (data.size() <= position) {
-			Log.e(TAG, "Illegal item position: " + position + " vs " + getItemCount());
-			return;
+	public int getItemViewType(int position) {
+		if (data.size() > position) {
+			return R.layout.item_contacts;
+		} else if (data.size() == position) {
+			return R.layout.item_add_contact;
+		} else {
+			String msg = "Illegal item position: " + position + " vs " + getItemCount();
+			Log.e(TAG, msg);
+			ACRA.getErrorReporter().handleException(new IndexOutOfBoundsException(msg));
+			return 0;
 		}
-		FriendInfo friendInfo = data.get(position);
-		holder.bindFriend(friendInfo);
-		holder.itemView.setOnClickListener(new OnItemClickListener(friendInfo));
+	}
+
+	@Override
+	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		View itemView = LayoutInflater.from(parent.getContext())
+				.inflate(viewType, parent, false);
+		if (viewType == R.layout.item_contacts) {
+			return new FriendViewHolder(itemView);
+		} else {
+			return new AddFriendViewHolder(itemView);
+		}
+	}
+
+	@Override
+	public void onBindViewHolder(ViewHolder holder, int position) {
+		if (data.size() > position) {
+			FriendViewHolder friendViewHolder;
+			try {
+				friendViewHolder = (FriendViewHolder) holder;
+			} catch (ClassCastException e) {
+				String msg = "Holder is not of type FriendViewHolder for position " + position;
+				Log.e(TAG, msg);
+				ACRA.getErrorReporter().handleException(new IllegalStateException(msg, e));
+				return;
+			}
+
+			FriendInfo friendInfo = data.get(position);
+			friendViewHolder.bindFriend(friendInfo);
+			friendViewHolder.itemView.setOnClickListener(new OnItemClickListener(friendInfo));
+		} else if (data.size() == position) {
+			// This is add button.
+			((AddFriendViewHolder) holder).bind(onAddFriendClickListener);
+		} else {
+			String msg = "Illegal item position: " + position + " vs " + getItemCount();
+			Log.e(TAG, msg);
+			ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
+		}
 	}
 
 	@Override
 	public int getItemCount() {
-		return data.size();
+		return data.size() + 1;
 	}
 
 	public void setData(@Nonnull Collection<FriendInfo> data) {
+		Log.v(TAG, "setData");
 		this.data.clear();
 		this.data.addAll(data);
 		notifyDataSetChanged();
 	}
 
 	public void resetData() {
+		Log.v(TAG, "resetData");
 		data.clear();
 		notifyDataSetChanged();
 	}
@@ -74,6 +116,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
 		private OnItemClickListener(FriendInfo friendInfo) {
 			this.friendInfo = friendInfo;
 		}
+
 		@Override
 		public void onClick(View v) {
 			Log.d(TAG, "click " + friendInfo.displayName);

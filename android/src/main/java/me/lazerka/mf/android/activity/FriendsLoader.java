@@ -11,6 +11,7 @@ import android.util.Log;
 import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.adapter.FriendInfo;
+import org.acra.ACRA;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -115,7 +116,9 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 			if (friendInfo != null) {
 				friendInfo.emails.add(emailsCursor.getString(1));
 			} else {
-				Log.e(TAG, "No friendInfo for setting email to, by lookupKey " + lookupKey);
+				String msg = "No friendInfo for setting email to, by lookupKey " + lookupKey;
+				Log.e(TAG, msg);
+				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 			}
 		};
 
