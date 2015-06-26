@@ -1,4 +1,4 @@
-package me.lazerka.mf.android.activity;
+package me.lazerka.mf.android.adapter;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
@@ -10,7 +10,6 @@ import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.adapter.FriendInfo;
 import org.acra.ACRA;
 
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ import java.util.Map;
 /**
  * Combination of two CursorLoaders -- for contacts, and for their emails.
  *
- * Chain down to CursorLoaders all and only methods invoked in background.
+ * Chain down to CursorLoaders all and only methods invoked in background. Handles foreground methods itself.
  *
  * @author Dzmitry Lazerka
  */
@@ -56,13 +55,6 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 				selectionArgs, // No selection arguments
 				Contacts.SORT_KEY_PRIMARY
 		);
-		//contactsLoader.registerListener(
-		//		CONTACTS_LOADER_ID, new OnLoadCompleteListener<Cursor>() {
-		//			@Override
-		//			public void onLoadComplete(Loader<Cursor> loader, Cursor data) {
-		//				FriendsLoader.this.
-		//			}
-		//		});
 
 		emailsLoader = new CursorLoader(
 				context,
@@ -136,11 +128,9 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 		Log.v(TAG, "onStartLoading");
 		super.onStartLoading();
 
-		// We don't want them to start their own AsyncTasks.
-		//contactsLoader.startLoading();
-		//emailsLoader.startLoading();
-
-		forceLoad();
+		if (isStarted()) {
+			forceLoad();
+		}
 	}
 
 	@Override

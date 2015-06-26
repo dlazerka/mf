@@ -2,7 +2,9 @@ package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
@@ -19,6 +21,11 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
+import me.lazerka.mf.android.adapter.FriendsLoader;
+
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka
@@ -106,6 +113,45 @@ public class ContactsFragment extends Fragment {
 		public void onClick(View v) {
 			Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
 			startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
+		}
+	}
+
+	/**
+	 * Invokes {@link FriendsLoader} to load contacts and their emails.
+	 *
+	 * @author Dzmitry Lazerka
+	 */
+	public static class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<FriendInfo>> {
+		private static final String TAG = FriendsLoaderCallbacks.class.getName();
+
+		private final Fragment fragment;
+		private final FriendListAdapter friendListAdapter;
+
+		public FriendsLoaderCallbacks(Fragment fragment, FriendListAdapter friendListAdapter) {
+			this.fragment = checkNotNull(fragment);
+			this.friendListAdapter = checkNotNull(friendListAdapter);
+		}
+
+		@Override
+		public Loader<List<FriendInfo>> onCreateLoader(int loaderId, Bundle args) {
+			if (loaderId != FRIENDS_LOADER_ID) {
+				Log.v(TAG, "FriendsLoaderCallbacks: loaderId " + loaderId + " not mine.");
+				return null;
+			}
+
+			return new FriendsLoader(fragment.getActivity());
+		}
+
+		@Override
+		public void onLoadFinished(Loader<List<FriendInfo>> loader, List<FriendInfo> data) {
+			Log.v(TAG, "FriendsLoaderCallbacks: onLoadFinished " + loader.getId() + ", " + data.size());
+			friendListAdapter.setData(data);
+		}
+
+		@Override
+		public void onLoaderReset(Loader<List<FriendInfo>> loader) {
+			Log.v(TAG, "FriendsLoaderCallbacks: onLoaderReset " + loader.getId());
+			friendListAdapter.resetData();
 		}
 	}
 }
