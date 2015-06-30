@@ -39,9 +39,9 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	@Override
 	public int getItemViewType(int position) {
 		if (data.size() > position) {
-			return R.layout.item_contacts;
+			return R.layout.view_contact;
 		} else if (data.size() == position) {
-			return R.layout.item_add_contact;
+			return R.layout.view_add_contact;
 		} else {
 			String msg = "Illegal item position: " + position + " vs " + getItemCount();
 			Log.e(TAG, msg);
@@ -54,7 +54,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		View itemView = LayoutInflater.from(parent.getContext())
 				.inflate(viewType, parent, false);
-		if (viewType == R.layout.item_contacts) {
+		if (viewType == R.layout.view_contact) {
 			return new FriendViewHolder(itemView);
 		} else {
 			return new AddFriendViewHolder(itemView);

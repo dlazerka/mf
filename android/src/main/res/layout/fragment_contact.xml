@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="horizontal"
+	tools:context=".activity.ContactFragment"
+	>
+
+	<FrameLayout
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_alignParentStart="true"
+		android:id="@+id/badge_container"
+		>
+		<include layout="@layout/view_contact"/>
+	</FrameLayout>
+
+	<FrameLayout
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_alignParentEnd="true"
+		android:id="@+id/locate"
+		>
+		<ImageButton
+			style="?android:attr/buttonStyleSmall"
+			android:layout_width="56dp"
+			android:layout_height="56dp"
+			android:src="@mipmap/locate_white"
+			android:contentDescription="@string/locate_contact"
+			android:background="@drawable/ripple_oval_green"
+			android:id="@+id/fab_locate"
+			android:layout_margin="16dp"
+			android:elevation="@dimen/fab_elevation_resting"
+			android:paddingStart="12dp"
+			android:paddingEnd="14dp"
+			android:paddingTop="14dp"
+			android:paddingBottom="14dp"
+			android:layout_gravity="center"
+			android:scaleType="fitXY"
+			/>
+	</FrameLayout>
+
+	<!--
+
+	<View
+		android:layout_height="match_parent"
+		android:layout_width="wrap_content"
+		android:layout_alignParentStart="true"
+		android:layout_centerVertical="true"
+		android:id="@+id/badge"
+		/>
+
+	<View
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_alignParentEnd="true"
+		android:layout_centerVertical="true"
+		/>
+-->
+
+</RelativeLayout>

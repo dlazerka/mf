@@ -12,10 +12,9 @@ import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import org.acra.ACRA;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Combination of two CursorLoaders -- for contacts, and for their emails.
@@ -93,11 +92,18 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 		// Handle contacts.
 		Map<String, FriendInfo> data = new LinkedHashMap<>(contactsCursor.getCount());
 		for (contactsCursor.moveToFirst(); !contactsCursor.isAfterLast(); contactsCursor.moveToNext()) {
-			FriendInfo friendInfo = new FriendInfo();
-			friendInfo.id = contactsCursor.getLong(0);
-			friendInfo.lookupKey = contactsCursor.getString(1);
-			friendInfo.displayName = contactsCursor.getString(2);
-			friendInfo.photoUri = contactsCursor.getString(3);
+			long id = checkNotNull(contactsCursor.getLong(0));
+			String lookupKey = checkNotNull(contactsCursor.getString(1));
+			String displayName = checkNotNull(contactsCursor.getString(2));
+			String photoUri = contactsCursor.getString(3);
+
+			FriendInfo friendInfo = new FriendInfo(
+					id,
+					lookupKey,
+					displayName,
+					photoUri,
+					Collections.<String>emptyList()
+			);
 			data.put(friendInfo.lookupKey, friendInfo);
 		};
 

@@ -4,6 +4,7 @@ import android.graphics.Outline;
 import android.graphics.drawable.shapes.OvalShape;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView.ViewHolder;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 import android.widget.ImageView;
@@ -21,6 +22,8 @@ public class FriendViewHolder extends ViewHolder {
 	}
 
 	public void bindFriend(FriendInfo friendInfo) {
+		Log.v(TAG, "bindFriend: " + friendInfo.id);
+
 		// Set name.
 		TextView nameView = (TextView) this.itemView.findViewById(R.id.name);
 		nameView.setText(friendInfo.displayName);

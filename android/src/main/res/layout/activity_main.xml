@@ -20,6 +20,6 @@
 		android:id="@+id/contacts"
 		android:layout_height="96dp"
 		android:layout_width="match_parent"
-		tools:layout="@layout/item_contacts"/>
+		tools:layout="@layout/view_contact"/>
 
 </LinearLayout>

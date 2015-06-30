@@ -32,9 +32,6 @@ import java.util.Set;
 public class MainActivity extends Activity {
 	private static final String TAG = MainActivity.class.getName();
 
-	/** What users to show. */
-	public static final String REQUEST_CONTACT_EMAILS = "REQUEST_CONTACT_EMAILS";
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.v(TAG, "onCreate");

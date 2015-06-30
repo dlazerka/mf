@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
@@ -32,8 +31,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * TODO: add null activity handling
  */
 public class ContactsFragment extends Fragment {
-	private static final String TAG = "ContactsFragment";
-	static final int FRIENDS_LOADER_ID = 12345;
+	private static final String TAG = ContactsFragment.class.getName();
+
+	private static final int FRIENDS_LOADER_ID = 12345;
 
 	/** Result code of ContactPicker dialog. */
 	private final int CONTACT_PICKER_RESULT = 1;
@@ -79,15 +79,12 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public void onClick(FriendInfo friendInfo) {
 			Log.d(TAG, "click " + friendInfo.displayName);
-			MainActivity activity = (MainActivity) getActivity();
 
-			if (!friendInfo.emails.isEmpty()) {
-				activity.showLocation(friendInfo.emails);
-			} else {
-				String msg = getString(R.string.contact_no_emails);
-				Toast.makeText(ContactsFragment.this.getActivity(), msg, Toast.LENGTH_LONG)
-						.show();
-			}
+			ContactFragment fragment = new ContactFragment();
+			fragment.setArguments(friendInfo.toBundle());
+			getFragmentManager().beginTransaction()
+					.add(R.id.contacts, fragment)
+					.commit();
 		}
 	}
 
