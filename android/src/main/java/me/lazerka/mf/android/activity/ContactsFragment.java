@@ -8,7 +8,6 @@ import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -16,13 +15,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Toast;
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request.Method;
+import com.android.volley.VolleyError;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
+import me.lazerka.mf.android.http.HttpUtils;
+import me.lazerka.mf.android.http.JsonRequester;
+import me.lazerka.mf.api.object.*;
+import org.acra.ACRA;
 
-import java.util.List;
+import javax.annotation.Nullable;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -71,7 +79,7 @@ public class ContactsFragment extends Fragment {
 		friendListAdapter = new FriendListAdapter(new OnItemClickListener(), new OnAddFriendClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
-		friendsLoaderCallbacks = new FriendsLoaderCallbacks(this, friendListAdapter);
+		friendsLoaderCallbacks = new FriendsLoaderCallbacks(friendListAdapter);
 		getLoaderManager().initLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 	}
 
@@ -83,7 +91,12 @@ public class ContactsFragment extends Fragment {
 			ContactFragment fragment = new ContactFragment();
 			fragment.setArguments(friendInfo.toBundle());
 			getFragmentManager().beginTransaction()
-					.add(R.id.contacts, fragment)
+					.setCustomAnimations(
+							R.animator.slide_from_below, R.animator.slide_to_above,
+							R.animator.slide_from_above, R.animator.slide_to_below
+					)
+					.replace(R.id.bottom_menu, fragment)
+					.addToBackStack(null)
 					.commit();
 		}
 	}
@@ -102,6 +115,8 @@ public class ContactsFragment extends Fragment {
 			Application.preferences.addFriend(contactUri);
 
 			getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
+
+			new FriendsStorer(new UserFriendsPut());
 		}
 	}
 
@@ -118,14 +133,10 @@ public class ContactsFragment extends Fragment {
 	 *
 	 * @author Dzmitry Lazerka
 	 */
-	public static class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<FriendInfo>> {
-		private static final String TAG = FriendsLoaderCallbacks.class.getName();
-
-		private final Fragment fragment;
+	public class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<FriendInfo>> {
 		private final FriendListAdapter friendListAdapter;
 
-		public FriendsLoaderCallbacks(Fragment fragment, FriendListAdapter friendListAdapter) {
-			this.fragment = checkNotNull(fragment);
+		public FriendsLoaderCallbacks(FriendListAdapter friendListAdapter) {
 			this.friendListAdapter = checkNotNull(friendListAdapter);
 		}
 
@@ -136,13 +147,21 @@ public class ContactsFragment extends Fragment {
 				return null;
 			}
 
-			return new FriendsLoader(fragment.getActivity());
+			return new FriendsLoader(getActivity());
 		}
 
 		@Override
 		public void onLoadFinished(Loader<List<FriendInfo>> loader, List<FriendInfo> data) {
 			Log.v(TAG, "FriendsLoaderCallbacks: onLoadFinished " + loader.getId() + ", " + data.size());
 			friendListAdapter.setData(data);
+			Set<String> emails = new HashSet<>(data.size());
+			for(FriendInfo friendInfo : data) {
+				emails.addAll(friendInfo.emails);
+			}
+
+			UsersInfoGet usersInfoGet = new UsersInfoGet(emails);
+			new UsersInfoRequester(usersInfoGet)
+					.send();
 		}
 
 		@Override
@@ -151,4 +170,31 @@ public class ContactsFragment extends Fragment {
 			friendListAdapter.resetData();
 		}
 	}
+
+	/** Requests server to see if my friends ever installed the app and have me in their friends. */
+	private class UsersInfoRequester extends JsonRequester<UsersInfoGet, UsersInfoResponse> {
+		public UsersInfoRequester(@Nullable UsersInfoGet request) {
+			super(Method.POST, LocationRequest.PATH, request, UsersInfoResponse.class, getActivity());
+		}
+
+		@Override
+		public void onResponse(UsersInfoResponse response) {
+			Map<UserInfo, Set<String>> userInfos = response.getUserInfos();
+			userInfos = userInfos == null ? new HashMap<UserInfo, Set<String>>() : userInfos;
+			Log.v(TAG, "Received " + userInfos.size() + " friend infos");
+			friendListAdapter.setServerInfos(userInfos);
+		}
+	}
+
+	private class FriendsStorer extends JsonRequester<UserFriendsPut, Void> {
+		public FriendsStorer(@Nullable UserFriendsPut request) {
+			super(Method.PUT, UserFriendsPut.PATH, request, Void.class, getActivity());
+		}
+
+		@Override
+		public void onResponse(Void response) {
+			Log.v(TAG, "Store friends successful");
+		}
+	}
+
 }

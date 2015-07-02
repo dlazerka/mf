@@ -15,11 +15,10 @@
 		android:layout_height="0dp"
 		android:layout_weight="1"/>
 
-	<fragment
-		class="me.lazerka.mf.android.activity.ContactsFragment"
-		android:id="@+id/contacts"
-		android:layout_height="96dp"
+	<FrameLayout
 		android:layout_width="match_parent"
-		tools:layout="@layout/view_contact"/>
+		android:layout_height="@dimen/bottom_menu_height"
+		android:id="@+id/bottom_menu"
+		/>
 
 </LinearLayout>

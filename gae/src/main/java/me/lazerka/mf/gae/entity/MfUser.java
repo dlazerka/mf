@@ -9,6 +9,8 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -29,6 +31,13 @@ public class MfUser {
 
 	User user;
 	@Index String email;
+
+	/**
+	 * To give ability to one of those users to see whether this user ever installed the app.
+	 * This doesn't give permission to see location of those users.
+	 */
+	@Nullable
+	Set<String> friendEmails;
 
 	/**
 	 * For looking up existing users by contact list (server should not know user's contact list, only app users).
@@ -85,5 +94,14 @@ public class MfUser {
 
 	public User getUser() {
 		return user;
+	}
+
+	@Nullable
+	public Set<String> getFriendEmails() {
+		return friendEmails;
+	}
+
+	public void setFriendEmails(@Nullable Set<String> friendEmails) {
+		this.friendEmails = friendEmails;
 	}
 }

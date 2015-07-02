@@ -25,8 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 	private static final String TAG = FriendsLoader.class.getName();
-	private static final int CONTACTS_LOADER_ID = 27;
-	private static final int EMAILS_LOADER_ID = 31;
 
 	private final CursorLoader contactsLoader;
 	private final CursorLoader emailsLoader;

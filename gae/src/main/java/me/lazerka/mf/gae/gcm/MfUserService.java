@@ -8,7 +8,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -36,5 +38,19 @@ public class MfUserService {
 			throw new WebApplicationException(Response.status(404).entity("User not found").build());
 		}
 		return otherUser;
+	}
+
+	public Set<MfUser> getUsersByEmails(Set<String> emails) {
+		logger.trace("Requesting users by emails {}", emails);
+
+		List<MfUser> users = ofy().load()
+				.type(MfUser.class)
+				.filter("email IN ", emails)
+				.list();
+		if (users.isEmpty()) {
+			logger.warn("No users found by emails: {}", emails);
+		}
+		logger.trace("Found {} users", users);
+		return new LinkedHashSet<>(users);
 	}
 }

@@ -37,6 +37,10 @@ public class MainActivity extends Activity {
 		Log.v(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		getFragmentManager().beginTransaction()
+				.add(R.id.bottom_menu, new ContactsFragment())
+				.commit();
 	}
 
 	@Override
@@ -154,7 +158,7 @@ public class MainActivity extends Activity {
 				if (!responseContent.isEmpty()) {
 					msg = "Error requesting location: " + responseContent;
 				} else {
-					msg = "Error requesting message: " + error.networkResponse.statusCode;
+					msg = "Error requesting location: " + error.networkResponse.statusCode;
 				}
 				Log.e(TAG, msg);
 				ACRA.getErrorReporter().handleException(new IllegalStateException(TAG + ": " + msg));

@@ -10,6 +10,7 @@ import android.view.ViewOutlineProvider;
 import android.widget.ImageView;
 import android.widget.TextView;
 import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.view.LetterDrawable;
 
 /**
  * @author Dzmitry Lazerka

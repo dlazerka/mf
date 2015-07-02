@@ -6,16 +6,16 @@ import me.lazerka.mf.gae.entity.MfUser;
 /**
  * @author Dzmitry Lazerka
  */
-public class UserBean {
+public class CurrentUserBean {
 	@JsonProperty
 	String id;
 
 	@JsonProperty
 	String email;
 
-	public UserBean() {}
+	public CurrentUserBean() {}
 
-	public UserBean(MfUser user) {
+	public CurrentUserBean(MfUser user) {
 		id = user.getId();
 		email = user.getEmail();
 	}

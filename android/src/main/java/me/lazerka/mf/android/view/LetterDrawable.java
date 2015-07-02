@@ -1,4 +1,4 @@
-package me.lazerka.mf.android.adapter;
+package me.lazerka.mf.android.view;
 
 import android.graphics.*;
 import android.graphics.drawable.ShapeDrawable;
