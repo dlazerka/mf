@@ -9,6 +9,7 @@ import com.android.volley.Response.Listener;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.api.ApiConstants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -50,6 +51,8 @@ public class JsonSerializingRequest<T> extends com.android.volley.toolbox.JsonRe
 		this.requestObject = request;
 		this.responseClass = responseClass;
 		checkArgument((listener == null) == (responseClass == null), "If you provide listener, provide response class");
+
+		headers.put("Content-Type", ApiConstants.APPLICATION_JSON);
 	}
 
 	@Override
@@ -62,6 +65,10 @@ public class JsonSerializingRequest<T> extends com.android.volley.toolbox.JsonRe
 				T responseObject = Application.jsonMapper.readValue(responseContent, responseClass);
 				Entry cacheEntry = HttpHeaderParser.parseCacheHeaders(response);
 				return Response.success(responseObject, cacheEntry);
+			} else if (response.statusCode == 204){
+				Log.v(TAG, "Request success, no content");
+				Entry cacheEntry = HttpHeaderParser.parseCacheHeaders(response);
+				return Response.success(null, cacheEntry);
 			} else {
 				Log.v(TAG, "Request error " + response.statusCode);
 				return Response.error(new VolleyError(response));

@@ -82,6 +82,10 @@ public class MainModule extends AbstractModule {
 
 		final User user = userService.getCurrentUser();
 		final Key<MfUser> key = keys.keyOf(new MfUser(user));
+		MfUser mfUser = ofy().load().key(key).now();
+		if (mfUser != null) {
+			return mfUser;
+		}
 
 		return ofy().transact(new Work<MfUser>() {
 			@Override

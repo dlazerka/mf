@@ -2,10 +2,17 @@ package me.lazerka.mf.android.adapter;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.object.UserInfo;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -17,18 +24,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class FriendInfo {
-	public final long id;
+	@JsonProperty
+	public long id;
 
-	@Nonnull
-	public final String lookupKey;
+	@JsonProperty
+	public String lookupKey;
 
-	@Nonnull
-	public final String displayName;
+	@JsonProperty
+	public String displayName;
 
+	@JsonProperty
 	@Nullable
-	public final String photoUri;
+	public String photoUri;
 
-	@Nonnull
+	@JsonProperty
 	public final Set<String> emails = new HashSet<>();
 
 	/**
@@ -44,31 +53,16 @@ public class FriendInfo {
 	public Map<String, UserInfo> serverInfos;
 
 	public static FriendInfo fromBundle(Bundle bundle) {
-		long id = checkNotNull(bundle.getLong("id"));
-		String lookupKey = checkNotNull(bundle.getString("lookupKey"));
-		String displayName = checkNotNull(bundle.getString("displayName"));
-		ArrayList<String> emails = checkNotNull(bundle.getStringArrayList("emails"));
-
-		Map<String, UserInfo> serverInfos = null;
-		Bundle serverInfoBundle = bundle.getBundle("serverInfos");
-		if (serverInfoBundle != null) {
-			serverInfos = new HashMap<>(serverInfoBundle.size());
-			for(String email : serverInfoBundle.keySet()) {
-				Bundle userInfoBundle = checkNotNull(serverInfoBundle.getBundle(email));
-				String serverEmail = checkNotNull(userInfoBundle.getString("email"));
-				serverInfos.put(email, new UserInfo(serverEmail));
-			}
+		String json = checkNotNull(bundle.getString("json"));
+		try {
+			return Application.jsonMapper.readValue(json, FriendInfo.class);
+		} catch (IOException e) {
+			throw new RuntimeException("Error deserializing", e);
 		}
-
-		return new FriendInfo(
-				id,
-				lookupKey,
-				displayName,
-				bundle.getString("photoUri"),
-				emails,
-				serverInfos
-		);
 	}
+
+	// For Jackson
+	private FriendInfo() {}
 
 	public FriendInfo(
 			long id,
@@ -87,25 +81,15 @@ public class FriendInfo {
 	}
 
 	public Bundle toBundle() {
-		Bundle result = new Bundle();
+		try {
+			String json = Application.jsonMapper.writeValueAsString(this);
 
-		result.putLong("id", id);
-		result.putString("lookupKey", lookupKey);
-		result.putString("displayName", displayName);
-		result.putString("photoUri", photoUri);
-		result.putStringArrayList("emails", new ArrayList<>(emails));
-		if (serverInfos != null) {
-			Bundle serverInfosBundle = new Bundle();
-			for(String email : serverInfos.keySet()) {
-				UserInfo userInfo = serverInfos.get(email);
-				Bundle userInfoBundle = new Bundle();
-				userInfoBundle.putString("email", userInfo.getEmail());
-				serverInfosBundle.putBundle(email, userInfoBundle);
-			}
-
-			result.putBundle("serverInfos", serverInfosBundle);
+			Bundle result = new Bundle();
+			result.putString("json", json);
+			return result;
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Error serializing", e);
 		}
-
-		return result;
 	}
+
 }

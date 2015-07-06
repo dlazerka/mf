@@ -92,7 +92,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	}
 
 	public void setData(@Nonnull Collection<FriendInfo> data) {
-		Log.v(TAG, "setData");
+		Log.v(TAG, "setData " + data.size());
 		this.data.clear();
 		this.data.addAll(data);
 		notifyDataSetChanged();
@@ -104,12 +104,19 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 		notifyDataSetChanged();
 	}
 
-	public void setServerInfos(Map<String, UserInfo> serverInfos) {
+	public void setServerInfos(List<UserInfo> serverInfos) {
+		Log.v(TAG, "setServerInfos " + serverInfos.size());
+		Map<String, UserInfo> byEmail = new HashMap<>();
+		for(UserInfo serverInfo : serverInfos) {
+			for(String email : serverInfo.getEmails()) {
+				byEmail.put(email, serverInfo);
+			}
+		}
+
 		for(FriendInfo friendInfo : data) {
 			friendInfo.serverInfos = new HashMap<>();
-
 			for(String email : friendInfo.emails) {
-				UserInfo userInfo = serverInfos.get(email);
+				UserInfo userInfo = byEmail.get(email);
 				if (userInfo != null) {
 					friendInfo.serverInfos.put(email, userInfo);
 				}

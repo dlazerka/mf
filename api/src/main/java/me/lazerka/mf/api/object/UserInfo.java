@@ -1,8 +1,11 @@
 package me.lazerka.mf.api.object;
 
-import javax.annotation.Nonnull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -10,34 +13,37 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class UserInfo {
-	@Nonnull
-	private final String email;
+	/** Canonicalized on server side. May differ from user's contacts. */
+	@JsonProperty
+	private String canonicalEmail;
 
-	public UserInfo(@Nonnull String email) {
-		this.email = checkNotNull(email);
+	/** As requested by user, not canonicalized. */
+	@JsonProperty
+	private Set<String> emails;
+
+	// For Jackson.
+	private UserInfo() {}
+
+	public UserInfo(
+			@Nonnull String canonicalEmail,
+			@Nonnull Set<String> emails
+	) {
+		this.canonicalEmail = checkNotNull(canonicalEmail);
+		this.emails = checkNotNull(emails);
 	}
 
-	/** Canonicalized on server side. May differ from user's contacts. */
+	@Nullable
+	public String getCanonicalEmail() {
+		return canonicalEmail;
+	}
+
 	@Nonnull
-	public String getEmail() {
-		return email;
+	public Set<String> getEmails() {
+		return emails == null ? Collections.<String>emptySet() : emails;
 	}
 
 	@Override
 	public String toString() {
-		return email;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		UserInfo userInfo = (UserInfo) o;
-		return Objects.equals(email, userInfo.email);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(email);
+		return canonicalEmail + ": " + emails;
 	}
 }

@@ -6,22 +6,24 @@ import com.google.common.base.MoreObjects;
 import javax.annotation.Nullable;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * To know if the users have ever installed the app.
  *
  * @author Dzmitry Lazerka
  */
-public class UsersInfoGet {
-	public static final String PATH = "/rest/user";
+public class UsersInfoRequest {
+	public static final String PATH = "/rest/user/friends";
 
 	@JsonProperty
 	private Set<String> emails;
 
 	// For Jackson.
-	private UsersInfoGet() {}
+	private UsersInfoRequest() {}
 
-	public UsersInfoGet(Set<String> emails) {
-		this.emails = emails;
+	public UsersInfoRequest(Set<String> emails) {
+		this.emails = checkNotNull(emails);
 	}
 
 	@Nullable

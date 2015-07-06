@@ -15,22 +15,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Toast;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request.Method;
-import com.android.volley.VolleyError;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
-import me.lazerka.mf.android.http.HttpUtils;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.*;
-import org.acra.ACRA;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -115,8 +112,6 @@ public class ContactsFragment extends Fragment {
 			Application.preferences.addFriend(contactUri);
 
 			getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
-
-			new FriendsStorer(new UserFriendsPut());
 		}
 	}
 
@@ -159,8 +154,8 @@ public class ContactsFragment extends Fragment {
 				emails.addAll(friendInfo.emails);
 			}
 
-			UsersInfoGet usersInfoGet = new UsersInfoGet(emails);
-			new UsersInfoRequester(usersInfoGet)
+			UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
+			new UsersInfoRequester(usersInfoRequest)
 					.send();
 		}
 
@@ -172,29 +167,16 @@ public class ContactsFragment extends Fragment {
 	}
 
 	/** Requests server to see if my friends ever installed the app and have me in their friends. */
-	private class UsersInfoRequester extends JsonRequester<UsersInfoGet, UsersInfoResponse> {
-		public UsersInfoRequester(@Nullable UsersInfoGet request) {
-			super(Method.POST, LocationRequest.PATH, request, UsersInfoResponse.class, getActivity());
+	private class UsersInfoRequester extends JsonRequester<UsersInfoRequest, UsersInfoResponse> {
+		public UsersInfoRequester(@Nullable UsersInfoRequest request) {
+			super(Method.POST, UsersInfoRequest.PATH, request, UsersInfoResponse.class, getActivity());
 		}
 
 		@Override
 		public void onResponse(UsersInfoResponse response) {
-			Map<UserInfo, Set<String>> userInfos = response.getUserInfos();
-			userInfos = userInfos == null ? new HashMap<UserInfo, Set<String>>() : userInfos;
+			List<UserInfo> userInfos = response.getUserInfos();
 			Log.v(TAG, "Received " + userInfos.size() + " friend infos");
 			friendListAdapter.setServerInfos(userInfos);
 		}
 	}
-
-	private class FriendsStorer extends JsonRequester<UserFriendsPut, Void> {
-		public FriendsStorer(@Nullable UserFriendsPut request) {
-			super(Method.PUT, UserFriendsPut.PATH, request, Void.class, getActivity());
-		}
-
-		@Override
-		public void onResponse(Void response) {
-			Log.v(TAG, "Store friends successful");
-		}
-	}
-
 }

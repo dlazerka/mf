@@ -1,43 +1,39 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collections;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * @see UsersInfoGet
+ * @see UsersInfoRequest
  *
  * @author Dzmitry Lazerka
  */
 public class UsersInfoResponse {
 	@JsonProperty
-	private Map<UserInfo, Set<String>> userInfos;
+	private List<UserInfo> userInfos;
 
 	// For Jackson.
 	private UsersInfoResponse() {}
 
-	public UsersInfoResponse(@Nonnull Map<UserInfo, Set<String>> userInfos) {
+	public UsersInfoResponse(@Nonnull List<UserInfo> userInfos) {
 		this.userInfos = checkNotNull(userInfos);
 	}
 
 	/**
 	 * Key is server response, value is users request (non-canonicalized).
 	 */
-	@Nullable // if request is manually mangled.
-	public Map<UserInfo, Set<String>> getUserInfos() {
-		return userInfos;
+	@Nonnull
+	public List<UserInfo> getUserInfos() {
+		return userInfos == null ? Collections.<UserInfo>emptyList() : userInfos;
 	}
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("userInfos", userInfos)
-				.toString();
+		return userInfos.toString();
 	}
 }

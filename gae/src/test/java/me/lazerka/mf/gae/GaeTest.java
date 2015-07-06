@@ -12,6 +12,7 @@ import com.google.appengine.tools.development.testing.LocalUserServiceTestConfig
 import com.google.apphosting.api.ApiProxy;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.util.Closeable;
+import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import me.lazerka.mf.gae.entity.MfUser;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterMethod;
@@ -65,7 +66,7 @@ public abstract class GaeTest {
 	}
 
 	@BeforeMethod
-	public void storeFixture() {
+	public void storeFixture() throws IllegalEmailFormatException {
 		user = new MfUser(new User("test@example.com", "example.com", "123"));
 		ofy().save().entity(user).now();
 	}

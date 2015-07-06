@@ -5,6 +5,7 @@ import android.location.LocationManager;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import me.lazerka.mf.android.Application;
@@ -78,6 +79,11 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 			MyLocation myLocation = new MyLocation(requestId, location, requesterEmail);
 
 			new LocationSender(myLocation, service).send();
+		} else {
+			// TODO implement tracking
+			Toast.makeText(service, "No lastKnownLocation", Toast.LENGTH_LONG)
+				.show();
+			Log.e(TAG, "No lastKnownLocation");
 		}
 	}
 

@@ -12,6 +12,7 @@ import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.gae.GaeTest;
+import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.entity.MfUser;
 import org.apache.commons.io.IOUtils;
@@ -64,7 +65,7 @@ public class GcmServiceTest extends GaeTest {
 	}
 
 	@BeforeMethod
-	public void setUpRecipient() {
+	public void setUpRecipient() throws IllegalEmailFormatException {
 		recipient = new MfUser(new User("recipient@example.com", "example.com", "321recipient"));
 		ofy().save().entity(new GcmRegistrationEntity(recipient, "gcmTestToken", may1));
 		ofy().save().entity(recipient).now();

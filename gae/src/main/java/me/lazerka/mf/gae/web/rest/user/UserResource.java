@@ -1,13 +1,12 @@
 package me.lazerka.mf.gae.web.rest.user;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.HashMultimap;
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.object.UserFriendsPut;
 import me.lazerka.mf.api.object.UserInfo;
-import me.lazerka.mf.api.object.UsersInfoGet;
+import me.lazerka.mf.api.object.UsersInfoRequest;
 import me.lazerka.mf.api.object.UsersInfoResponse;
 import me.lazerka.mf.gae.UserUtils;
+import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import me.lazerka.mf.gae.entity.MfUser;
 import me.lazerka.mf.gae.gcm.MfUserService;
 import org.slf4j.Logger;
@@ -17,7 +16,9 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
@@ -41,23 +42,6 @@ public class UserResource {
 		return new CurrentUserBean(currentUser);
 	}
 
-	@PUT
-	@Path("/friends")
-	public void putFriends(UserFriendsPut req) {
-		logger.trace("User {} puts his friends {}", currentUser.getEmail(), req.getEmails());
-
-		if (req.getEmails() == null) {
-			throw new WebApplicationException(Response.status(Status.BAD_REQUEST).entity("emails is null").build());
-		}
-
-		HashSet<String> canonicalized = new HashSet<>();
-		for(String friendEmail : req.getEmails()) {
-			canonicalized.add(UserUtils.canonicalizeGmailAddress(friendEmail));
-		}
-		currentUser.setFriendEmails(canonicalized);
-		ofy().save().entity(currentUser).now();
-	}
-
 	/**
 	 * A user requests available info on his friends (e.g. whether they installed the app at all).
 	 *
@@ -69,8 +53,9 @@ public class UserResource {
 	 *
 	 */
 	@POST
+	@Path("/friends")
 	@Consumes("application/json")
-	public UsersInfoResponse byEmail(UsersInfoGet request) {
+	public UsersInfoResponse myEmail(UsersInfoRequest request) {
 		logger.trace("By {} for {}", currentUser.getEmail(), request.getEmails());
 
 		Set<String> emails = request.getEmails();
@@ -83,23 +68,36 @@ public class UserResource {
 							.entity("emails is longer than " + ApiConstants.MAXIMUM_FRIENDS_ALLOWED).build());
 		}
 
-		ListMultimap<String, String> canonicalized = ArrayListMultimap.create();
+		HashMultimap<String, String> normalized = HashMultimap.create();
 		for(String email : emails) {
-			canonicalized.put(UserUtils.canonicalizeGmailAddress(email), email);
+			try {
+				normalized.put(UserUtils.normalizeGmailAddress(email), email);
+			} catch (IllegalEmailFormatException e) {
+				logger.warn(email, e);
+				// TODO: tell client-side about this
+			}
 		}
 
-		Set<MfUser> users = mfUserService.getUsersByEmails(canonicalized.keySet());
+		// Save given emails as current user friends.
+		currentUser.setFriendEmails(normalized.keySet());
+		ofy().save().entity(currentUser); // async
 
-		Map<UserInfo, Set<String>> result = new LinkedHashMap<>();
+		Set<MfUser> users = mfUserService.getUsersByEmails(normalized.keySet());
+
+		List<UserInfo> result = new ArrayList<>();
 		for(MfUser user : users) {
 			// Here we check if requested users have current user in their friends.
 			Set<String> friendEmails = user.getFriendEmails();
-			if (friendEmails != null && friendEmails.contains(currentUser.getEmail())) {
+			String currentUserEmail = currentUser.getEmail();
+			if (friendEmails != null && friendEmails.contains(currentUserEmail)) {
 
-				List<String> clientEmails = canonicalized.get(user.getEmail());
-
-				UserInfo userInfo = new UserInfo(user.getEmail());
-				result.put(userInfo, new HashSet<>(clientEmails));
+				Set<String> clientEmails = normalized.get(user.getEmail());
+				if (clientEmails == null) {
+					logger.error("No client emails for canonic {}: {}", user.getEmail(), normalized);
+				} else {
+					UserInfo userInfo = new UserInfo(user.getEmail(), clientEmails);
+					result.add(userInfo);
+				}
 			}
 		}
 

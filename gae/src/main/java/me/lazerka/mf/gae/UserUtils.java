@@ -18,10 +18,10 @@ public class UserUtils {
 	 * GMail emails are case-insensitive, although standard says otherwise.
 	 * Currently we work only with GMail authentication, so following GMail logic.
 	 */
-	public static String canonicalizeGmailAddress(String address) {
+	public static String normalizeGmailAddress(String address) throws IllegalEmailFormatException {
 		Matcher matcher = emailAddressSplitPattern.matcher(address);
 		if (!matcher.matches()) {
-			throw new IllegalArgumentException(address);
+			throw new IllegalEmailFormatException(address);
 		}
 
 		String localPart = matcher.group(1);
@@ -36,4 +36,12 @@ public class UserUtils {
 
 		return periodless.toLowerCase(Locale.US);
 	}
+
+	/** Checked exception for invalid argument of {@link #normalizeGmailAddress(String)}. */
+	public static class IllegalEmailFormatException extends Exception {
+		public IllegalEmailFormatException(String message) {
+			super(message);
+		}
+	}
+
 }

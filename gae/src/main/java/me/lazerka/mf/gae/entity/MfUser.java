@@ -5,6 +5,8 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
+import me.lazerka.mf.gae.UserUtils;
+import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -49,7 +51,12 @@ public class MfUser {
 	public MfUser(@Nonnull User user) {
 		this.googleId = checkNotNull(user.getUserId());
 		this.user = user;
-		this.email = checkNotNull(user.getEmail());
+		try {
+			this.email = UserUtils.normalizeGmailAddress(checkNotNull(user.getEmail()));
+		} catch (IllegalEmailFormatException e) {
+			// Make unchecked, because it's should be impossible to get invalid email from Google's authentication.
+			throw new IllegalArgumentException(e);
+		}
 		this.emailSha256 = SHA_256.hashString(email, UTF_8).toString();
 	}
 
