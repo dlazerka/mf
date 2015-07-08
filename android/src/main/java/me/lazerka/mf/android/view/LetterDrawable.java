@@ -39,7 +39,7 @@ public class LetterDrawable extends ShapeDrawable {
 	public LetterDrawable(Shape shape, char letter, int id) {
 		super(shape);
 		this.text = new char[] {letter};
-		this.color = MATERIAL_COLORS.get(id % MATERIAL_COLORS.size());
+		this.color = MATERIAL_COLORS.get(Math.abs(id) % MATERIAL_COLORS.size());
 
 		if (typeface == null) {
 			typeface = Typeface.create("sans-serif-light", Typeface.NORMAL);
