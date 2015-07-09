@@ -1,5 +1,6 @@
 package me.lazerka.mf.android.adapter;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,6 +53,35 @@ public class FriendInfo {
 	@Nullable
 	public Map<String, UserInfo> serverInfos;
 
+	static {
+		AsyncTask.execute(
+				new Runnable() {
+					@Override
+					public void run() {
+					}
+				});
+	}
+
+	/**
+	 * Serializes a dummy instance in order to let Jackson cache what's needed ahead of time, so user doesn't
+	 * experience any hiccups.
+	 */
+	public static void warmUpJackson() {
+		FriendInfo temp = new FriendInfo();
+		try {
+			String json = Application.jsonMapper.writeValueAsString(temp);
+			// Ignoring result.
+			Application.jsonMapper.readValue(json, FriendInfo.class);
+		} catch (IOException e) {
+			// Inconceivable!
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Deserializes an instance from a Bundle, created previously by {@link #toBundle()}.
+	 * Uses Jackson for simplicity and easier maintenance.
+	 */
 	public static FriendInfo fromBundle(Bundle bundle) {
 		String json = checkNotNull(bundle.getString("json"));
 		try {
@@ -80,6 +110,10 @@ public class FriendInfo {
 		this.serverInfos = serverInfos;
 	}
 
+	/**
+	 * Serializes this to a Bundle, to be read later by {@link #fromBundle(Bundle)}.
+	 * Uses Jackson for simplicity and easier maintenance.
+	 */
 	public Bundle toBundle() {
 		try {
 			String json = Application.jsonMapper.writeValueAsString(this);

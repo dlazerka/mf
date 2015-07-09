@@ -6,6 +6,7 @@ import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,7 +23,9 @@ import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.http.JsonRequester;
-import me.lazerka.mf.api.object.*;
+import me.lazerka.mf.api.object.UserInfo;
+import me.lazerka.mf.api.object.UsersInfoRequest;
+import me.lazerka.mf.api.object.UsersInfoResponse;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -158,6 +161,13 @@ public class ContactsFragment extends Fragment {
 			new UsersInfoRequester(usersInfoRequest)
 					.send();
 
+			AsyncTask.execute(
+					new Runnable() {
+						@Override
+						public void run() {
+							FriendInfo.warmUpJackson();
+						}
+					});
 		}
 
 		@Override
