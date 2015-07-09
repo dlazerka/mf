@@ -6,7 +6,6 @@ import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.support.v7.widget.LinearLayoutManager;
@@ -160,14 +159,6 @@ public class ContactsFragment extends Fragment {
 			UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
 			new UsersInfoRequester(usersInfoRequest)
 					.send();
-
-			AsyncTask.execute(
-					new Runnable() {
-						@Override
-						public void run() {
-							FriendInfo.warmUpJackson();
-						}
-					});
 		}
 
 		@Override

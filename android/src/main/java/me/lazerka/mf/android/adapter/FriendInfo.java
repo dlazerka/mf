@@ -63,22 +63,6 @@ public class FriendInfo {
 	}
 
 	/**
-	 * Serializes a dummy instance in order to let Jackson cache what's needed ahead of time, so user doesn't
-	 * experience any hiccups.
-	 */
-	public static void warmUpJackson() {
-		FriendInfo temp = new FriendInfo();
-		try {
-			String json = Application.jsonMapper.writeValueAsString(temp);
-			// Ignoring result.
-			Application.jsonMapper.readValue(json, FriendInfo.class);
-		} catch (IOException e) {
-			// Inconceivable!
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
 	 * Deserializes an instance from a Bundle, created previously by {@link #toBundle()}.
 	 * Uses Jackson for simplicity and easier maintenance.
 	 */
