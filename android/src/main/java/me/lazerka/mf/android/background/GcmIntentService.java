@@ -127,6 +127,8 @@ public class GcmIntentService extends IntentService {
 					}
 
 					if (!fired) {
+						// May happen when we restarted app, and received enqueued GCM messages before map initializes
+						// and sets it's handler.
 						Log.w(TAG, "Not found any handler for GCM message " + extras.toString());
 					}
 

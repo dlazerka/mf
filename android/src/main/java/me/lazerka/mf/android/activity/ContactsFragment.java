@@ -92,7 +92,7 @@ public class ContactsFragment extends Fragment {
 							R.animator.slide_from_below, R.animator.slide_to_above,
 							R.animator.slide_from_above, R.animator.slide_to_below
 					)
-					.replace(R.id.bottom_menu, fragment)
+					.replace(R.id.bottom_fragment_container, fragment)
 					.addToBackStack(null)
 					.commit();
 		}
@@ -157,6 +157,7 @@ public class ContactsFragment extends Fragment {
 			UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
 			new UsersInfoRequester(usersInfoRequest)
 					.send();
+
 		}
 
 		@Override

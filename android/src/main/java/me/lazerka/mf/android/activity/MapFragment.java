@@ -2,10 +2,14 @@ package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -18,6 +22,7 @@ import com.google.common.collect.Maps;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.background.GcmIntentService;
+import me.lazerka.mf.android.background.GcmIntentService.ServiceBinder;
 import me.lazerka.mf.android.background.GcmMessageHandler;
 import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
@@ -184,7 +189,7 @@ public class MapFragment extends Fragment {
 
 			// First time -- center camera and zoom out.
 			int zoom = getNiceZoom(location.getAcc());
-			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(position, zoom - 3);
+			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(position, zoom);
 			map.moveCamera(cameraUpdate);
 
 		} else {
@@ -324,5 +329,30 @@ public class MapFragment extends Fragment {
 	}
 
 	private class ActivityIsNullException extends Exception {}
+
+	/**
+	 * @author Dzmitry Lazerka
+	 */
+	public static class GcmServiceConnection implements ServiceConnection {
+		protected final String TAG = getClass().getName();
+		private Handler handler;
+
+		public GcmServiceConnection(Handler handler) {
+			this.handler = handler;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder binder) {
+			Log.v(TAG, "onServiceConnected: " + name.toString());
+
+			ServiceBinder serviceBinder = (ServiceBinder) binder;
+			serviceBinder.bind(MyLocationGcmPayload.TYPE, handler);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			Log.v(TAG, "onServiceDisconnected: " + name.toString());
+		}
+	}
 }
 

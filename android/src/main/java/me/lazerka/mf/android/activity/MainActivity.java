@@ -38,9 +38,12 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		getFragmentManager().beginTransaction()
-				.add(R.id.bottom_menu, new ContactsFragment())
-				.commit();
+		if (savedInstanceState == null) {
+			getFragmentManager().beginTransaction()
+					// replace(), not add, because this is called
+					.replace(R.id.bottom_fragment_container, new ContactsFragment())
+					.commit();
+		}
 	}
 
 	@Override

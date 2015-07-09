@@ -18,7 +18,7 @@
 	<FrameLayout
 		android:layout_width="match_parent"
 		android:layout_height="@dimen/bottom_menu_height"
-		android:id="@+id/bottom_menu"
+		android:id="@+id/bottom_fragment_container"
 		/>
 
 </LinearLayout>
