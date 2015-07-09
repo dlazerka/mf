@@ -40,9 +40,9 @@
 			android:layout_margin="16dp"
 			android:elevation="@dimen/fab_elevation_resting"
 			android:paddingStart="12dp"
-			android:paddingEnd="14dp"
-			android:paddingTop="14dp"
-			android:paddingBottom="14dp"
+			android:paddingEnd="12dp"
+			android:paddingTop="12dp"
+			android:paddingBottom="12dp"
 			android:layout_gravity="center"
 			android:scaleType="fitXY"
 			/>

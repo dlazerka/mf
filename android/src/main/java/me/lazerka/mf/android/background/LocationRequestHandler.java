@@ -2,6 +2,7 @@ package me.lazerka.mf.android.background;
 
 import android.content.Context;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
@@ -50,7 +51,7 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 		if (service == null) {
 			// Probably happens when device is turning off.
 			String msg = "Service is GCed, not sending my location";
-			Log.e(TAG, msg);
+			Log.i(TAG, msg);
 			ACRA.getErrorReporter().handleException(new RuntimeException(TAG + ": " + msg));
 			return;
 		}
@@ -98,6 +99,9 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 			MyLocation myLocation = new MyLocation(requestId, location, requesterEmail);
 
 			new LocationSender(myLocation, service).send();
+
+			int howLongMs = 300000; // TODO: make user-configurable
+			scheduleSendingLocation(service, requesterEmail, howLongMs);
 		} else {
 			// TODO implement tracking
 			Toast.makeText(service, "No lastKnownLocation", Toast.LENGTH_LONG)
@@ -122,7 +126,78 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 		return friend;
 	}
 
-	private class LocationSender extends JsonRequester<MyLocation, MyLocationResponse> {
+	private void scheduleSendingLocation(Context context, String requesterEmail, int howLongMs) {
+		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		LocationListener listener = new LocationListener(context, requesterEmail, howLongMs);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener);
+	}
+
+	private static class LocationListener implements android.location.LocationListener {
+		private static final String TAG = LocationListener.class.getName();
+
+		private final WeakReference<Context> contextRef;
+		private final String myEmail;
+		private final String requesterEmail;
+		private final long stopAtMs;
+
+		LocationListener(Context context, String requesterEmail, int howLongMs) {
+			this.contextRef = new WeakReference<>(context);
+			this.requesterEmail = requesterEmail;
+			this.myEmail = Application.preferences.getAccount().name;
+			this.stopAtMs = SystemClock.uptimeMillis() + howLongMs;
+		}
+
+		@Override
+		public void onLocationChanged(android.location.Location loc) {
+			Log.d(TAG, loc.toString());
+
+
+			Context context = contextRef.get();
+			if (context == null) {
+				Log.i(TAG, "contextRef is GCed, not sending location");
+				return;
+			}
+
+			Location location = new Location(
+					DateTime.now(UTC),
+					myEmail,
+					loc.getLatitude(),
+					loc.getLongitude(),
+					loc.getAccuracy()
+			);
+
+			String requestId = String.valueOf(SystemClock.uptimeMillis());
+			MyLocation myLocation = new MyLocation(requestId, location, requesterEmail);
+
+			new LocationSender(myLocation, context).send();
+
+			if (SystemClock.uptimeMillis() > stopAtMs) {
+				LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+				locationManager.removeUpdates(this);
+				Log.i(TAG, "Stopped sending my location");
+			}
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			Log.d(TAG, provider + " changed status to " + status);
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+			Log.d(TAG, provider + " enabled");
+		}
+
+		@Override
+		public void onProviderDisabled(String provider) {
+			Log.d(TAG, provider + " disabled");
+		}
+
+	}
+
+	private static class LocationSender extends JsonRequester<MyLocation, MyLocationResponse> {
+		private static final String TAG = LocationSender.class.getName();
+
 		public LocationSender(MyLocation request, Context context) {
 			super(Method.POST, MyLocation.PATH, request, MyLocationResponse.class, context);
 		}

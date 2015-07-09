@@ -15,16 +15,18 @@ import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.model.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.background.GcmIntentService;
 import me.lazerka.mf.android.background.GcmMessageHandler;
 import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
 import org.joda.time.DateTime;
-import org.joda.time.Period;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.text.DateFormat;
+import java.util.Locale;
 import java.util.Map;
 
 public class MapFragment extends Fragment {
@@ -157,7 +159,7 @@ public class MapFragment extends Fragment {
 		return zoom > 4 ? zoom - 3 : zoom;
 	}
 
-	public void drawLocation(Location location) {
+	private void drawLocation(Location location) throws ActivityIsNullException {
 		LatLng position = new LatLng(location.getLat(), location.getLon());
 
 		String email = location.getEmail();
@@ -179,11 +181,26 @@ public class MapFragment extends Fragment {
 			options.strokeColor(circleStroke);
 			options.strokeWidth(circleStrokeWidth);
 			item.circle = map.addCircle(options);
+
+			// First time -- center camera and zoom out.
+			int zoom = getNiceZoom(location.getAcc());
+			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(position, zoom - 3);
+			map.moveCamera(cameraUpdate);
+
 		} else {
 			item.marker.setPosition(position);
 			item.circle.setCenter(position);
+			item.circle.setRadius(location.getAcc());
 		}
 
+		Locale locale = Application.context.getResources().getConfiguration().locale;
+		DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM, locale);
+
+		DateTime when = location.getWhen();
+		String timeFormatted = timeFormat.format(when.toDate());
+		item.marker.setSnippet(timeFormatted);
+
+/* This should be shown only with periodic task to update
 		DateTime when = location.getWhen();
 		if (when != null) {
 			Period period = new Period(when.getMillis(), System.currentTimeMillis());
@@ -199,6 +216,7 @@ public class MapFragment extends Fragment {
 			}
 			item.marker.setSnippet(snippet);
 		}
+*/
 	}
 
 	private void addTestMarker() {
@@ -230,18 +248,14 @@ public class MapFragment extends Fragment {
 	*/
 
 	public void showLocation(Location location) {
-		drawLocation(location);
-
-		LatLng latLng = new LatLng(location.getLat(), location.getLon());
+		Log.v(TAG, "Showing location: " + location);
 
 		try {
-			int zoom = getNiceZoom(location.getAcc());
-			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom + 2);
-			map.moveCamera(cameraUpdate);
-			map.setOnMyLocationButtonClickListener(null);
+			drawLocation(location);
 		} catch (ActivityIsNullException e) {
 			Log.w(TAG, "showLocation: activity is null");
 		}
+
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 
 /**
  * Server's response to accepted {@link MyLocation}.
@@ -20,5 +21,12 @@ public class MyLocationResponse {
 
 	public String getRequestId() {
 		return requestId;
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+				.add("requestId", requestId)
+				.toString();
 	}
 }

@@ -164,7 +164,11 @@ public class GcmService {
 		gcmRequest.setRegistrationIds(registrationIds);
 		gcmRequest.setTimeToLiveSeconds(TIME_TO_LIVE_SECONDS);
 		gcmRequest.putPayload(payload);
-		gcmRequest.setCollapseKey(currentUser.getEmail());
+
+		// If collapseKey is set, then GCM will delay subsequent messages and deliver them later.
+		// We don't want that, we want to deliver ASAP.
+		//gcmRequest.setCollapseKey(currentUser.getEmail());
+
 		return gcmRequest;
 	}
 
