@@ -1,7 +1,7 @@
 package me.lazerka.mf.android.adapter;
 
 import android.graphics.Outline;
-import android.graphics.drawable.shapes.OvalShape;
+import android.graphics.drawable.shapes.RectShape;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.util.Log;
@@ -17,6 +17,9 @@ import me.lazerka.mf.android.view.LetterDrawable;
  */
 public class FriendViewHolder extends ViewHolder {
 	private static final String TAG = FriendViewHolder.class.getName();
+
+	// Also see setRect() below.
+	private static final RectShape SHAPE = new RectShape();
 
 	public FriendViewHolder(View itemView) {
 		super(itemView);
@@ -35,7 +38,7 @@ public class FriendViewHolder extends ViewHolder {
 			String displayName = friendInfo.displayName;
 
 			char letter = displayName.charAt(0);
-			LetterDrawable drawable = new LetterDrawable(new OvalShape(), letter, displayName.hashCode());
+			LetterDrawable drawable = new LetterDrawable(SHAPE, letter, displayName.hashCode());
 			imageView.setImageDrawable(drawable);
 
 			// This comment was relevant to CursorAdapter, not sure it's needed for RecyclerView anymore.
@@ -47,7 +50,8 @@ public class FriendViewHolder extends ViewHolder {
 					new ViewOutlineProvider() {
 						@Override
 						public void getOutline(View view, Outline outline) {
-							outline.setOval(0, 0, view.getWidth(), view.getWidth());
+							// Also see RectShape above.
+							outline.setRect(0, 0, view.getWidth(), view.getWidth());
 						}
 					});
 			imageView.setClipToOutline(true);
