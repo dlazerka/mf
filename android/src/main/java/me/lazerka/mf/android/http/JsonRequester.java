@@ -75,7 +75,7 @@ public abstract class JsonRequester<REQ, RESP> implements Listener<RESP>, ErrorL
 			} else {
 				msg = "Server error: " + errorData;
 			}
-			Log.e(TAG, msg);
+			Log.e(TAG, String.valueOf(request) + ": " + msg);
 		}
 		if (context != null) {
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();

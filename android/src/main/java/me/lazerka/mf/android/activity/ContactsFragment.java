@@ -156,9 +156,11 @@ public class ContactsFragment extends Fragment {
 				emails.addAll(friendInfo.emails);
 			}
 
-			UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
-			new UsersInfoRequester(usersInfoRequest)
-					.send();
+			if (!emails.isEmpty()) {
+				UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
+				new UsersInfoRequester(usersInfoRequest)
+						.send();
+			}
 		}
 
 		@Override
