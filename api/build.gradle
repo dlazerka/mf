@@ -8,15 +8,15 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:2.0.1'
 
     compile 'com.google.guava:guava:18.0'
-    compile 'joda-time:joda-time:2.6'
+    compile 'joda-time:joda-time:2.9.1'
     compile 'commons-io:commons-io:2.4'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.4'
-    compile ('com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.4') {
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.3'
+    compile ('com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3') {
         exclude module: 'jackson-annotations'
         exclude module: 'joda-time'
     }
 
-    testCompile 'org.testng:testng:6.8.21'
+    testCompile 'org.testng:testng:6.9.9'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
     // We're not supposed to have non-pure methods in API package.
     // testCompile 'org.mockito:mockito-all:1.10.19'
