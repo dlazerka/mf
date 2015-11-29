@@ -2,7 +2,6 @@ package me.lazerka.mf.android.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -10,6 +9,8 @@ import android.view.ViewGroup;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.api.object.UserInfo;
 import org.acra.ACRA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -20,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
-	private static final String TAG = FriendListAdapter.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(FriendListAdapter.class);
 
 	private final List<FriendInfo> data = new ArrayList<>();
 	private final OnFriendClickListener onFriendClickListener;
@@ -43,7 +44,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 			return R.layout.view_add_contact;
 		} else {
 			String msg = "Illegal item position: " + position + " vs " + getItemCount();
-			Log.e(TAG, msg);
+			logger.error(msg);
 			ACRA.getErrorReporter().handleException(new IndexOutOfBoundsException(msg));
 			return 0;
 		}
@@ -68,7 +69,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 				friendViewHolder = (FriendViewHolder) holder;
 			} catch (ClassCastException e) {
 				String msg = "Holder is not of type FriendViewHolder for position " + position;
-				Log.e(TAG, msg);
+				logger.error(msg);
 				ACRA.getErrorReporter().handleException(new IllegalStateException(msg, e));
 				return;
 			}
@@ -81,7 +82,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 			((AddFriendViewHolder) holder).bind(onAddFriendClickListener);
 		} else {
 			String msg = "Illegal item position: " + position + " vs " + getItemCount();
-			Log.e(TAG, msg);
+			logger.error(msg);
 			ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 		}
 	}
@@ -92,20 +93,17 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	}
 
 	public void setData(@Nonnull Collection<FriendInfo> data) {
-		Log.v(TAG, "setData " + data.size());
 		this.data.clear();
 		this.data.addAll(data);
 		notifyDataSetChanged();
 	}
 
 	public void resetData() {
-		Log.v(TAG, "resetData");
 		data.clear();
 		notifyDataSetChanged();
 	}
 
 	public void setServerInfos(List<UserInfo> serverInfos) {
-		Log.v(TAG, "setServerInfos " + serverInfos.size());
 		Map<String, UserInfo> byEmail = new HashMap<>();
 		for(UserInfo serverInfo : serverInfos) {
 			for(String email : serverInfo.getEmails()) {
@@ -138,7 +136,6 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 
 		@Override
 		public void onClick(View v) {
-			Log.d(TAG, "click " + friendInfo.displayName);
 			onFriendClickListener.onClick(friendInfo);
 		}
 	}

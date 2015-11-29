@@ -6,10 +6,11 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import me.lazerka.mf.android.auth.GcmAuthenticator;
 import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.Map;
  * @author Dzmitry Lazerka
  */
 public class GcmIntentService extends IntentService {
-	private static final String TAG = GcmIntentService.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(GcmIntentService.class);
 
 	/**
 	 * Message Bundle key that contains our payload from GCM.
@@ -40,7 +41,6 @@ public class GcmIntentService extends IntentService {
 
 	@Override
 	public void onCreate() {
-		Log.v(TAG, "onCreate");
 		super.onCreate();
 
 		// Mostly for calling from BootReceiver.
@@ -50,13 +50,11 @@ public class GcmIntentService extends IntentService {
 
 	@Override
 	public ServiceBinder onBind(Intent intent) {
-		Log.v(TAG, "onBind");
 		return binder;
 	}
 
 	@Override
 	public boolean onUnbind(Intent intent) {
-		Log.v(TAG, "onUnbind");
 		return super.onUnbind(intent);
 	}
 
@@ -75,12 +73,12 @@ public class GcmIntentService extends IntentService {
 	}
 
 	private void handleRegistrationId(Intent intent) {
-		Log.i(TAG, "Received com.google.android.c2dm.intent.REGISTRATION");
+		logger.info("Received com.google.android.c2dm.intent.REGISTRATION");
 		String gcmToken = intent.getStringExtra("registration_id");
 		if (gcmToken != null) {
 			GcmAuthenticator.storeGcmRegistration(gcmToken);
 		} else {
-			Log.w(TAG, "null registration id");
+			logger.warn("null registration id");
 		}
 	}
 
@@ -98,21 +96,18 @@ public class GcmIntentService extends IntentService {
 			 */
 			switch (messageType) {
 				case GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR:
-					Log.i(TAG, "GCM Send error: " + extras.toString());
+					logger.info("GCM Send error: " + extras.toString());
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_DELETED:
-					Log.i(TAG, "GCM Deleted messages: " + extras.toString());
+					logger.info("GCM Deleted messages: " + extras.toString());
 					break;
 				case GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE:
-					Log.v(TAG, "GCM message: " + extras.toString());
 					// Look through messageHandlers to see if there's a message for them.
 					boolean fired = false;
 					for(String type : messageHandlers.keySet()) {
 
 						String json = extras.getString(type);
 						if (json != null) {
-							Log.v(TAG, "Handler found for " + type);
-
 							Handler handler = messageHandlers.get(type);
 							fired = true;
 
@@ -129,7 +124,7 @@ public class GcmIntentService extends IntentService {
 					if (!fired) {
 						// May happen when we restarted app, and received enqueued GCM messages before map initializes
 						// and sets it's handler.
-						Log.w(TAG, "Not found any handler for GCM message " + extras.toString());
+						logger.warn("Not found any handler for GCM message " + extras.toString());
 					}
 
 					break;

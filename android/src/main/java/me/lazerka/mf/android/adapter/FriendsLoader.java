@@ -7,10 +7,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
-import android.util.Log;
 import com.google.common.base.Joiner;
 import me.lazerka.mf.android.Application;
 import org.acra.ACRA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -24,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
-	private static final String TAG = FriendsLoader.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(FriendsLoader.class);
 
 	private final CursorLoader contactsLoader;
 	private final CursorLoader emailsLoader;
@@ -82,8 +83,6 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 
 	@Override
 	public ArrayList<FriendInfo> loadInBackground() {
-		Log.v(TAG, "loadInBackground");
-
 		Cursor contactsCursor = contactsLoader.loadInBackground();
 		Cursor emailsCursor = emailsLoader.loadInBackground();
 
@@ -114,7 +113,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 				friendInfo.emails.add(emailsCursor.getString(1));
 			} else {
 				String msg = "No friendInfo for setting email to, by lookupKey " + lookupKey;
-				Log.e(TAG, msg);
+				logger.error(msg);
 				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 			}
 		};
@@ -123,14 +122,12 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 	}
 
 	public void cancelLoadInBackground() {
-		Log.v(TAG, "cancelLoadInBackground");
 		contactsLoader.cancelLoadInBackground();
 		emailsLoader.cancelLoadInBackground();
 	}
 
 	@Override
 	protected void onStartLoading() {
-		Log.v(TAG, "onStartLoading");
 		super.onStartLoading();
 
 		if (isStarted()) {
@@ -140,19 +137,16 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 
 	@Override
 	protected void onStopLoading() {
-		Log.v(TAG, "onStopLoading");
 		super.onStopLoading();
 	}
 
 	@Override
 	public void onCanceled(List<FriendInfo> data) {
-		Log.v(TAG, "onCanceled");
 		super.onCanceled(data);
 	}
 
 	@Override
 	protected void onReset() {
-		Log.v(TAG, "onReset");
 		super.onReset();
 	}
 

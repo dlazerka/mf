@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,6 +24,8 @@ import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.UserInfo;
 import me.lazerka.mf.api.object.UsersInfoRequest;
 import me.lazerka.mf.api.object.UsersInfoResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -38,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * TODO: add null activity handling
  */
 public class ContactsFragment extends Fragment {
-	private static final String TAG = ContactsFragment.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(ContactsFragment.class);
 
 	private static final int FRIENDS_LOADER_ID = 12345;
 
@@ -53,7 +54,6 @@ public class ContactsFragment extends Fragment {
 	public View onCreateView(
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
 	) {
-		Log.v(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
 
 		initList(view);
@@ -85,8 +85,6 @@ public class ContactsFragment extends Fragment {
 	private class OnItemClickListener implements FriendListAdapter.OnFriendClickListener {
 		@Override
 		public void onClick(FriendInfo friendInfo) {
-			Log.d(TAG, "click " + friendInfo.displayName);
-
 			ContactFragment fragment = new ContactFragment();
 			fragment.setArguments(friendInfo.toBundle());
 			getFragmentManager().beginTransaction()
@@ -103,13 +101,13 @@ public class ContactsFragment extends Fragment {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode != CONTACT_PICKER_RESULT) {
-			Log.w(TAG, "Unknown request code: " + requestCode);
+			logger.warn("Unknown request code: " + requestCode);
 			super.onActivityResult(requestCode, resultCode, data);
 		}
 
 		if (resultCode == Activity.RESULT_OK) {
 			Uri contactUri = data.getData();
-			Log.i(TAG, "Adding friend: " + contactUri);
+			logger.info("Adding friend: " + contactUri);
 
 			Application.preferences.addFriend(contactUri);
 
@@ -140,7 +138,6 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public Loader<List<FriendInfo>> onCreateLoader(int loaderId, Bundle args) {
 			if (loaderId != FRIENDS_LOADER_ID) {
-				Log.v(TAG, "FriendsLoaderCallbacks: loaderId " + loaderId + " not mine.");
 				return null;
 			}
 
@@ -149,7 +146,6 @@ public class ContactsFragment extends Fragment {
 
 		@Override
 		public void onLoadFinished(Loader<List<FriendInfo>> loader, List<FriendInfo> data) {
-			Log.v(TAG, "FriendsLoaderCallbacks: onLoadFinished " + loader.getId() + ", " + data.size());
 			friendListAdapter.setData(data);
 			Set<String> emails = new HashSet<>(data.size());
 			for(FriendInfo friendInfo : data) {
@@ -165,7 +161,6 @@ public class ContactsFragment extends Fragment {
 
 		@Override
 		public void onLoaderReset(Loader<List<FriendInfo>> loader) {
-			Log.v(TAG, "FriendsLoaderCallbacks: onLoaderReset " + loader.getId());
 			friendListAdapter.resetData();
 		}
 	}
@@ -179,7 +174,6 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public void onResponse(UsersInfoResponse response) {
 			List<UserInfo> userInfos = response.getUserInfos();
-			Log.v(TAG, "Received " + userInfos.size() + " friend infos");
 			friendListAdapter.setServerInfos(userInfos);
 		}
 	}

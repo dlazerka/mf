@@ -1,7 +1,5 @@
 package me.lazerka.mf.android.http;
 
-import android.os.SystemClock;
-import android.util.Log;
 import com.android.volley.*;
 import com.android.volley.Cache.Entry;
 import com.android.volley.Response.ErrorListener;
@@ -10,6 +8,8 @@ import com.android.volley.toolbox.HttpHeaderParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.ApiConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,8 +27,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class JsonSerializingRequest<T> extends com.android.volley.toolbox.JsonRequest<T> {
+	private static final Logger logger = LoggerFactory.getLogger(JsonSerializingRequest.class);
+
 	/** Just to distinguish requests in logs. */
-	private final String TAG = JsonSerializingRequest.class.getName() + "-" + SystemClock.uptimeMillis();
 	private final Map<String, String> headers = new LinkedHashMap<>();
 
 	private final Object requestObject;
@@ -58,19 +59,16 @@ public class JsonSerializingRequest<T> extends com.android.volley.toolbox.JsonRe
 	@Override
 	protected Response<T> parseNetworkResponse(NetworkResponse response) {
 		try {
-			String responseContent = HttpUtils.decodeNetworkResponseCharset(response, TAG);
+			String responseContent = HttpUtils.decodeNetworkResponseCharset(response, logger);
 
 			if (response.statusCode == 200) {
-				Log.v(TAG, "Request successful, parsing.");
 				T responseObject = Application.jsonMapper.readValue(responseContent, responseClass);
 				Entry cacheEntry = HttpHeaderParser.parseCacheHeaders(response);
 				return Response.success(responseObject, cacheEntry);
 			} else if (response.statusCode == 204){
-				Log.v(TAG, "Request success, no content");
 				Entry cacheEntry = HttpHeaderParser.parseCacheHeaders(response);
 				return Response.success(null, cacheEntry);
 			} else {
-				Log.v(TAG, "Request error " + response.statusCode);
 				return Response.error(new VolleyError(response));
 			}
 		} catch (IOException e) {

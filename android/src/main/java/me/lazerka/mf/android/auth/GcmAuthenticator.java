@@ -3,7 +3,6 @@ package me.lazerka.mf.android.auth;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.google.android.gms.common.ConnectionResult;
@@ -14,6 +13,8 @@ import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
 import me.lazerka.mf.api.object.GcmRegistration;
 import org.acra.ACRA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -24,7 +25,7 @@ import java.io.IOException;
  * @author Dzmitry Lazerka
  */
 public class GcmAuthenticator {
-	private static final String TAG = GcmAuthenticator.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(GcmAuthenticator.class);
 
 	/**
 	 * Project number obtained from the API Console, as described in GCM "Getting Started".
@@ -65,12 +66,12 @@ public class GcmAuthenticator {
 				new GcmRegisterTask().execute();
 			} else {
 				// Unconditionally send gcmToken, because server might have removed it, even if we sent it before.
-				Log.v(TAG, "Sending GCM token to server");
+				logger.info("Sending GCM token to server");
 				new GcmRegistrationSender(gcmToken)
 						.send();
 			}
 		} else {
-			Log.e(TAG, "No valid Google Play Services APK found.");
+			logger.error("No valid Google Play Services APK found.");
 			Toast.makeText(context, "Please install Google Play Services", Toast.LENGTH_LONG)
 					.show();
 		}
@@ -85,7 +86,7 @@ public class GcmAuthenticator {
 	private boolean checkPlayServices() {
 		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
 		if (resultCode != ConnectionResult.SUCCESS) {
-			Log.w(TAG, "Google Play Services unavailable: " + resultCode);
+			logger.warn("Google Play Services unavailable: " + resultCode);
 			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
 				if (context instanceof Activity) {
 					GooglePlayServicesUtil.getErrorDialog(
@@ -96,11 +97,11 @@ public class GcmAuthenticator {
 					.show();
 				} else {
 					String msg = "Play Services unavailable, but cannot show error dialog to user.";
-					Log.e(TAG, msg);
+					logger.error(msg);
 					ACRA.getErrorReporter().handleException(new Exception(msg), true);
 				}
 			} else {
-				Log.i(TAG, "This device is not supported.");
+				logger.info("This device is not supported.");
 			}
 			return false;
 		}
@@ -121,16 +122,16 @@ public class GcmAuthenticator {
 				if (gcm == null) {
 					gcm = GoogleCloudMessaging.getInstance(Application.context);
 				}
-				Log.i(TAG, "Calling GCM.register()");
+				logger.info("Calling GCM.register()");
 				gcmToken = gcm.register(SENDER_ID);
-				Log.i(TAG, "GCM.register() successful");
+				logger.info("GCM.register() successful");
 
 				storeGcmRegistration(gcmToken);
 
 				return "Device registered";
 			} catch (IOException e) {
 				// On Sony Xperia happens all the time, but fortunately GcmBroadcastReceiver receives the regId.
-				Log.i(TAG, "GCM.register() failed: " + e.getMessage());
+				logger.info("GCM.register() failed: " + e.getMessage());
 				return "Error: " + e.getMessage();
 				// If there is an error, don't just keep trying to register.
 				// Require the user to click a button again, or perform
@@ -141,11 +142,11 @@ public class GcmAuthenticator {
 		@Override
 		protected void onPostExecute(String msg) {
 			if (msg.contains("Error")) {
-				Log.w(TAG, msg);
+				logger.warn(msg);
 				Toast.makeText(context, "Google Cloud Messaging " + msg, Toast.LENGTH_LONG)
 						.show();
 			} else {
-				Log.i(TAG, msg);
+				logger.info(msg);
 			}
 		}
 	}
@@ -156,8 +157,6 @@ public class GcmAuthenticator {
 	 * @author Dzmitry Lazerka
 	 */
 	private static class GcmRegistrationSender extends JsonRequester<GcmRegistration, GcmRegistrationResponse> {
-		private final String TAG = getClass().getName();
-
 		public GcmRegistrationSender(@Nonnull String gcmRegistrationId) {
 			super(
 					Method.POST,
@@ -169,7 +168,7 @@ public class GcmAuthenticator {
 		@Override
 		public void onResponse(GcmRegistrationResponse response) {
 			GcmRegistration request = getRequest();
-			Log.i(TAG, "Server stored our registration ID: " + request.getId());
+			logger.info("Server stored our registration ID: " + request.getId());
 		}
 	}
 }

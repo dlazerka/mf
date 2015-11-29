@@ -80,6 +80,7 @@ dependencies {
 		exclude group: 'com.google.android'
 	}
 	compile 'com.mcxiaoke.volley:library:1.0.19'
+	compile 'org.slf4j:slf4j-android:1.7.13'
 
 	androidTestCompile(
 			'org.hamcrest:hamcrest-core:1.3',

@@ -1,6 +1,5 @@
 package me.lazerka.mf.android.activity;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,7 +11,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.*;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
@@ -27,6 +25,8 @@ import me.lazerka.mf.android.background.GcmMessageHandler;
 import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -35,7 +35,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class MapFragment extends Fragment {
-	private static final String TAG = MapFragment.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(MapFragment.class);
+
 	public static final String CAMERA_POSITION = "cameraPosition";
 
 	private final int circleArea = Color.parseColor("#55DAEAFF");
@@ -55,14 +56,7 @@ public class MapFragment extends Fragment {
 	private GcmServiceConnection gcmServiceConnection;
 
 	@Override
-	public void onAttach(Activity activity) {
-		Log.v(TAG, "onAttach");
-		super.onAttach(activity);
-	}
-
-	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setRetainInstance(true);
 
@@ -72,7 +66,6 @@ public class MapFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.v(TAG, "onCreateView");
 		View view = inflater.inflate(R.layout.fragment_map, container, false);
 
 		// Gets the MapView from the XML layout and creates it
@@ -98,7 +91,6 @@ public class MapFragment extends Fragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-		Log.v(TAG, "onStart");
 		Intent intent = new Intent(getActivity(), GcmIntentService.class);
 		getActivity().bindService(intent, gcmServiceConnection, Context.BIND_AUTO_CREATE);
 	}
@@ -106,33 +98,28 @@ public class MapFragment extends Fragment {
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.v(TAG, "onStop");
 		getActivity().unbindService(gcmServiceConnection);
 	}
 
 	@Override
 	public void onResume() {
 		mapView.onResume();
-		Log.v(TAG, "onResume");
 		super.onResume();
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.v(TAG, "onDestroy");
 		mapView.onDestroy();
 	}
 
 	@Override
 	public void onDetach() {
-		Log.v(TAG, "onDetach");
 		super.onDetach();
 	}
 
 	@Override
 	public void onLowMemory() {
-		Log.v(TAG, "onAttach");
 		super.onLowMemory();
 		mapView.onLowMemory();
 	}
@@ -246,19 +233,16 @@ public class MapFragment extends Fragment {
 	private class MyMarkerClickListener implements OnMarkerClickListener {
 		@Override
 		public boolean onMarkerClick(Marker marker) {
-			Log.d(TAG, "onMarkerClick " + marker.toString());
 			return false;
 		}
 	}
 	*/
 
 	public void showLocation(Location location) {
-		Log.v(TAG, "Showing location: " + location);
-
 		try {
 			drawLocation(location);
 		} catch (ActivityIsNullException e) {
-			Log.w(TAG, "showLocation: activity is null");
+			logger.warn("showLocation: activity is null");
 		}
 
 	}
@@ -284,7 +268,7 @@ public class MapFragment extends Fragment {
 		public void handleMessage(Message message) {
 			MapFragment mapFragment = fragmentWeakReference.get();
 			if (mapFragment == null) {
-				Log.i(TAG, "MapFragment got GCed, not handling friend's location");
+				logger.info("MapFragment got GCed, not handling friend's location");
 				return;
 			}
 
@@ -292,7 +276,7 @@ public class MapFragment extends Fragment {
 			try {
 				activity = mapFragment.getMyActivity();
 			} catch (ActivityIsNullException e) {
-				Log.i(TAG, "ActivityIsNullException, not handling friend's location");
+				logger.info("ActivityIsNullException, not handling friend's location");
 				return;
 			}
 
@@ -315,7 +299,6 @@ public class MapFragment extends Fragment {
 			}
 
 			try {
-				Log.d(TAG, "onMyLocationChange" + location);
 				set = true;
 				LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 				int zoom = getNiceZoom(location.getAccuracy());
@@ -323,7 +306,7 @@ public class MapFragment extends Fragment {
 				map.moveCamera(cameraUpdate);
 				map.setOnMyLocationChangeListener(null);
 			} catch (ActivityIsNullException e) {
-				Log.i(TAG, "onMyLocationChange: activity is null, doing nothing.");
+				logger.info("onMyLocationChange: activity is null, doing nothing.");
 			}
 		}
 	}
@@ -334,7 +317,6 @@ public class MapFragment extends Fragment {
 	 * @author Dzmitry Lazerka
 	 */
 	public static class GcmServiceConnection implements ServiceConnection {
-		protected final String TAG = getClass().getName();
 		private Handler handler;
 
 		public GcmServiceConnection(Handler handler) {
@@ -343,15 +325,14 @@ public class MapFragment extends Fragment {
 
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
-			Log.v(TAG, "onServiceConnected: " + name.toString());
-
+			logger.trace("onServiceConnected: " + name.toString());
 			ServiceBinder serviceBinder = (ServiceBinder) binder;
 			serviceBinder.bind(MyLocationGcmPayload.TYPE, handler);
 		}
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-			Log.v(TAG, "onServiceDisconnected: " + name.toString());
+			logger.trace("onServiceDisconnected: " + name.toString());
 		}
 	}
 }

@@ -1,8 +1,6 @@
 package me.lazerka.mf.android.http;
 
 import android.content.Context;
-import android.os.SystemClock;
-import android.util.Log;
 import android.widget.Toast;
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
@@ -10,6 +8,8 @@ import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import me.lazerka.mf.android.Application;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * @author Dzmitry Lazerka
  */
 public abstract class JsonRequester<REQ, RESP> implements Listener<RESP>, ErrorListener {
-	private final String TAG = getClass().getName() + "-" + SystemClock.uptimeMillis();
+	private static final Logger logger = LoggerFactory.getLogger(JsonRequester.class);
 
 	private final JsonSerializingRequest<RESP> jsonSerializingRequest;
 	private final REQ request;
@@ -56,26 +56,26 @@ public abstract class JsonRequester<REQ, RESP> implements Listener<RESP>, ErrorL
 
 	@Override
 	public void onErrorResponse(VolleyError error) {
-		Log.w(TAG, error.getMessage(), error);
+		logger.warn(error.getMessage(), error);
 
 		String msg;
 		String errorMessage = error.getMessage() != null ? (": " + error.getMessage()) : "";
 		if (error instanceof AuthFailureError) {
-			Log.e(TAG, "AuthFailureError", error);
+			logger.error("AuthFailureError", error);
 			msg = "Authentication error" + errorMessage;
 		} else if (error.networkResponse == null) {
 			msg = "Network error: " + errorMessage;
 		} else if (error.networkResponse.statusCode == 404) {
 			msg = getMessage404(error.networkResponse);
-			Log.w(TAG, msg);
+			logger.warn(msg);
 		} else {
-			String errorData = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, TAG);
+			String errorData = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, logger);
 			if (errorData.isEmpty()) {
 				msg = "Server error: " + error.networkResponse.statusCode;
 			} else {
 				msg = "Server error: " + errorData;
 			}
-			Log.e(TAG, String.valueOf(request) + ": " + msg);
+			logger.error(String.valueOf(request) + ": " + msg);
 		}
 		if (context != null) {
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();

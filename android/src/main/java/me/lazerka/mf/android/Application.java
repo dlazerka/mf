@@ -8,7 +8,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
-import android.util.Log;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -21,6 +20,8 @@ import org.acra.ACRAConfiguration;
 import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender.Method;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,7 +40,7 @@ import java.net.URI;
 		resToastText = R.string.acra_toast_text
 )
 public class Application extends MultiDexApplication {
-	public static String TAG;
+	private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
 	public static String USER_AGENT;
 
@@ -72,7 +73,6 @@ public class Application extends MultiDexApplication {
 	public void onCreate() {
 		super.onCreate();
 
-		TAG = getApplicationContext().getPackageName();
 		USER_AGENT = getApplicationContext().getPackageName();
 
 		ACRA.init(this);
@@ -107,7 +107,7 @@ public class Application extends MultiDexApplication {
 					String propertyName
 			) throws IOException {
 				String msg = "Unknown property `" + propertyName + "` in " + beanOrClass;
-				Log.w(TAG, msg);
+				logger.warn(msg);
 				jsonParser.skipChildren();
 				return true;
 			}

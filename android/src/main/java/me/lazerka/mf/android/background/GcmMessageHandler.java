@@ -8,13 +8,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import org.acra.ACRA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -22,7 +23,7 @@ import java.io.IOException;
  * @author Dzmitry Lazerka
  */
 public abstract class GcmMessageHandler<P extends GcmPayload> extends Handler {
-	private static final String TAG = GcmMessageHandler.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(GcmMessageHandler.class);
 
 	private static final int NOTIFICATION_ID = 1;
 
@@ -37,7 +38,7 @@ public abstract class GcmMessageHandler<P extends GcmPayload> extends Handler {
 
 			// TODO remove for production
 			String msg = "Cannot parse json as " + clazz.getSimpleName() + ": " + json;
-			Log.e(TAG, msg);
+			logger.error(msg);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 			throw e;
 		}

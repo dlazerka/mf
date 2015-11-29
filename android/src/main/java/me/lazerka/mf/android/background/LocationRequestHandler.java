@@ -21,6 +21,8 @@ import me.lazerka.mf.api.object.MyLocation;
 import me.lazerka.mf.api.object.MyLocationResponse;
 import org.acra.ACRA;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -32,7 +34,7 @@ import static org.joda.time.DateTimeZone.UTC;
  * @author Dzmitry Lazerka
  */
 public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcmPayload> {
-	private final String TAG = getClass().getName();
+	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
 
 	/**
 	 * If passing this as usual, then service cannot get GCed.
@@ -45,14 +47,12 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 
 	@Override
 	public void handleMessage(Message message) {
-		Log.v(TAG, "handleMessage " + message);
-
 		GcmIntentService service = serviceRef.get();
 		if (service == null) {
 			// Probably happens when device is turning off.
 			String msg = "Service is GCed, not sending my location";
-			Log.i(TAG, msg);
-			ACRA.getErrorReporter().handleException(new RuntimeException(TAG + ": " + msg));
+			logger.info(msg);
+			ACRA.getErrorReporter().handleException(new RuntimeException(logger.getName() + ": " + msg));
 			return;
 		}
 
@@ -69,7 +69,7 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 		// Not ideally clean to use FriendsLoader this way, but clean enough for now.
 		FriendInfo friend = getFriendInfo(requesterEmail, service);
 		if (friend == null) {
-			Log.w(TAG, "Requester not in friends list, rejecting " + requesterEmail);
+			logger.warn("Requester not in friends list, rejecting " + requesterEmail)
 
 			String appName = service.getResources().getString(R.string.app_name);
 			sendNotification(
@@ -106,7 +106,7 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 			// TODO implement tracking
 			Toast.makeText(service, "No lastKnownLocation", Toast.LENGTH_LONG)
 				.show();
-			Log.e(TAG, "No lastKnownLocation");
+			logger.error("No lastKnownLocation");
 		}
 	}
 
@@ -133,8 +133,6 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 	}
 
 	private static class LocationListener implements android.location.LocationListener {
-		private static final String TAG = LocationListener.class.getName();
-
 		private final WeakReference<Context> contextRef;
 		private final String myEmail;
 		private final String requesterEmail;
@@ -149,12 +147,9 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 
 		@Override
 		public void onLocationChanged(android.location.Location loc) {
-			Log.d(TAG, loc.toString());
-
-
 			Context context = contextRef.get();
 			if (context == null) {
-				Log.i(TAG, "contextRef is GCed, not sending location");
+				logger.info("contextRef is GCed, not sending location");
 				return;
 			}
 
@@ -174,37 +169,35 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 			if (SystemClock.uptimeMillis() > stopAtMs) {
 				LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 				locationManager.removeUpdates(this);
-				Log.i(TAG, "Stopped sending my location");
+				logger.info("Stopped sending my location");
 			}
 		}
 
 		@Override
 		public void onStatusChanged(String provider, int status, Bundle extras) {
-			Log.d(TAG, provider + " changed status to " + status);
+			logger.info(provider + " changed status to " + status);
 		}
 
 		@Override
 		public void onProviderEnabled(String provider) {
-			Log.d(TAG, provider + " enabled");
+			logger.info(provider + " enabled");
 		}
 
 		@Override
 		public void onProviderDisabled(String provider) {
-			Log.d(TAG, provider + " disabled");
+			logger.info(provider + " disabled");
 		}
 
 	}
 
 	private static class LocationSender extends JsonRequester<MyLocation, MyLocationResponse> {
-		private static final String TAG = LocationSender.class.getName();
-
 		public LocationSender(MyLocation request, Context context) {
 			super(Method.POST, MyLocation.PATH, request, MyLocationResponse.class, context);
 		}
 
 		@Override
 		public void onResponse(MyLocationResponse response) {
-			Log.d(TAG, "onResponse: " + response.toString());
+			logger.info("onResponse: " + response.toString());
 		}
 
 		@Override

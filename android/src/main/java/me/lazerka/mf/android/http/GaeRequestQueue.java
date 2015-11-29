@@ -2,7 +2,6 @@ package me.lazerka.mf.android.http;
 
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
-import android.util.Log;
 import com.android.volley.*;
 import com.android.volley.toolbox.BasicNetwork;
 import com.android.volley.toolbox.HttpStack;
@@ -11,6 +10,8 @@ import com.android.volley.toolbox.NoCache;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GaeAuthenticator;
 import me.lazerka.mf.android.auth.GaeAuthenticator.AuthenticationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -26,6 +27,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author Dzmitry Lazerka
  */
 public class GaeRequestQueue extends RequestQueue {
+	private static final Logger logger = LoggerFactory.getLogger(GaeRequestQueue.class);
+
 	/**
 	 * Characters allowed in Cookie header, value part.
 	 * See RFC6265: US-ASCII characters excluding CTLs, whitespace DQUOTE, comma, semicolon, and backslash.
@@ -51,7 +54,6 @@ public class GaeRequestQueue extends RequestQueue {
 	}
 
 	private static class GaeNetwork extends BasicNetwork {
-		private static final String TAG = GaeNetwork.class.getName();
 		private final GaeAuthenticator authenticator;
 
 		public GaeNetwork(HttpStack httpStack, GaeAuthenticator authenticator) {
@@ -75,7 +77,7 @@ public class GaeRequestQueue extends RequestQueue {
 			NetworkResponse response = super.performRequest(request);
 
 			if (shouldAuthenticateResponse(response)) {
-				Log.i(TAG, "Should authenticate request #" + request.getSequence());
+				logger.info("Should authenticate request #" + request.getSequence());
 				gaeAuthToken = obtainGaeAuthToken();
 
 				// Race condition (between concurrent requests) OK.
@@ -83,11 +85,11 @@ public class GaeRequestQueue extends RequestQueue {
 
 				setAuthCookie(gaeAuthToken, request);
 
-				Log.v(TAG, "Sending request #" + request.getSequence() + " again.");
+				logger.info("Sending request #" + request.getSequence() + " again.");
 				response = super.performRequest(request);
 
 				if (shouldAuthenticateResponse(response)) {
-					Log.i(TAG, "Still not authenticated request #" + request.getSequence() + ", aborting.");
+					logger.warn("Still not authenticated request #" + request.getSequence() + ", aborting.");
 					throw new AuthFailureError("Unable to authenticate: " + response.statusCode);
 				}
 			}
@@ -126,16 +128,16 @@ public class GaeRequestQueue extends RequestQueue {
 			boolean result = response.statusCode == 403 // Forbidden
 					|| response.statusCode == 302; // Moved Temporarily
 			if (result) {
-				Log.v(TAG, "Status code indicates we should re-authenticate: " + response.statusCode);
+				logger.info("Status code indicates we should re-authenticate: " + response.statusCode);
 			} else {
 				String contentType = response.headers.get("Content-Type");
 				if (contentType == null || contentType.isEmpty()) {
-					Log.w(TAG, "Content-Type is empty: " + contentType);
+					logger.warn("Content-Type is empty: " + contentType);
 					// We're not sure we need to authenticate this.
 					return false;
 				}
 				if (contentType.startsWith("text/html")) {
-					Log.v(TAG, "Content-Type is '" + contentType + "', authenticating.");
+					// Content-Type is text/html, authenticating.
 					return true;
 				}
 			}
@@ -144,7 +146,7 @@ public class GaeRequestQueue extends RequestQueue {
 
 		@Nonnull
 		private String obtainGaeAuthToken() throws AuthFailureError, NetworkError {
-			Log.i(TAG, "GaeAuthToken null, authenticating");
+			logger.info("GaeAuthToken null, authenticating");
 			try {
 				return authenticator.authenticate();
 			} catch (AuthenticationException | AuthenticatorException e) {

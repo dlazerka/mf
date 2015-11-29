@@ -6,11 +6,12 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.content.Intent;
-import android.util.Log;
 import android.widget.Toast;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.AndroidAuthenticator;
 import me.lazerka.mf.android.auth.AndroidAuthenticator.AuthenticatorCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -18,7 +19,7 @@ import java.io.IOException;
  * @author Dzmitry Lazerka
  */
 public class LoginActivity extends Activity {
-	private final String TAG = getClass().getName();
+	private static final Logger logger = LoggerFactory.getLogger(LoginActivity.class);
 
 	private final int ACCOUNT_PICKER = 0;
 	private final int USER_CONFIRMATION = 1;
@@ -31,7 +32,6 @@ public class LoginActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-		Log.v(TAG, "onResume");
 		super.onResume();
 
 		Intent intent = androidAuthenticator.checkAccountValid();
@@ -46,7 +46,6 @@ public class LoginActivity extends Activity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		Log.v(TAG, "onActivityResult: requestCode=" + requestCode + " resultCode=" + resultCode);
 
 		switch (requestCode) {
 			case ACCOUNT_PICKER:
@@ -56,7 +55,7 @@ public class LoginActivity extends Activity {
 					return;
 				}
 				if (resultCode != RESULT_OK) {
-					Log.w(TAG, "Result not OK: " + resultCode);
+					logger.warn("Result not OK: " + resultCode);
 					return;
 				}
 				String name = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
@@ -72,7 +71,7 @@ public class LoginActivity extends Activity {
 					return;
 				}
 				if (resultCode != RESULT_OK) {
-					Log.w(TAG, "Result not OK: " + resultCode);
+					logger.warn("Result not OK: " + resultCode);
 					return;
 				}
 				replaceWithActivity(MainActivity.class);
@@ -93,12 +92,12 @@ public class LoginActivity extends Activity {
 
 		@Override
 		public void onUserInputRequired(Intent intent) {
-			Log.i(TAG, "onUserInputRequired, starting credentials prompt activity.");
+			logger.info("onUserInputRequired, starting credentials prompt activity.");
 			startActivityForResult(intent, USER_CONFIRMATION);
 		}
 
 		private void onException(Exception e, String userMessage) {
-			Log.w(TAG, e.getClass().getSimpleName() + " getting authentication token", e);
+			logger.warn(e.getClass().getSimpleName() + " getting authentication token", e);
 			Toast.makeText(LoginActivity.this, userMessage, Toast.LENGTH_LONG).show();
 		}
 

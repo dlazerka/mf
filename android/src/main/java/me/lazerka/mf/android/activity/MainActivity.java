@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -21,6 +20,8 @@ import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import org.acra.ACRA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -30,11 +31,10 @@ import java.util.Set;
  * @author Dzmitry Lazerka
  */
 public class MainActivity extends Activity {
-	private static final String TAG = MainActivity.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		Log.v(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -48,7 +48,6 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-		Log.v(TAG, "onResume");
 		super.onResume();
 
 		GcmAuthenticator gcmAuthenticator = new GcmAuthenticator(this);
@@ -107,7 +106,7 @@ public class MainActivity extends Activity {
 		public void onResponse(LocationRequestResult response) {
 			List<GcmResult> results = response.getResults();
 			if (results == null || results.isEmpty()) {
-				Log.w(TAG, "Empty results list in LocationRequestResult " + results);
+				logger.warn("Empty results list in LocationRequestResult " + results);
 			} else {
 
 				// If at least one result is successful -- show it, otherwise show any error.
@@ -122,12 +121,12 @@ public class MainActivity extends Activity {
 				String error = oneResult.getError();
 				if (error == null) {
 					String msg = "Sent location request to " + response.getEmail();
-					Log.i(TAG, msg);
+					logger.info(msg);
 					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
 						.show();
 				} else {
 					String msg = "Error sending location request to " + response.getEmail() + ": " + error;
-					Log.w(TAG, msg);
+					logger.warn(msg);
 					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
 						.show();
 				}
@@ -141,7 +140,7 @@ public class MainActivity extends Activity {
 			String msg;
 			String errorMessage = error.getMessage() != null ? (": " + error.getMessage()) : "";
 			if (error instanceof AuthFailureError) {
-				Log.e(TAG, "AuthFailureError", error);
+				logger.error("AuthFailureError", error);
 				msg = "Authentication error" + errorMessage;
 			} else if (error.networkResponse == null) {
 				msg = "Error requesting location" + errorMessage;
@@ -151,20 +150,20 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 				} else {
 					String email = getRequest().getEmails().iterator().next();
-					String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, TAG);
+					String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, logger);
 					msg = email + " not found: " + responseContent;
 				}
-				Log.w(TAG, msg);
+				logger.warn(msg);
 
 			} else {
-				String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, TAG);
+				String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, logger);
 				if (!responseContent.isEmpty()) {
 					msg = "Error requesting location: " + responseContent;
 				} else {
 					msg = "Error requesting location: " + error.networkResponse.statusCode;
 				}
-				Log.e(TAG, msg);
-				ACRA.getErrorReporter().handleException(new IllegalStateException(TAG + ": " + msg));
+				logger.error(msg);
+				ACRA.getErrorReporter().handleException(new IllegalStateException(logger.getName() + ": " + msg));
 			}
 			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
 		}
@@ -176,7 +175,7 @@ public class MainActivity extends Activity {
 						"Did your friend installed the app?";
 			} else {
 				String email = getRequest().getEmails().iterator().next();
-				String responseContent = HttpUtils.decodeNetworkResponseCharset(networkResponse, TAG);
+				String responseContent = HttpUtils.decodeNetworkResponseCharset(networkResponse, logger);
 				return email + " not found: " + responseContent;
 			}
 		}

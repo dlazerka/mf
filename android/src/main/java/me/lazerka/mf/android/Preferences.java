@@ -6,7 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
-import android.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,7 +17,7 @@ import java.util.*;
  * Type-safe API for SharedPreferences, so that we have one place for them.
  */
 public class Preferences {
-	private static final String TAG = Preferences.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(Preferences.class);
 
 	private final String ACCOUNT_NAME = "account.name";
 	private final String ACCOUNT_TYPE = "account.type";
@@ -61,18 +62,17 @@ public class Preferences {
 	@Nonnull
 	public List<Uri> getFriends() {
 		Set<String> set = preferences.getStringSet(FRIENDS, Collections.<String>emptySet());
-		assert set != null;
 		List<Uri> result = new ArrayList<>(set.size());
 		for(String uriString : set) {
 			Uri parsed = Uri.parse(uriString);
 			result.add(parsed);
 		}
-		Log.i(TAG, "getFriends " + result.size());
+		logger.info("getFriends " + result.size());
 		return result;
 	}
 
 	public boolean addFriend(Uri contactUri) {
-		Log.i(TAG, "addFriend " + contactUri);
+		logger.info("addFriend " + contactUri);
 		synchronized (preferences) {
 			// Clone, otherwise value won't be set.
 			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(FRIENDS, new HashSet<String>(1)));
@@ -88,7 +88,7 @@ public class Preferences {
 	}
 
 	public boolean removeFriend(Uri contactUri) {
-		Log.i(TAG, "removeFriend " + contactUri);
+		logger.info("removeFriend " + contactUri);
 		synchronized (preferences) {
 			// Clone, otherwise value won't be set.
 			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(FRIENDS, new HashSet<String>(0)));
@@ -110,11 +110,11 @@ public class Preferences {
 			int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
 
 			if (result == null) {
-				Log.i(TAG, "GCM Registration ID not found.");
+				logger.info("GCM Registration ID not found.");
 				return null;
 			} else {
 				// Do not log real registration ID as it should be private.
-				Log.v(TAG, "GCM Registration ID found.");
+				logger.info("GCM Registration ID found.");
 			}
 
 			// Check if app was updated; if so, it must clear the registration ID
@@ -123,7 +123,7 @@ public class Preferences {
 			// See build.gradle where it's defined
 			int currentVersion = Application.getVersion();
 			if (registeredVersion != currentVersion) {
-				Log.i(TAG, "App version changed.");
+				logger.info("App version changed.");
 				return null;
 			}
 
@@ -136,7 +136,7 @@ public class Preferences {
 	 * See MfBackupAgent for that.
 	 */
 	public void setGcmToken(@Nonnull String gcmRegistrationId) {
-		Log.v(TAG, "GCM Registration ID stored.");
+		logger.info("GCM Registration ID stored.");
 		preferences.edit()
 				.putString(GCM_TOKEN, gcmRegistrationId)
 				.putInt(GCM_APP_VERSION, Application.getVersion())
@@ -163,7 +163,7 @@ public class Preferences {
 	}
 
 	public void onBeforeBackup() {
-		Log.v(TAG, "onBeforeBackup");
+		logger.info("onBeforeBackup");
 		clearGcmToken();
 	}
 }
