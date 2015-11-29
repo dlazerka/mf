@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
@@ -69,7 +68,7 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 		// Not ideally clean to use FriendsLoader this way, but clean enough for now.
 		FriendInfo friend = getFriendInfo(requesterEmail, service);
 		if (friend == null) {
-			logger.warn("Requester not in friends list, rejecting " + requesterEmail)
+			logger.warn("Requester not in friends list, rejecting " + requesterEmail);
 
 			String appName = service.getResources().getString(R.string.app_name);
 			sendNotification(
@@ -84,29 +83,33 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 		sendNotification(requesterEmail + " requested your location", appName, service);
 
 		LocationManager locationManager = (LocationManager) service.getSystemService(Context.LOCATION_SERVICE);
-		android.location.Location lastKnownLocation =
-				locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		if (lastKnownLocation != null) {
-			Location location = new Location(
-					DateTime.now(UTC),
-					Application.preferences.getAccount().name,
-					lastKnownLocation.getLatitude(),
-					lastKnownLocation.getLongitude(),
-					lastKnownLocation.getAccuracy()
-			);
+		try {
+			android.location.Location lastKnownLocation =
+					locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+			if (lastKnownLocation != null) {
+				Location location = new Location(
+						DateTime.now(UTC),
+						Application.preferences.getAccount().name,
+						lastKnownLocation.getLatitude(),
+						lastKnownLocation.getLongitude(),
+						lastKnownLocation.getAccuracy()
+				);
 
-			String requestId = String.valueOf(SystemClock.uptimeMillis());
-			MyLocation myLocation = new MyLocation(requestId, location, requesterEmail);
+				String requestId = String.valueOf(SystemClock.uptimeMillis());
+				MyLocation myLocation = new MyLocation(requestId, location, requesterEmail);
 
-			new LocationSender(myLocation, service).send();
+				new LocationSender(myLocation, service).send();
 
-			int howLongMs = 300000; // TODO: make user-configurable
-			scheduleSendingLocation(service, requesterEmail, howLongMs);
-		} else {
-			// TODO implement tracking
-			Toast.makeText(service, "No lastKnownLocation", Toast.LENGTH_LONG)
-				.show();
-			logger.error("No lastKnownLocation");
+				int howLongMs = 300000; // TODO: make user-configurable
+				scheduleSendingLocation(service, requesterEmail, howLongMs);
+			} else {
+				// TODO implement tracking
+				Toast.makeText(service, "No lastKnownLocation", Toast.LENGTH_LONG)
+						.show();
+				logger.error("No lastKnownLocation");
+			}
+		} catch (SecurityException e) {
+			logger.error("SecurityException on getLastKnownLocation()", e);
 		}
 	}
 
@@ -129,7 +132,11 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 	private void scheduleSendingLocation(Context context, String requesterEmail, int howLongMs) {
 		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		LocationListener listener = new LocationListener(context, requesterEmail, howLongMs);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener);
+		try {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener);
+		} catch (SecurityException e) {
+			logger.error("SecurityException on requestLocationUpdates()", e);
+		}
 	}
 
 	private static class LocationListener implements android.location.LocationListener {
@@ -168,8 +175,13 @@ public class LocationRequestHandler extends GcmMessageHandler<LocationRequestGcm
 
 			if (SystemClock.uptimeMillis() > stopAtMs) {
 				LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-				locationManager.removeUpdates(this);
-				logger.info("Stopped sending my location");
+				try {
+					locationManager.removeUpdates(this);
+					logger.info("Stopped sending my location");
+				} catch (SecurityException e) {
+					logger.error("SecurityException on removeUpdates()", e);
+				}
+
 			}
 		}
 
