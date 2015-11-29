@@ -5,33 +5,17 @@ import android.accounts.AccountManager;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
-import android.net.http.AndroidHttpClient;
 import android.util.Log;
-import com.google.common.collect.Lists;
+import com.squareup.okhttp.*;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.ApiConstants;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.HttpCookie;
 import java.net.URI;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -53,6 +37,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GaeAuthenticator {
 	public static final String AUTH_TOKEN_COOKIE_NAME = "SACSID";
 	private static final String TAG = GaeAuthenticator.class.getName();
+
+	private final OkHttpClient httpClient;
+	private final CookieManager cookieManager;
+
+	public GaeAuthenticator() {
+		cookieManager = new CookieManager();
+		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+
+		httpClient = new OkHttpClient();
+		httpClient.setFollowRedirects(false);
+		httpClient.setCookieHandler(cookieManager);
+	}
 
 	/**
 	 * For invoking from background.
@@ -92,35 +88,47 @@ public class GaeAuthenticator {
 			throw new NoAccountException();
 		}
 
-		String userAgent = Application.USER_AGENT;
-		AndroidHttpClient httpClient = AndroidHttpClient.newInstance(userAgent, null);
+//		String userAgent = Application.USER_AGENT;
+//		AndroidHttpClient httpClient = AndroidHttpClient.newInstance(userAgent, null);
 		// Don't follow redirects.
-		httpClient.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
-		HttpContext httpContext = new BasicHttpContext();
-		BasicCookieStore cookieStore = new BasicCookieStore();
-		httpContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-
-		try {
+//		httpClient.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
+//		HttpContext httpContext = new BasicHttpContext();
+//		BasicCookieStore cookieStore = new BasicCookieStore();
+//		httpContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
 
 			if (Application.isServerDev()) {
-				return authDevAppserver(account.name, httpClient, httpContext, cookieStore);
+				return authDevAppserver(account.name);
 			}
 
 			URI uri = Application.SERVER_ROOT.resolve("/_ah/login?auth=" + androidAuthToken + "&continue=http://0.0.0.0/");
-			HttpGet httpGet = new HttpGet(uri);
-			HttpResponse response = httpClient.execute(httpGet, httpContext);
-			HttpEntity entity = response.getEntity();
-			InputStream is = entity.getContent();
-			Header contentEncoding = entity.getContentEncoding();
-			String encoding = contentEncoding != null ? contentEncoding.getValue() : null;
+//			HttpGet httpGet = new HttpGet(uri);
+//			HttpResponse response = httpClient.execute(httpGet, httpContext);
 
-			String responseContent = IOUtils.toString(is, encoding);
-			Log.i(TAG, "Response: " + responseContent);
+			HttpUrl httpUrl  = HttpUrl.get(Application.SERVER_ROOT)
+					.resolve("/_ah/login")
+					.newBuilder()
+					.addQueryParameter("auth", androidAuthToken)
+					.addQueryParameter("continue", "http://0.0.0.0/")
+					.build();
 
-			int statusCode = response.getStatusLine().getStatusCode();
+			Request request = new Request.Builder()
+					.url(httpUrl)
+					.build();
+			Response response = httpClient.newCall(request).execute();
+
+//            HttpEntity entity = response.getEntity();
+//			InputStream is = entity.getContent();
+//			Header contentEncoding = entity.getContentEncoding();
+//			String encoding = contentEncoding != null ? contentEncoding.getValue() : null;
+
+//			String responseContent = IOUtils.toString(is, encoding);
+			Log.i(TAG, "Response: " + response.message());
+
+			int statusCode = response.code();
 
 			// dev_appserver case.
-			if (statusCode == 200 && "text/html".equals(entity.getContentType().getValue())) {
+			String contentType = response.header("Content-Type");
+			if (statusCode == 200 && "text/html".equals(contentType)) {
 				String msg = "Auth response should be 302, but is 200, looks like dev appserver";
 				Log.w(TAG, msg);
 				throw new AuthenticationException(msg);
@@ -132,7 +140,7 @@ public class GaeAuthenticator {
 				throw new AuthenticationException(msg);
 			}
 
-			for (Cookie cookie : cookieStore.getCookies()) {
+			for (HttpCookie cookie : cookieManager.getCookieStore().getCookies()) {
 				if (cookie.getName().equals(AUTH_TOKEN_COOKIE_NAME)) {
 					Log.i(TAG, "GAE cookie retrieval successful.");
 					return cookie.getValue();
@@ -141,39 +149,45 @@ public class GaeAuthenticator {
 			String msg = "GAE auth response code is 302, but cookie ACSID not set.";
 			Log.e(TAG, msg);
 			throw new AuthenticationException(msg);
-		} finally {
-			httpClient.close();
-		}
 	}
 
-	private String authDevAppserver(
-			String email,
-			AndroidHttpClient httpClient,
-			HttpContext httpContext,
-			CookieStore cookieStore
-	) throws IOException, AuthenticationException {
-		int statusCode;
+	private String authDevAppserver(String email) throws IOException, AuthenticationException {
+//		int statusCode;
 		Log.i(TAG, "Status code 200, must be dev_appserver, sending regular form...");
-		URI uriDev = Application.SERVER_ROOT.resolve("/_ah/login");
-		HttpPost post = new HttpPost(uriDev);
+		HttpUrl httpUrl = HttpUrl.get(Application.SERVER_ROOT)
+				.resolve("/_ah/login");
 
-		List<NameValuePair> pairs = Lists.newArrayList();
-		pairs.add(new BasicNameValuePair("email", email));
-		pairs.add(new BasicNameValuePair("continue", "http://0.0.0.0/"));
-		post.setEntity(new UrlEncodedFormEntity(pairs));
-		post.setHeader("Content-Type", "application/x-www-form-urlencoded");
+		RequestBody body = new FormEncodingBuilder()
+				.add("email", email)
+				.add("continue", "http://0.0.0.0/")
+				.build();
+		Request request = new Request.Builder()
+				.url(httpUrl)
+				.post(body)
+				.build();
 
-		HttpResponse response = httpClient.execute(post, httpContext);
+		Response response = httpClient.newCall(request).execute();
 
-		statusCode = response.getStatusLine().getStatusCode();
+//        URI uriDev = Application.SERVER_ROOT.resolve("/_ah/login");
+//		HttpPost post = new HttpPost(uriDev);
 
-		if (statusCode != 302) {
-			String msg = "GAE auth response code is not 302, but is " + statusCode;
+//		List<NameValuePair> pairs = Lists.newArrayList();
+//		pairs.add(new BasicNameValuePair("email", email));
+//		pairs.add(new BasicNameValuePair("continue", "http://0.0.0.0/"));
+//		post.setEntity(new UrlEncodedFormEntity(pairs));
+//		post.setHeader("Content-Type", "application/x-www-form-urlencoded");
+
+//		HttpResponse response = httpClient.execute(post, httpContext);
+
+//		statusCode = response.getStatusLine().getStatusCode();
+
+		if (response.code() != 302) {
+			String msg = "GAE auth response code is not 302, but is " + response.code();
 			Log.w(TAG, msg);
 			throw new AuthenticationException(msg);
 		}
 
-		for (Cookie cookie : cookieStore.getCookies()) {
+		for (HttpCookie cookie : cookieManager.getCookieStore().getCookies()) {
 			if (cookie.getName().equals("dev_appserver_login")) {
 				// It's OK to log this auth cookie, because it's local dev server only.
 				Log.i(TAG, "GAE cookie retrieval successful: " + cookie.getValue());
