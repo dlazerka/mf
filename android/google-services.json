@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_id": "lazerka-mf",
+    "project_number": "769083712074",
+    "name": "lazerka-mf"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769083712074:android:ca5eab4547b39fc1",
+        "client_id": "android:me.lazerka.mf.android",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "me.lazerka.mf.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "769083712074-gashs8hdsr8kkechuqu00ptkf81f69bt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "me.lazerka.mf.android",
+            "certificate_hash": "FC2992B5D458585AA43608327A4BFAB2464B4B3A"
+          }
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 2,
+          "analytics_property": {
+            "tracking_id": "UA-1875804-9"
+          }
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

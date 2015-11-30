@@ -1,22 +1,17 @@
 package me.lazerka.mf.android.auth;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
+import android.accounts.*;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-
 import com.google.android.gms.common.AccountPicker;
-
-import java.io.IOException;
-
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.activity.LoginActivity;
 import me.lazerka.mf.api.ApiConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * Handles on-device authentication, i.e.obtains Android token.
@@ -29,7 +24,8 @@ import me.lazerka.mf.api.ApiConstants;
  * @author Dzmitry Lazerka
  */
 public class AndroidAuthenticator {
-	private static final String TAG = AndroidAuthenticator.class.getName();
+	private static final Logger logger = LoggerFactory.getLogger(AndroidAuthenticator.class);
+
 	static final String ACCOUNT_TYPE = "com.google";
 
 	/**

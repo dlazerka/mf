@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import me.lazerka.mf.android.http.GaeRequestQueue;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.object.AcraException;
@@ -68,6 +69,9 @@ public class Application extends MultiDexApplication {
 	public static Preferences preferences;
 	public static Context context;
 	public static GaeRequestQueue requestQueue;
+
+	// See LoginActivity where it's set.
+	public static GoogleSignInAccount account;
 
 	@Override
 	public void onCreate() {
