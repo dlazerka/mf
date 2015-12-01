@@ -18,9 +18,9 @@
 	 option is required to comply with the Google+ Sign-In developer policies
 	-->
 	<uses-permission android:name="android.permission.USE_CREDENTIALS" />
-	<!-- To retrieve the account name (email) as part of sign-in: -->
+	<!-- To retrieve the account name (email) as part of sign-in. -->
 	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
-	<!-- To auto-complete the email text field in the login form with the user's emails -->
+	<!-- To auto-complete the email text field in the login form with the user's emails. -->
 	<uses-permission android:name="android.permission.READ_PROFILE" />
 	<!-- For adding friends from Android contacts. -->
 	<uses-permission android:name="android.permission.READ_CONTACTS" />

@@ -79,7 +79,7 @@ public class WebModule extends JerseyServletModule {
 	@Singleton
 	@Named("gcm.api.key")
 	String provideGcmApiKey() {
-		File file = new File("WEB-INF/gcm.api.key");
+		File file = new File("WEB-INF/secret/gcm.api.key");
 		try {
 			FileReader fr = new FileReader(file);
 			String result = IOUtils.toString(fr).trim();

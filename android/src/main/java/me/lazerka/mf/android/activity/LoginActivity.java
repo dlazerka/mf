@@ -1,22 +1,24 @@
 package me.lazerka.mf.android.activity;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Toast;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.*;
 import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.OptionalPendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ public class LoginActivity extends FragmentActivity {
 	private static final Logger logger = LoggerFactory.getLogger(LoginActivity.class);
 
 	private static final int RC_SIGN_IN = 9001;
-	private static final int RC_PLAY_ERROR_DIALOG = 9001;
+	private static final int RC_PLAY_ERROR_DIALOG = 123;
 
 	private GoogleApiClient googleApiClient;
 
@@ -37,17 +39,23 @@ public class LoginActivity extends FragmentActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_signing_progress);
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
 
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
 				.requestId()
-				.requestProfile()
+				//.requestProfile() // We don't need profile.
 				.requestEmail()
+				.requestIdToken(getString(R.string.server_oauth_key))
 				.build();
+
+		// If there's only one account on device, we're sure user would want to use it.
+		AccountManager accountManager = AccountManager.get(this);
+		Account[] accounts = accountManager.getAccountsByType("com.google");
+		if (accounts.length == 1) {
+			String accountName = accounts[0].name;
+			gso = new GoogleSignInOptions.Builder(gso)
+					.setAccountName(accountName)
+					.build();
+		}
 
 		googleApiClient = new Builder(this).enableAutoManage(
 				this, new OnConnectionFailedListener() {
@@ -61,6 +69,11 @@ public class LoginActivity extends FragmentActivity {
 				})
 				.addApi(Auth.GOOGLE_SIGN_IN_API, gso)
 				.build();
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
 
 		OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(googleApiClient);
 
@@ -93,10 +106,36 @@ public class LoginActivity extends FragmentActivity {
 			Application.account = result.getSignInAccount();
 			replaceWithActivity(MainActivity.class);
 		} else {
-			logger.info("SignIn unsuccessful");
-			// Signed out, show unauthenticated UI.
-			launchSignInActivityForResult();
+			Status status = result.getStatus();
+			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
+
+			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
+				launchSignInActivityForResult();
+				return;
+			}
+
+			// User pressed "Deny"
+			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+				showSignInButton();
+				return;
+			}
+
+			// To reproduce, change GoogleSignInOptions on the fly. // There's nothing user can do about it.
+			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_FAILED) {
+				Auth.GoogleSignInApi.revokeAccess(googleApiClient);
+				Auth.GoogleSignInApi.signOut(googleApiClient);
+				Toast.makeText(this, "Sign-In failed", Toast.LENGTH_LONG).show();
+			}
+			showSignInButton();
 		}
+	}
+
+	private void launchSignInActivityForResult() {
+		logger.info("Launching SignIn Activity for result");
+
+		Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+
+		startActivityForResult(signInIntent, RC_SIGN_IN);
 	}
 
 	private void showSignInButton() {
@@ -112,12 +151,6 @@ public class LoginActivity extends FragmentActivity {
 				});
 	}
 
-	private void launchSignInActivityForResult() {
-		logger.info("Launching SignIn Activity for result");
-		Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-		startActivityForResult(signInIntent, RC_SIGN_IN);
-	}
-
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
@@ -127,8 +160,16 @@ public class LoginActivity extends FragmentActivity {
 			case RC_SIGN_IN:
 				logger.info("Got result from SignIn Activity: " + resultCode);
 
-				// It doesn't matter what resultCode here, because handleSignInResult will handle unsuccessful ones.
-				handleSignInResult(Auth.GoogleSignInApi.getSignInResultFromIntent(data));
+				//if (resultCode == RESULT_OK) {
+				GoogleSignInResult resultFromIntent = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+				// Will handle non-OK results.
+				handleSignInResult(resultFromIntent);
+				//} else {
+				//	showSignInButton();
+				//}
+				break;
+			case RC_PLAY_ERROR_DIALOG:
+				showSignInButton();
 				break;
 			default:
 				logger.warn("Not ours: " + requestCode);
