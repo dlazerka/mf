@@ -8,7 +8,7 @@ buildscript {
 }
 
 apply plugin: 'java'
-apply plugin: 'war'
+apply plugin: 'war' // Required by endpoints
 apply plugin: 'appengine'
 
 repositories {
@@ -23,20 +23,30 @@ dependencies {
     appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.28'
     compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.28'
 
-    compile 'javax.servlet:servlet-api:2.5'
-
+    // Datastore
     compile ('com.googlecode.objectify:objectify:5.1.9') {
         exclude module: 'appengine-api-labs' // By artifact name.
         exclude module: 'guava' // By artifact name.
-
     }
 
+    // Auth
+    compile 'javax.annotation:jsr250-api:1.0'
+    compile ('com.google.api-client:google-api-client-appengine:1.21.0') {// For UrlFetchTransport
+        exclude module: 'guava-jdk5' // By artifact name.
+    }
+    compile ('com.google.apis:google-api-services-oauth2:v2-rev98-1.21.0') {
+        exclude module: 'guava-jdk5' // By artifact name.
+    }
+
+    // Web Server
+    compile 'javax.servlet:servlet-api:2.5'
     compile 'com.sun.jersey:jersey-server:1.19'
     compile 'com.sun.jersey.contribs:jersey-guice:1.19'
     compile ('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.6.3') {
         exclude module: 'jackson-annotations' // By artifact name.
     }
 
+    // Misc
     compile 'com.google.inject:guice:4.0'
     compile 'com.google.inject.extensions:guice-servlet:4.0'
     compile 'org.slf4j:slf4j-api:1.7.13'

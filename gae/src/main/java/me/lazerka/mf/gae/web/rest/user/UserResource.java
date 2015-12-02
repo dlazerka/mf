@@ -9,9 +9,11 @@ import me.lazerka.mf.gae.UserUtils;
 import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import me.lazerka.mf.gae.entity.MfUser;
 import me.lazerka.mf.gae.gcm.MfUserService;
+import me.lazerka.mf.gae.oauth.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -27,6 +29,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
  */
 @Path("/rest/user")
 @Produces(ApiConstants.APPLICATION_JSON)
+@RolesAllowed(Role.OAUTH)
 public class UserResource {
 	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
 

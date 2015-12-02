@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -42,6 +43,7 @@ public class AcraExceptionResource {
 	// Expected response will be logged, see org.acra.util.HttpRequest
 	@PUT
 	@Produces("text/plain")
+	@PermitAll
 	public String post(MultivaluedMap<String, String> map, @PathParam("reportId") String reportId) throws IOException {
 
 		String exceptionMessage = getExceptionMessage(map);

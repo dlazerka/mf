@@ -6,9 +6,11 @@ import com.google.inject.Provides;
 import com.googlecode.objectify.ObjectifyFilter;
 import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
 import com.sun.jersey.api.core.PackagesResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
+import me.lazerka.mf.gae.oauth.AuthFilterFactory;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +67,7 @@ public class WebModule extends JerseyServletModule {
 		params.put(PackagesResourceConfig.FEATURE_DISABLE_WADL, "true");
 
 		// This makes use of custom Auth+filters using OAuth2.
-		// Commented because using GAE default authentication.
-		// params.put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, AuthFilterFactory.class.getName());
+		params.put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, AuthFilterFactory.class.getName());
 
 		//params.put("com.sun.jersey.spi.container.ContainerRequestFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
 		//params.put("com.sun.jersey.spi.container.ContainerResponseFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
