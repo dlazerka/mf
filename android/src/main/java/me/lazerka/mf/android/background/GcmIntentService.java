@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Handles messages from GCM. Basically, there's only one message -- if someone requests our location.
+ * Handles messages from GCM.
  *
  * @author Dzmitry Lazerka
  */

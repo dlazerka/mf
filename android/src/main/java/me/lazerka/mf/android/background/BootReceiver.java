@@ -46,6 +46,9 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 
 			GcmAuthenticator gcmAuthenticator = new GcmAuthenticator(this);
 			gcmAuthenticator.checkRegistration();
+
+			// Release the wake lock provided by the WakefulBroadcastReceiver.
+			GcmBroadcastReceiver.completeWakefulIntent(intent);
 		}
 	}
 }

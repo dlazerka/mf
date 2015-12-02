@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.http.JsonRequester;
@@ -84,28 +84,31 @@ public class GcmAuthenticator {
 	 * the Google Play Store or enable it in the device's system settings.
 	 */
 	private boolean checkPlayServices() {
-		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
-		if (resultCode != ConnectionResult.SUCCESS) {
-			logger.warn("Google Play Services unavailable: " + resultCode);
-			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-				if (context instanceof Activity) {
-					GooglePlayServicesUtil.getErrorDialog(
-							resultCode,
-							(Activity) context,
-							PLAY_SERVICES_RESOLUTION_REQUEST
-					)
-					.show();
-				} else {
-					String msg = "Play Services unavailable, but cannot show error dialog to user.";
-					logger.error(msg);
-					ACRA.getErrorReporter().handleException(new Exception(msg), true);
-				}
-			} else {
-				logger.info("This device is not supported.");
-			}
-			return false;
+		GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+		int resultCode = apiAvailability.isGooglePlayServicesAvailable(context);
+		if (resultCode == ConnectionResult.SUCCESS) {
+			return true;
 		}
-		return true;
+
+		logger.warn("Google Play Services unavailable: " + resultCode);
+
+		if (apiAvailability.isUserResolvableError(resultCode)) {
+			if (context instanceof Activity) {
+				logger.info("Showing ErrorDialog to user...");
+				apiAvailability.getErrorDialog((Activity) context, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
+						.show();
+			} else {
+				String msg = "Play Services unavailable, but cannot show error dialog to user.";
+				logger.error(msg);
+				ACRA.getErrorReporter().handleException(new Exception(msg), true);
+			}
+		} else {
+			String msg = "This device doesn't support Play Services.";
+			logger.error(msg);
+			ACRA.getErrorReporter().handleException(new Exception(msg), true);
+		}
+
+		return false;
 	}
 
 
