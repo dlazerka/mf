@@ -104,7 +104,7 @@
 			android:exported="false"
 			/>
 		<service
-			android:name=".background.BootReceiver$GcmCheckService"
+			android:name=".background.RenewGcmTokenService"
 			android:exported="false"
 			/>
 		<receiver android:name=".background.BootReceiver">

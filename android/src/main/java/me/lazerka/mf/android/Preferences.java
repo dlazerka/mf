@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
+import android.support.annotation.WorkerThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,7 @@ public class Preferences {
 	private final String FRIENDS = "mf.friends";
 	private final String GCM_APP_VERSION = "gcm.app.version";
 	private final String GCM_TOKEN = "gcm.token";
+	private final String GCM_TOKEN_SENT = "gcm.token.sent";
 
 	private final SharedPreferences preferences;
 
@@ -135,10 +137,10 @@ public class Preferences {
 	 * This should not be backed up when user uses Backup/Restore feature.
 	 * See MfBackupAgent for that.
 	 */
-	public void setGcmToken(@Nonnull String gcmRegistrationId) {
+	public void setGcmToken(@Nonnull String gcmToken) {
 		logger.info("GCM Registration ID stored.");
 		preferences.edit()
-				.putString(GCM_TOKEN, gcmRegistrationId)
+				.putString(GCM_TOKEN, gcmToken)
 				.putInt(GCM_APP_VERSION, Application.getVersion())
 				.apply();
 	}
@@ -150,6 +152,35 @@ public class Preferences {
 				.remove(GCM_APP_VERSION)
 				.commit();
 	}
+
+	/**
+	 * This should not be backed up when user uses Backup/Restore feature.
+	 * See MfBackupAgent for that.
+	 */
+	@SuppressLint("CommitPrefEdits")
+	@WorkerThread
+	public void setGcmTokenSent(@Nonnull String gcmToken) {
+		logger.info("setGcmTokenSent()");
+		preferences.edit()
+				.putString(GCM_TOKEN_SENT, gcmToken)
+				.putInt(GCM_APP_VERSION, Application.getVersion())
+				.commit();
+	}
+
+	/**
+	 * This should not be backed up when user uses Backup/Restore feature.
+	 * See MfBackupAgent for that.
+	 */
+	@SuppressLint("CommitPrefEdits")
+	@WorkerThread
+	public void clearGcmTokenSent(@Nonnull String gcmToken) {
+		logger.info("setGcmTokenSent()");
+		preferences.edit()
+				.remove(GCM_TOKEN_SENT)
+				.remove(GCM_APP_VERSION)
+				.commit();
+	}
+
 
 	@Nullable
 	public String getGaeAuthToken() {

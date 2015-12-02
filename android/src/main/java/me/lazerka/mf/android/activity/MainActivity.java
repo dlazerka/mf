@@ -13,7 +13,7 @@ import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.auth.GcmAuthenticator;
+import me.lazerka.mf.android.background.RenewGcmTokenService;
 import me.lazerka.mf.android.http.HttpUtils;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
@@ -47,16 +47,11 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
-	protected void onResume() {
-		super.onResume();
+	protected void onStart() {
+		super.onStart();
 
-		GcmAuthenticator gcmAuthenticator = new GcmAuthenticator(this);
-		gcmAuthenticator.checkRegistration();
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
+		// Make sure server has our GCM token.
+		startService(new Intent(this, RenewGcmTokenService.class));
 	}
 
 	@Override

@@ -45,7 +45,7 @@ public class GcmIntentService extends IntentService {
 
 		// Mostly for calling from BootReceiver.
 		new GcmAuthenticator(this)
-				.checkRegistration();
+				.renewRegistration();
 	}
 
 	@Override
@@ -76,7 +76,8 @@ public class GcmIntentService extends IntentService {
 		logger.info("Received com.google.android.c2dm.intent.REGISTRATION");
 		String gcmToken = intent.getStringExtra("registration_id");
 		if (gcmToken != null) {
-			GcmAuthenticator.storeGcmRegistration(gcmToken);
+			logger.error("TODO");
+			//GcmAuthenticator.storeGcmRegistration(gcmToken);
 		} else {
 			logger.warn("null registration id");
 		}

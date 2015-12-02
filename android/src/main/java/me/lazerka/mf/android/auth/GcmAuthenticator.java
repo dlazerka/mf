@@ -3,12 +3,17 @@ package me.lazerka.mf.android.auth;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.WorkerThread;
 import android.widget.Toast;
 import com.android.volley.Request.Method;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
+import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
 import me.lazerka.mf.api.object.GcmRegistration;
@@ -18,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 
 /**
  * Deals with GCM registration -- obtains GCM registration ID (aka GCM-token), and stores it.
@@ -56,25 +62,58 @@ public class GcmAuthenticator {
 				.send();
 	}
 
+	/**
+	 * @param token to store.
+	 */
+	@WorkerThread
+	public void sendGcmToken(String token) throws IOException {
+		GcmRegistration content = new GcmRegistration(token, Application.getVersion());
+		ApiPost apiPost = new ApiPost(content);
+		Response response = apiPost.execute();
 
-	public void checkRegistration() {
-		if (checkPlayServices()) {
-			gcm = GoogleCloudMessaging.getInstance(context);
-			gcmToken = Application.preferences.getGcmToken();
-
-			if (gcmToken == null) {
-				new GcmRegisterTask().execute();
-			} else {
-				// Unconditionally send gcmToken, because server might have removed it, even if we sent it before.
-				logger.info("Sending GCM token to server");
-				new GcmRegistrationSender(gcmToken)
-						.send();
-			}
+		if (response.code() == HttpURLConnection.HTTP_OK) {
+			// Remember that we have sent the token to server, per Google sample.
+			// I'm not sure this is that useful, because server might forgotten it
+			Application.preferences.setGcmTokenSent(token);
 		} else {
+			String msg = "Didn't sent GCM token" + response.message();
+			throw new IOException(msg);
+		}
+	}
+
+	/**
+	 * Checks and renews GCM token.
+	 * Sends to server the new one.
+	 */
+	@WorkerThread
+	public void renewRegistration() {
+		if (!checkPlayServices()) {
 			logger.error("No valid Google Play Services APK found.");
 			Toast.makeText(context, "Please install Google Play Services", Toast.LENGTH_LONG)
 					.show();
+			Application.preferences.clearGcmToken();
+			return;
 		}
+
+		try {
+			String token = getToken();
+			sendGcmToken(token);
+		} catch (IOException e) {
+			// On Sony Xperia happens all the time, but fortunately GcmBroadcastReceiver receives the regId.
+			logger.warn("GCM.register() failed: " + e.getMessage());
+			// If there is an error, don't just keep trying to register.
+			// Require the user to click a button again, or perform
+			// exponential back-off.
+		}
+	}
+
+	private String getToken() throws IOException {
+		InstanceID instanceID = InstanceID.getInstance(context);
+		// Initially this call goes out to the network to retrieve the token,
+		// subsequent calls are local.
+		return instanceID.getToken(
+				context.getString(R.string.gcm_sender_id),
+				GoogleCloudMessaging.INSTANCE_ID_SCOPE);
 	}
 
 	/**

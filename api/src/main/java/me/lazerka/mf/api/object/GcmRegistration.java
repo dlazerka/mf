@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 /**
  * @author Dzmitry Lazerka
  */
-public class GcmRegistration {
+public class GcmRegistration implements ApiObject {
 	public static final String PATH = "/rest/gcm/registration";
 
 	/**
@@ -19,6 +19,11 @@ public class GcmRegistration {
 	/** As specified in AndroidManifest.xml */
 	@JsonProperty
 	private int appVersion;
+
+	@Override
+	public String getPath() {
+		return PATH;
+	}
 
 	// For Jackson.
 	private GcmRegistration() {
