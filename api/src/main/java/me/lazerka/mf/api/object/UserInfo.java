@@ -13,9 +13,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class UserInfo {
-	/** Canonicalized on server side. May differ from user's contacts. */
+	/** Normalized on server side. May differ from user's contacts. */
 	@JsonProperty
-	private String canonicalEmail;
+	private String normalizedEmail;
 
 	/** As requested by user, not canonicalized. */
 	@JsonProperty
@@ -25,16 +25,16 @@ public class UserInfo {
 	private UserInfo() {}
 
 	public UserInfo(
-			@Nonnull String canonicalEmail,
+			@Nonnull String normalizedEmail,
 			@Nonnull Set<String> emails
 	) {
-		this.canonicalEmail = checkNotNull(canonicalEmail);
+		this.normalizedEmail = checkNotNull(normalizedEmail);
 		this.emails = checkNotNull(emails);
 	}
 
 	@Nullable
-	public String getCanonicalEmail() {
-		return canonicalEmail;
+	public String getNormalizedEmail() {
+		return normalizedEmail;
 	}
 
 	@Nonnull
@@ -44,6 +44,6 @@ public class UserInfo {
 
 	@Override
 	public String toString() {
-		return canonicalEmail + ": " + emails;
+		return normalizedEmail + ": " + emails;
 	}
 }

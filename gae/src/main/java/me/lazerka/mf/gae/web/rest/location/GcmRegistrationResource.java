@@ -1,15 +1,16 @@
 package me.lazerka.mf.gae.web.rest.location;
 
-import com.googlecode.objectify.Key;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
 import me.lazerka.mf.api.object.GcmRegistration;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.oauth.Role;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.*;
@@ -23,6 +24,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
  */
 @Path(GcmRegistration.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
+@RolesAllowed(Role.OAUTH)
 public class GcmRegistrationResource {
 	private static final Logger logger = LoggerFactory.getLogger(GcmRegistrationResource.class);
 
@@ -55,7 +57,8 @@ public class GcmRegistrationResource {
 	@DELETE
 	public void delete(GcmRegistration bean) {
 		logger.info("Deleting GcmRegistrationEntity for {}", user.getEmail());
-		Key<GcmRegistrationEntity> key = GcmRegistrationEntity.key(user, bean.getId());
-		ofy().delete().key(key).now();
+
+		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getId(), now);
+		ofy().delete().entity(entity).now();
 	}
 }

@@ -14,7 +14,7 @@ import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.gae.Pair;
 import me.lazerka.mf.gae.PairedList;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.user.MfUser;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

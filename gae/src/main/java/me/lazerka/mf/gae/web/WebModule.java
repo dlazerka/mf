@@ -11,17 +11,17 @@ import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.gae.oauth.AuthFilterFactory;
-import org.apache.commons.io.IOUtils;
+import me.lazerka.mf.gae.oauth.OauthSecurityContext;
+import me.lazerka.mf.gae.oauth.OauthUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
+import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import javax.ws.rs.core.SecurityContext;
 import java.util.Map;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Web stuff configuration (servlets, filters, etc).
@@ -77,23 +77,9 @@ public class WebModule extends JerseyServletModule {
 	}
 
 	@Provides
-	@Singleton
-	@Named("gcm.api.key")
-	String provideGcmApiKey() {
-		File file = new File("WEB-INF/secret/gcm.api.key");
-		try {
-			FileReader fr = new FileReader(file);
-			String result = IOUtils.toString(fr).trim();
-			if (result.isEmpty()) {
-				throw new RuntimeException("File is empty: " + file.getAbsolutePath());
-			}
-			return result;
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException("File " + file.getAbsolutePath() + " not found. " +
-					"Put there Google Cloud Messaging API key obtained as described here " +
-					"http://developer.android.com/google/gcm/gs.html");
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+	@Inject
+	OauthUser provideCurrentUser(SecurityContext securityContext) {
+		OauthSecurityContext oauthSecurityContext = (OauthSecurityContext) securityContext;
+		return checkNotNull(oauthSecurityContext.getUserPrincipal());
 	}
 }

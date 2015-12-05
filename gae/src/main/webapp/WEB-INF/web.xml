@@ -29,7 +29,7 @@
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
 
-	<!-- For OAuth2.0 security, see AuthFilter. -->
+	<!-- For OAuth2.0 security, see AuthFilterFactory. -->
 
 	<security-constraint>
 		<web-resource-collection>

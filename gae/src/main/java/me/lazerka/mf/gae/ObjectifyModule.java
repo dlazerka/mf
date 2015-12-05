@@ -6,7 +6,7 @@ import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
 import me.lazerka.mf.gae.entity.AcraExceptionEntity;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.user.MfUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

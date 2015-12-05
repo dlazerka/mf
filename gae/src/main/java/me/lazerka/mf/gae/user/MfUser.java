@@ -1,17 +1,15 @@
-package me.lazerka.mf.gae.entity;
+package me.lazerka.mf.gae.user;
 
-import com.google.appengine.api.users.User;
+import com.google.appengine.api.datastore.Email;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.*;
-import me.lazerka.mf.gae.UserUtils;
-import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -31,33 +29,31 @@ public class MfUser {
 	DateTime createdDate;
 	DateTime lastModDate;
 
-	User user;
-	@Index String email;
+	@Index
+	Email email;
 
 	/**
 	 * To give ability to one of those users to see whether this user ever installed the app.
 	 * This doesn't give permission to see location of those users.
 	 */
 	@Nullable
-	Set<String> friendEmails;
+	Set<Email> friendEmails;
 
 	/**
 	 * For looking up existing users by contact list (server should not know user's contact list, only app users).
 	 */
-	@Index String emailSha256;
+	@Index
+	String emailSha256;
 
 	private MfUser() {}
 
-	public MfUser(@Nonnull User user) {
-		this.googleId = checkNotNull(user.getUserId());
-		this.user = user;
-		try {
-			this.email = UserUtils.normalizeGmailAddress(checkNotNull(user.getEmail()));
-		} catch (IllegalEmailFormatException e) {
-			// Make unchecked, because it's should be impossible to get invalid email from Google's authentication.
-			throw new IllegalArgumentException(e);
-		}
-		this.emailSha256 = SHA_256.hashString(email, UTF_8).toString();
+	/**
+	 * Note that email must be normalized, see UserService.
+	 */
+	public MfUser(@Nonnull String id, @Nonnull EmailNormalized normalized) {
+		this.googleId = checkNotNull(id);
+		this.email = new Email(normalized.getEmail());
+		this.emailSha256 = SHA_256.hashString(normalized.getEmail(), UTF_8).toString();
 	}
 
 	@OnSave
@@ -77,9 +73,8 @@ public class MfUser {
 
 		MfUser user = (MfUser) o;
 
-		if (!googleId.equals(user.googleId)) return false;
+		return googleId.equals(user.googleId);
 
-		return true;
 	}
 
 	@Override
@@ -87,28 +82,38 @@ public class MfUser {
 		return googleId.hashCode();
 	}
 
-	public Key<MfUser> key() {
-		return Key.create(MfUser.class, googleId);
-	}
-
 	public String getId() {
 		return googleId;
 	}
 
-	public String getEmail() {
-		return user.getEmail();
+	public EmailNormalized getEmail() {
+		return new EmailNormalized(email.getEmail());
 	}
 
-	public User getUser() {
-		return user;
-	}
-
+	/**
+	 * Emails this user marked as his/her friends in the app.
+	 */
 	@Nullable
-	public Set<String> getFriendEmails() {
-		return friendEmails;
+	public Set<EmailNormalized> getFriendEmails() {
+		if (friendEmails == null) {
+			return null;
+		}
+		HashSet<EmailNormalized> result = new HashSet<>(friendEmails.size());
+		for(Email email : friendEmails) {
+			result.add(new EmailNormalized(email.getEmail()));
+		}
+		return result;
 	}
 
-	public void setFriendEmails(@Nullable Set<String> friendEmails) {
-		this.friendEmails = friendEmails;
+	public void setFriendEmails(@Nullable Set<EmailNormalized> friendEmails) {
+		if (friendEmails == null) {
+			this.friendEmails = null;
+			return;
+		}
+
+		this.friendEmails = new HashSet<>(friendEmails.size());
+		for(EmailNormalized normalized : friendEmails) {
+			this.friendEmails.add(new Email(normalized.getEmail()));
+		}
 	}
 }

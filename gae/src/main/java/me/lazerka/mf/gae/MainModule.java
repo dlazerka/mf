@@ -14,25 +14,25 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.urlfetch.URLFetchService;
 import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
-import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.googlecode.objectify.Key;
-import com.googlecode.objectify.ObjectifyService;
-import com.googlecode.objectify.Work;
-import com.googlecode.objectify.impl.Keys;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.oauth.OauthModule;
 import me.lazerka.mf.gae.web.WebModule;
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Main project configuration.
@@ -44,6 +44,7 @@ public class MainModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		install(new OauthModule());
 		install(new WebModule());
 
 		install(new ObjectifyModule());
@@ -51,7 +52,7 @@ public class MainModule extends AbstractModule {
 
 		bindGaeServices();
 
-		logger.debug(MainModule.class.getSimpleName() + " set up.");
+		logger.info(MainModule.class.getSimpleName() + " set up.");
 	}
 
 	private void useOfy() {
@@ -69,42 +70,27 @@ public class MainModule extends AbstractModule {
 		bind(UserService.class).toInstance(UserServiceFactory.getUserService());
 	}
 
-	/**
-	 * Returns current user, creating entity if doesn't exist.
-	 */
-	@Provides
-	private MfUser provideUser(UserService userService) {
-		Keys keys = ObjectifyService.factory().keys();
-
-		if (!userService.isUserLoggedIn()) {
-			throw new IllegalStateException("User is not logged in");
-		}
-
-		final User user = userService.getCurrentUser();
-		final Key<MfUser> key = keys.keyOf(new MfUser(user));
-		MfUser mfUser = ofy().load().key(key).now();
-		if (mfUser != null) {
-			return mfUser;
-		}
-
-		return ofy().transact(new Work<MfUser>() {
-			@Override
-			public MfUser run() {
-				MfUser mfUser = ofy().load().key(key).now();
-				if (mfUser != null) {
-					return mfUser;
-				}
-				mfUser = new MfUser(user);
-				ofy().save().entity(mfUser).now();
-				return mfUser;
-			}
-		});
-	}
-
 	@Provides
 	@Named("now")
 	private DateTime now() {
 		return DateTime.now(DateTimeZone.UTC);
 	}
 
+	/**
+	 * Reads whole file as a string.
+	 */
+	public static String readFileString(File file, String notFoundMsg) {
+		logger.trace("Reading {}", file.getAbsolutePath());
+		try (FileInputStream is = new FileInputStream(file)) {
+			String result = IOUtils.toString(is, UTF_8).trim();
+			if (result.isEmpty()) {
+				throw new RuntimeException("File is empty: " + file.getAbsolutePath());
+			}
+			return result;
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException("File " + file.getAbsolutePath() + " not found. " + notFoundMsg);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

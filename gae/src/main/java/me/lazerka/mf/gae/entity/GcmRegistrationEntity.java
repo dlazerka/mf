@@ -1,11 +1,11 @@
 package me.lazerka.mf.gae.entity;
 
-import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Parent;
+import me.lazerka.mf.gae.user.MfUser;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nonnull;
@@ -70,9 +70,5 @@ public class GcmRegistrationEntity {
 	@Nullable
 	public Integer getAppVersion() {
 		return appVersion;
-	}
-
-	public static Key<GcmRegistrationEntity> key(MfUser user, String id) {
-		return Key.create(user.key(), GcmRegistrationEntity.class, id);
 	}
 }

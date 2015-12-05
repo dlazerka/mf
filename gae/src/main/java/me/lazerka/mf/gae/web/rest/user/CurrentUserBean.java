@@ -1,7 +1,7 @@
 package me.lazerka.mf.gae.web.rest.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.user.MfUser;
 import me.lazerka.mf.gae.oauth.Role;
 
 import javax.annotation.security.RolesAllowed;
@@ -21,6 +21,6 @@ public class CurrentUserBean {
 
 	public CurrentUserBean(MfUser user) {
 		id = user.getId();
-		email = user.getEmail();
+		email = user.getEmail().getEmail();
 	}
 }

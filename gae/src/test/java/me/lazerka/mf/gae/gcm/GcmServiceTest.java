@@ -3,7 +3,6 @@ package me.lazerka.mf.gae.gcm;
 import com.google.appengine.api.urlfetch.HTTPRequest;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 import com.google.appengine.api.urlfetch.URLFetchService;
-import com.google.appengine.api.users.User;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import me.lazerka.mf.api.JsonMapper;
@@ -12,9 +11,9 @@ import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.gae.GaeTest;
-import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.user.EmailNormalized;
+import me.lazerka.mf.gae.user.MfUser;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.mockito.Answers;
@@ -65,12 +64,12 @@ public class GcmServiceTest extends GaeTest {
 	}
 
 	@BeforeMethod
-	public void setUpRecipient() throws IllegalEmailFormatException {
-		recipient = new MfUser(new User("recipient@example.com", "example.com", "321recipient"));
+	public void setUpRecipient() {
+		recipient = new MfUser("321recipient", new EmailNormalized("recipient@example.com"));
 		ofy().save().entity(new GcmRegistrationEntity(recipient, "gcmTestToken", may1));
 		ofy().save().entity(recipient).now();
 
-		payload = new LocationRequestGcmPayload("testRequestId", user.getEmail(), may1);
+		payload = new LocationRequestGcmPayload("testRequestId", user.getEmail().getEmail(), may1);
 	}
 
 	void initResponse(String fileName) throws Exception {

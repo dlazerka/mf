@@ -5,11 +5,10 @@ import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.object.UserInfo;
 import me.lazerka.mf.api.object.UsersInfoRequest;
 import me.lazerka.mf.api.object.UsersInfoResponse;
-import me.lazerka.mf.gae.UserUtils;
-import me.lazerka.mf.gae.UserUtils.IllegalEmailFormatException;
-import me.lazerka.mf.gae.entity.MfUser;
-import me.lazerka.mf.gae.gcm.MfUserService;
 import me.lazerka.mf.gae.oauth.Role;
+import me.lazerka.mf.gae.user.EmailNormalized;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
+import static me.lazerka.mf.gae.user.UserService.normalizeEmail;
 
 /**
  * @author Dzmitry Lazerka
@@ -37,7 +37,7 @@ public class UserResource {
 	MfUser currentUser;
 
 	@Inject
-	MfUserService mfUserService;
+	UserService userService;
 
 	@GET
 	@Path("/me")
@@ -49,10 +49,13 @@ public class UserResource {
 	 * A user requests available info on his friends (e.g. whether they installed the app at all).
 	 *
 	 * Note that we don't want to give anyone information about anyone. So we include in response only those users that
-	 * already  * added requester to their friends.
+	 * already added requester to their friends.
 	 *
 	 * This doesn't mean user's allowed to see their location yet, of course. Location requests are authorized every
 	 * time on client side by device who's being requested.
+	 *
+	 * TODO: do we really need this functionality? If forces us to store user friends on server-side, we could avoid
+	 * that.
 	 *
 	 */
 	@POST
@@ -71,34 +74,29 @@ public class UserResource {
 							.entity("emails is longer than " + ApiConstants.MAXIMUM_FRIENDS_ALLOWED).build());
 		}
 
-		HashMultimap<String, String> normalized = HashMultimap.create();
-		for(String email : emails) {
-			try {
-				normalized.put(UserUtils.normalizeGmailAddress(email), email);
-			} catch (IllegalEmailFormatException e) {
-				logger.warn(email, e);
-				// TODO: tell client-side about this
-			}
+		HashMultimap<EmailNormalized, String> normalized = HashMultimap.create();
+		for (String email : emails) {
+			normalized.put(normalizeEmail(email), email);
 		}
 
 		// Save given emails as current user friends.
 		currentUser.setFriendEmails(normalized.keySet());
 		ofy().save().entity(currentUser); // async
 
-		Set<MfUser> users = mfUserService.getUsersByEmails(normalized.keySet());
+		Set<MfUser> users = userService.getUsersByEmails(normalized.keySet());
 
 		List<UserInfo> result = new ArrayList<>();
 		for(MfUser user : users) {
 			// Here we check if requested users have current user in their friends.
-			Set<String> friendEmails = user.getFriendEmails();
-			String currentUserEmail = currentUser.getEmail();
+			Set<EmailNormalized> friendEmails = user.getFriendEmails();
+			EmailNormalized currentUserEmail = currentUser.getEmail();
 			if (friendEmails != null && friendEmails.contains(currentUserEmail)) {
 
 				Set<String> clientEmails = normalized.get(user.getEmail());
 				if (clientEmails == null) {
-					logger.error("No client emails for canonic {}: {}", user.getEmail(), normalized);
+					logger.error("No client emails for normalized {}: {}", user.getEmail(), normalized);
 				} else {
-					UserInfo userInfo = new UserInfo(user.getEmail(), clientEmails);
+					UserInfo userInfo = new UserInfo(user.getEmail().getEmail(), clientEmails);
 					result.add(userInfo);
 				}
 			}

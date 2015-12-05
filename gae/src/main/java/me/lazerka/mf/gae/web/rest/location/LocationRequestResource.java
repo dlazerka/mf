@@ -5,19 +5,19 @@ import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
-import me.lazerka.mf.gae.entity.MfUser;
+import me.lazerka.mf.gae.user.MfUser;
 import me.lazerka.mf.gae.gcm.GcmService;
-import me.lazerka.mf.gae.gcm.MfUserService;
+import me.lazerka.mf.gae.user.UserService;
+import me.lazerka.mf.gae.oauth.Role;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +26,7 @@ import java.util.List;
  */
 @Path(LocationRequest.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
+@RolesAllowed(Role.OAUTH)
 public class LocationRequestResource {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestResource.class);
 
@@ -37,13 +38,13 @@ public class LocationRequestResource {
 	DateTime now;
 
 	@Inject
-	MfUserService mfUserService;
+	UserService userService;
 
 	@Inject
 	GcmService gcmService;
 
 	/**
-	 * Finds a user by given emails (must belong to only one user = google account),
+	 * Finds a user by given emails (must belong to only one user),
 	 * then sends GCM message to all the registrations by this user (devices where he/she installed the app).
 	 * Later, the other user will send its location to server, and we will send them back to requester using GCM.
 	 *
@@ -58,18 +59,22 @@ public class LocationRequestResource {
 		logger.trace("byEmail for {}", locationRequest.getEmails());
 
 		ArrayList<String> emails = new ArrayList<>(locationRequest.getEmails());
-		MfUser recipientUser = mfUserService.getUserByEmails(emails);
+		MfUser recipientUser = userService.getUserByEmails(emails);
+		if (recipientUser == null) {
+			logger.warn("No user found by emails: {}", emails);
+			throw new WebApplicationException(Response.status(404).entity("User not found").build());
+		}
 
 		LocationRequestGcmPayload payload = new LocationRequestGcmPayload(
 				locationRequest.getRequestId(),
-				user.getEmail(),
+				user.getEmail().getEmail(),
 				now
 		);
 
 		List<GcmResult> gcmResults = gcmService.send(recipientUser, payload);
 
 		LocationRequestResult result = new LocationRequestResult(
-				recipientUser.getEmail(),
+				recipientUser.getEmail().getEmail(),
 				gcmResults
 		);
 		return result;
