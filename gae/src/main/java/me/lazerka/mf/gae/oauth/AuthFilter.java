@@ -32,11 +32,14 @@ import static me.lazerka.mf.api.ApiConstants.COOKIE_NAME_AUTH_TOKEN;
  * @see <a href="https://developers.google.com/identity/sign-in/android/backend-auth">documentation</a>.
  * @author Dzmitry Lazerka
  */
-abstract class AuthFilter implements ResourceFilter, ContainerRequestFilter {
+public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 	private static final Logger logger = LoggerFactory.getLogger(AuthFilter.class);
 
 	@Inject
 	UserService userService;
+
+	@Inject
+	TokenVerifier tokenVerifier;
 
 	Set<String> roles;
 
@@ -93,17 +96,16 @@ abstract class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 		}
 
 		try {
-			return verify(cookie.getValue());
+			return tokenVerifier.verify(cookie.getValue());
 		} catch (GeneralSecurityException e) {
-			logger.warn("Invalid token", e);
-			throw new WebApplicationException(getForbiddenResponse(request, "Invalid token"));
+			logger.info("Invalid token", e);
+			// TODO test whether it reports cause to client, and is it bad
+			throw new WebApplicationException(e, getForbiddenResponse(request, "Invalid token"));
 		} catch (IOException e) {
 			logger.error("IOException verifying OAuth token", e);
-			throw new WebApplicationException(getForbiddenResponse(request, "Error verifying token"));
+			throw new WebApplicationException(e, getForbiddenResponse(request, "Error verifying token"));
 		}
 	}
-
-	protected abstract OauthUser verify(String authToken) throws IOException, GeneralSecurityException;
 
 	private Response getForbiddenResponse(ContainerRequest request, String reason) {
 		String url = composeLoginUrl(request);

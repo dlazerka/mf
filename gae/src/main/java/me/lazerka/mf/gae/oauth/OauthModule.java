@@ -40,8 +40,8 @@ public class OauthModule extends AbstractModule {
 				.toInstance(readOauthClientId());
 
 		// Choose between verification methods.
-		bind(AuthFilter.class).to(AuthFilterSignatureVerify.class);
-		//bind(AuthFilter.class).to(AuthFilterRemoteVerify.class);
+		bind(TokenVerifier.class).to(TokenVerifierSignature.class);
+		//bind(AuthFilter.class).to(TokenVerifierRemote.class);
 	}
 
 	@Inject

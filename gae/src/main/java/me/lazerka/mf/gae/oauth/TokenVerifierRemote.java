@@ -32,8 +32,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * @see <a href="https://developers.google.com/identity/sign-in/android/backend-auth">documentation</a>.
  * @author Dzmitry Lazerka
  */
-public class AuthFilterRemoteVerify extends AuthFilter {
-	private static final Logger logger = LoggerFactory.getLogger(AuthFilterRemoteVerify.class);
+public class TokenVerifierRemote implements TokenVerifier {
+	private static final Logger logger = LoggerFactory.getLogger(TokenVerifierRemote.class);
 
 	private static final UriBuilder endpoint =
 			UriBuilder.fromUri("https://www.googleapis.com/oauth2/v3/tokeninfo")
@@ -50,7 +50,7 @@ public class AuthFilterRemoteVerify extends AuthFilter {
 	String oauthClientId;
 
 	@Override
-	protected OauthUser verify(String authToken) throws IOException, InvalidKeyException {
+	public OauthUser verify(String authToken) throws IOException, InvalidKeyException {
 		logger.trace("Requesting endpoint to validate token");
 
 		URL url = endpoint.build(authToken).toURL();

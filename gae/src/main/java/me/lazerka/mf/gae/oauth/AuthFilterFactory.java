@@ -32,7 +32,7 @@ public class AuthFilterFactory implements ResourceFilterFactory {
 	private final List<String> httpMethods = ImmutableList.of("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS");
 
 	@Inject
-	Provider<AuthFilterSignatureVerify> authFilterProvider;
+	Provider<AuthFilter> authFilterProvider;
 
 	@Override
 	public List<ResourceFilter> create(AbstractMethod method) {
@@ -72,7 +72,7 @@ public class AuthFilterFactory implements ResourceFilterFactory {
 
 	private ResourceFilter getFilter(String[] roles) {
 		LinkedHashSet<String> set = Sets.newLinkedHashSet(Arrays.asList(roles));
-		AuthFilterSignatureVerify authFilter = authFilterProvider.get();
+		AuthFilter authFilter = authFilterProvider.get();
 		authFilter.setRoles(set);
 		return authFilter;
 	}

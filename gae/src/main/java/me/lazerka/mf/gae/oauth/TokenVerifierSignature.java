@@ -17,12 +17,12 @@ import java.security.InvalidKeyException;
  * @see <a href="https://developers.google.com/identity/sign-in/android/backend-auth">documentation</a>.
  * @author Dzmitry Lazerka
  */
-public class AuthFilterSignatureVerify extends AuthFilter {
+public class TokenVerifierSignature implements TokenVerifier {
 	@Inject
 	GoogleIdTokenVerifier tokenVerifier;
 
 	@Override
-	protected OauthUser verify(String token) throws IOException, GeneralSecurityException {
+	public OauthUser verify(String token) throws IOException, GeneralSecurityException {
 		GoogleIdToken idToken = GoogleIdToken.parse(tokenVerifier.getJsonFactory(), token);
 
 		if (!tokenVerifier.verify(idToken)) {
