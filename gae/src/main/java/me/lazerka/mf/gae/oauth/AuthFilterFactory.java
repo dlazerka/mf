@@ -1,7 +1,7 @@
 package me.lazerka.mf.gae.oauth;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.model.AbstractMethod;
 import com.sun.jersey.spi.container.ResourceFilter;
 import com.sun.jersey.spi.container.ResourceFilterFactory;
@@ -17,8 +17,6 @@ import javax.inject.Provider;
 import javax.ws.rs.Path;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -71,9 +69,8 @@ public class AuthFilterFactory implements ResourceFilterFactory {
 	}
 
 	private ResourceFilter getFilter(String[] roles) {
-		LinkedHashSet<String> set = Sets.newLinkedHashSet(Arrays.asList(roles));
 		AuthFilter authFilter = authFilterProvider.get();
-		authFilter.setRoles(set);
+		authFilter.setRoles(ImmutableSet.copyOf(roles));
 		return authFilter;
 	}
 
