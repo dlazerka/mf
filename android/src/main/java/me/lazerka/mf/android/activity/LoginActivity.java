@@ -103,6 +103,7 @@ public class LoginActivity extends FragmentActivity {
 		if (result.isSuccess()) {
 			logger.info("SignIn successful");
 			// Signed in successfully, show authenticated UI.
+			// Token is usually valid for 60 minutes.
 			Application.account = result.getSignInAccount();
 			replaceWithActivity(MainActivity.class);
 		} else {

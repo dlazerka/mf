@@ -63,7 +63,7 @@ public class OauthModule extends AbstractModule {
 
 	@Provides
 	@Singleton
-	JsonFactory createJsonFactory() {
+	JsonFactory getJsonFactory() {
 		return JacksonFactory.getDefaultInstance();
 	}
 

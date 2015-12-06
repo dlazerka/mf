@@ -1,7 +1,6 @@
 package me.lazerka.mf.gae.oauth;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.appengine.api.users.UserService;
@@ -44,10 +43,7 @@ import static org.testng.Assert.fail;
 public class AuthFilterSignatureVerifyTest {
 	String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhenAiOiIxMDA4NzE5OTcwOTc4LWhiMjRuMmRzdGI0MG80NWQ0ZmV1bzJ1a3FtY2M2MzgxLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiZW1haWxfdmVyaWZpZWQiOiJ0cnVlIiwiZW1haWwiOiJiaWxsZDE2MDBAZ21haWwuY29tIiwibmFtZSI6IlRlc3QgVGVzdCIsImF1ZCI6IjEwMDg3MTk5NzA5NzgtaGIyNG4yZHN0YjQwbzQ1ZDRmZXVvMnVrcW1jYzYzODEuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJpYXQiOjE0MzM5NzgzNTMsImV4cCI6MTQzMzk4MTk1M30.GC1hAjr8DbAT5CkEL19wCUqZHsDH1SklFPL2ZJxezW8";
 
-	Payload payload = new Payload().setSubject("123").setEmail("me@example.com");
-
 	ContainerRequest request = mock(ContainerRequest.class);
-	GoogleIdToken idToken = mock(GoogleIdToken.class);
 
 	AuthFilterSignatureVerify unit;
 
@@ -68,10 +64,6 @@ public class AuthFilterSignatureVerifyTest {
 
 		when(request.getRequestUri())
 				.thenReturn(URI.create("https://example.com"));
-
-		when(idToken.getPayload())
-				.thenReturn(payload);
-
 	}
 
 	@Test

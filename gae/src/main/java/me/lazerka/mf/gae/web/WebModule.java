@@ -11,6 +11,7 @@ import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.gae.oauth.AuthFilterFactory;
+import me.lazerka.mf.gae.oauth.OauthModule;
 import me.lazerka.mf.gae.oauth.OauthSecurityContext;
 import me.lazerka.mf.gae.oauth.OauthUser;
 import org.slf4j.Logger;
@@ -34,6 +35,8 @@ public class WebModule extends JerseyServletModule {
 	@Override
 	protected void configureServlets() {
 		logger.trace("configureServlets");
+
+		install(new OauthModule());
 
 		// Objectify requires this while using Async+Caching
 		// until https://code.google.com/p/googleappengine/issues/detail?id=4271 gets fixed.

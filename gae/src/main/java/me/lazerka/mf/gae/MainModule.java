@@ -44,7 +44,6 @@ public class MainModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		install(new OauthModule());
 		install(new WebModule());
 
 		install(new ObjectifyModule());

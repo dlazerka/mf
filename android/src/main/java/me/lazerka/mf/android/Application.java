@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import me.lazerka.mf.android.activity.LoginActivity;
 import me.lazerka.mf.android.http.GaeRequestQueue;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.object.AcraException;
@@ -70,7 +71,12 @@ public class Application extends MultiDexApplication {
 	public static Context context;
 	public static GaeRequestQueue requestQueue;
 
-	// See LoginActivity where it's set.
+	/**
+	 * Account issued to us by Google Sign-In
+	 * Usually valid for 60 minutes.
+	 *
+	 * @see LoginActivity where it's set.
+	 */
 	public static GoogleSignInAccount account;
 
 	@Override
