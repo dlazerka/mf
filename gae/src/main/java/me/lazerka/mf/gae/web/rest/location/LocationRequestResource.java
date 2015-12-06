@@ -31,9 +31,6 @@ public class LocationRequestResource {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestResource.class);
 
 	@Inject
-	MfUser user;
-
-	@Inject
 	@Named("now")
 	DateTime now;
 
@@ -56,6 +53,7 @@ public class LocationRequestResource {
 	@POST
 	@Consumes("application/json")
 	public LocationRequestResult byEmail(LocationRequest locationRequest) {
+		MfUser user = userService.getCurrentUser();
 		logger.trace("byEmail for {}", locationRequest.getEmails());
 
 		ArrayList<String> emails = new ArrayList<>(locationRequest.getEmails());

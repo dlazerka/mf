@@ -11,15 +11,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class OauthSecurityContext implements SecurityContext {
 	@Nonnull
-	private final OauthUser user;
+	private final UserPrincipal user;
 
-	public OauthSecurityContext(@Nonnull OauthUser user, boolean isSecure) {
+	public OauthSecurityContext(@Nonnull UserPrincipal user, boolean isSecure) {
 		this.user = checkNotNull(user);
 		checkArgument(isSecure, "OAuth2.0 should always be secure.");
 	}
 
 	@Override
-	public OauthUser getUserPrincipal() {
+	public UserPrincipal getUserPrincipal() {
 		return user;
 	}
 

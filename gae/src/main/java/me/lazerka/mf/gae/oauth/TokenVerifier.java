@@ -7,5 +7,5 @@ import java.security.GeneralSecurityException;
  * @author Dzmitry Lazerka
  */
 public interface TokenVerifier {
-	OauthUser verify(String authToken) throws IOException, GeneralSecurityException;
+	UserPrincipal verify(String authToken) throws IOException, GeneralSecurityException;
 }

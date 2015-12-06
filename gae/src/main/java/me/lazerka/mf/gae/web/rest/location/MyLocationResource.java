@@ -36,9 +36,6 @@ public class MyLocationResource {
 	GcmService gcmService;
 
 	@Inject
-	MfUser user;
-
-	@Inject
 	DateTime now;
 
 	@POST
@@ -55,6 +52,8 @@ public class MyLocationResource {
 			logger.warn("Something is null");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
+
+		MfUser user = userService.getCurrentUser();
 
 		// We don't trust client to set this, obviously.
 		location.setEmail(user.getEmail().getEmail());

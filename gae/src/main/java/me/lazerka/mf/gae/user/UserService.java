@@ -2,14 +2,16 @@ package me.lazerka.mf.gae.user;
 
 import com.google.appengine.api.datastore.Email;
 import com.google.common.collect.ImmutableList;
-import me.lazerka.mf.gae.oauth.OauthUser;
+import com.googlecode.objectify.Work;
+import me.lazerka.mf.gae.entity.CreateOrFetch;
+import me.lazerka.mf.gae.oauth.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.ws.rs.core.SecurityContext;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,7 +33,7 @@ public class UserService {
 	private static final Pattern periodRegex = Pattern.compile(".", Pattern.LITERAL);
 
 	@Inject
-	Provider<OauthUser> oauthUserProvider;
+	SecurityContext securityContext;
 
 	/**
 	 * Try to normalize email addresses by lowercasing domain part.
@@ -44,7 +46,6 @@ public class UserService {
 	public static EmailNormalized normalizeEmail(String address){
 		Matcher matcher = emailAddressSplitPattern.matcher(address);
 		if (!matcher.matches()) {
-
 			logger.warn("Email address invalid: {}", address);
 			return new EmailNormalized(address);
 		}
@@ -71,41 +72,29 @@ public class UserService {
 		return new EmailNormalized(localPart + domainPart);
 	}
 
-	public MfUser getCurrentUser() {
-		OauthUser oauthUser = checkNotNull(oauthUserProvider.get());
-
-		EmailNormalized normalized = normalizeEmail(checkNotNull(oauthUser.getEmail()));
-
-		return new MfUser(oauthUser.getId(), normalized);
+	private UserPrincipal getCurrentOauthUser() {
+		return (UserPrincipal) checkNotNull(securityContext.getUserPrincipal());
 	}
 
-/*
-	public MfUser update() {
-		Keys keys = ObjectifyService.factory().keys();
+	public MfUser getCurrentUser() {
+		UserPrincipal oauthUser = getCurrentOauthUser();
+		EmailNormalized normalized = normalizeEmail(oauthUser.getEmail());
 
-		final Key<MfUser> key = keys.keyOf(new MfUser(oauthUser));
-		MfUser user = ofy().load().key(key).now();
-		if (user != null) {
-			return user;
+		MfUser user = new MfUser(oauthUser.getId(), normalized);
+		MfUser existingEntity = ofy().load().entity(user).now();
+
+		if (existingEntity == null) {
+			return create(user);
 		}
 
-		Work<MfUser> createWork = new Work<MfUser>() {
-			@Override
-			public MfUser run() {
-				MfUser user = ofy().load().key(key).now();
-				if (user != null) {
-					return user;
-				}
-				user = new MfUser(user);
-				ofy().save().entity(user).now();
-				return user;
-			}
-		};
-		return ofy().transact(createWork);
-
+		return existingEntity;
 	}
 
-*/
+
+	public MfUser create(final MfUser newEntity) {
+		Work<MfUser> createWork = new CreateOrFetch<>(newEntity);
+		return ofy().transact(createWork);
+	}
 
 	@Nullable
 	public MfUser getUserByEmail(@Nonnull String email) {
@@ -146,4 +135,5 @@ public class UserService {
 		logger.trace("Found {} users", users);
 		return new LinkedHashSet<>(users);
 	}
+
 }

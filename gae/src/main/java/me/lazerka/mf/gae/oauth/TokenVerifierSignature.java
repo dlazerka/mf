@@ -22,7 +22,7 @@ public class TokenVerifierSignature implements TokenVerifier {
 	GoogleIdTokenVerifier tokenVerifier;
 
 	@Override
-	public OauthUser verify(String token) throws IOException, GeneralSecurityException {
+	public UserPrincipal verify(String token) throws IOException, GeneralSecurityException {
 		GoogleIdToken idToken = GoogleIdToken.parse(tokenVerifier.getJsonFactory(), token);
 
 		if (!tokenVerifier.verify(idToken)) {
@@ -31,6 +31,6 @@ public class TokenVerifierSignature implements TokenVerifier {
 		}
 
 		Payload payload = idToken.getPayload();
-		return new OauthUser(payload.getSubject(), payload.getEmail());
+		return new UserPrincipal(payload.getSubject(), payload.getEmail());
 	}
 }

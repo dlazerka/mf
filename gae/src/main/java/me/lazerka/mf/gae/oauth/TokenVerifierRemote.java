@@ -50,7 +50,7 @@ public class TokenVerifierRemote implements TokenVerifier {
 	String oauthClientId;
 
 	@Override
-	public OauthUser verify(String authToken) throws IOException, InvalidKeyException {
+	public UserPrincipal verify(String authToken) throws IOException, InvalidKeyException {
 		logger.trace("Requesting endpoint to validate token");
 
 		URL url = endpoint.build(authToken).toURL();
@@ -103,6 +103,6 @@ public class TokenVerifierRemote implements TokenVerifier {
 			throw new InvalidKeyException("Email not verified");
 		}
 
-		return new OauthUser(payload.getSubject(), payload.getEmail());
+		return new UserPrincipal(payload.getSubject(), payload.getEmail());
 	}
 }

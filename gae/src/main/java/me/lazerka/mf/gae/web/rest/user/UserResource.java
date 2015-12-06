@@ -34,15 +34,12 @@ public class UserResource {
 	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
 
 	@Inject
-	MfUser currentUser;
-
-	@Inject
 	UserService userService;
 
 	@GET
 	@Path("/me")
 	public CurrentUserBean me() {
-		return new CurrentUserBean(currentUser);
+		return new CurrentUserBean(userService.getCurrentUser());
 	}
 
 	/**
@@ -62,6 +59,7 @@ public class UserResource {
 	@Path("/friends")
 	@Consumes("application/json")
 	public UsersInfoResponse myEmail(UsersInfoRequest request) {
+		MfUser currentUser = userService.getCurrentUser();
 		logger.trace("By {} for {}", currentUser.getEmail(), request.getEmails());
 
 		Set<String> emails = request.getEmails();

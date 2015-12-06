@@ -63,7 +63,7 @@ public class AuthFilterTest {
 		SystemProperty.environment.set(Value.Production);
 
 		when(unit.tokenVerifier.verify(token))
-				.thenReturn(new OauthUser("123", "test@example.com"));
+				.thenReturn(new UserPrincipal("123", "test@example.com"));
 
 		unit.filter(request);
 

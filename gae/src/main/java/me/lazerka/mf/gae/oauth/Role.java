@@ -7,6 +7,21 @@ import com.google.appengine.api.users.UserService;
  */
 public class Role {
 	/**
+	 * Any authenticated user.
+	 */
+	public static final String AUTHENTICATED = "AUTHENTICATED";
+
+	/**
+	 * Any user with valid OAUTH token.
+	 */
+	public static final String OAUTH = "OAUTH";
+
+	/**
+	 * Any user with authenticated using default Google Accounts.
+	 */
+	public static final String GAE = "GAE";
+
+	/**
 	 * Application admins, as determined by {@link UserService#isUserAdmin()}
 	 */
 	public static final String ADMIN = "ADMIN";
@@ -15,9 +30,4 @@ public class Role {
 	 * Any user on local development server.
 	 */
 	public static final String DEVSERVER = "DEVSERVER";
-
-	/**
-	 * Any user with valid OAUTH token.
-	 */
-	public static final String OAUTH = "OAUTH";
 }

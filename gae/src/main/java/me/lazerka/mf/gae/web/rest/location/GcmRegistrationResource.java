@@ -6,6 +6,7 @@ import me.lazerka.mf.api.object.GcmRegistration;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.user.MfUser;
 import me.lazerka.mf.gae.oauth.Role;
+import me.lazerka.mf.gae.user.UserService;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ public class GcmRegistrationResource {
 	private static final Logger logger = LoggerFactory.getLogger(GcmRegistrationResource.class);
 
 	@Inject
-	MfUser user;
+	UserService userService;
 
 	@Inject
 	@Named("now")
@@ -46,6 +47,7 @@ public class GcmRegistrationResource {
 	@POST
 	@Consumes("application/json")
 	public GcmRegistrationResponse save(GcmRegistration bean) {
+		MfUser user = userService.getCurrentUser();
 		logger.info("Saving GcmRegistrationEntity by {}", user.getEmail());
 
 		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getId(), now, bean.getAppVersion());
@@ -56,6 +58,7 @@ public class GcmRegistrationResource {
 	/** Doesn't throw 404 in case of not existent. */
 	@DELETE
 	public void delete(GcmRegistration bean) {
+		MfUser user = userService.getCurrentUser();
 		logger.info("Deleting GcmRegistrationEntity for {}", user.getEmail());
 
 		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getId(), now);

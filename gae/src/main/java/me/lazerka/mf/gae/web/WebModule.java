@@ -2,7 +2,6 @@ package me.lazerka.mf.gae.web;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.Maps;
-import com.google.inject.Provides;
 import com.googlecode.objectify.ObjectifyFilter;
 import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
 import com.sun.jersey.api.core.PackagesResourceConfig;
@@ -12,17 +11,11 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.gae.oauth.AuthFilterFactory;
 import me.lazerka.mf.gae.oauth.OauthModule;
-import me.lazerka.mf.gae.oauth.OauthSecurityContext;
-import me.lazerka.mf.gae.oauth.OauthUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.core.SecurityContext;
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Web stuff configuration (servlets, filters, etc).
@@ -77,12 +70,5 @@ public class WebModule extends JerseyServletModule {
 		//params.put("com.sun.jersey.config.feature.logging.DisableEntitylogging", "true");
 		//params.put("com.sun.jersey.config.feature.Trace", "true");
 		return params;
-	}
-
-	@Provides
-	@Inject
-	OauthUser provideCurrentUser(SecurityContext securityContext) {
-		OauthSecurityContext oauthSecurityContext = (OauthSecurityContext) securityContext;
-		return checkNotNull(oauthSecurityContext.getUserPrincipal());
 	}
 }

@@ -1,8 +1,10 @@
 package me.lazerka.mf.gae.oauth;
 
+import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.appengine.api.utils.SystemProperty.Environment.Value;
+import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
@@ -29,6 +31,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static me.lazerka.mf.api.ApiConstants.COOKIE_NAME_AUTH_TOKEN;
 
 /**
+ * Checks requests whether they are authenticated using either GAE or OAuth authentication.
+ *
  * @see <a href="https://developers.google.com/identity/sign-in/android/backend-auth">documentation</a>.
  * @author Dzmitry Lazerka
  */
@@ -57,27 +61,34 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 	public ContainerRequest filter(ContainerRequest request) {
 		checkNotNull(roles);
 
-		// Allow HTTP, on local dev server only.
-		if (roles.contains(Role.DEVSERVER) && isDevServer()) {
+		// Allow HTTP on local dev server only.
+		if (roles.contains(Role.DEVSERVER) && isDevServer() && userService.isUserLoggedIn()) {
 			logger.info("Dev auth, OK: " + request);
+			setGaeSecurityContext(request, Role.DEVSERVER);
 			return request;
 		}
 
-		// Deny all HTTP requests (@PermitAll requests do not come here at all).
+		// Deny all insecure requests (@PermitAll requests do not come here at all).
 		if (!request.isSecure() && !isDevServer()) {
 			logger.warn("Insecure auth, Deny: " + request);
 			throw new WebApplicationException(getForbiddenResponse(request, "Request insecure"));
 		}
 
-		if (roles.contains(Role.ADMIN) && userService.isUserLoggedIn() && userService.isUserAdmin()) {
-			logger.info("Admin auth, OK: " + request);
+		if (userService.isUserLoggedIn()) {
+			if (roles.contains(Role.ADMIN) && userService.isUserAdmin()) {
+				logger.info("GAE admin auth, OK: " + request);
+				setGaeSecurityContext(request, Role.ADMIN);
+			} else {
+				logger.info("GAE regular auth, OK: " + request);
+				setGaeSecurityContext(request, Role.GAE);
+			}
 			return request;
 		}
 
 		if (roles.contains(Role.OAUTH)) {
 			logger.trace("Authenticating OAuth user...");
 
-			OauthUser user = verifyOauthToken(request);
+			UserPrincipal user = verifyOauthToken(request);
 			request.setSecurityContext(new OauthSecurityContext(user, true));
 			return request;
 		}
@@ -86,20 +97,28 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 		throw new WebApplicationException(getForbiddenResponse(request, "Forbidden"));
 	}
 
-	private OauthUser verifyOauthToken(ContainerRequest request) {
+	private void setGaeSecurityContext(ContainerRequest request, String role) {
+		User user = userService.getCurrentUser();
+		UserPrincipal userPrincipal = new UserPrincipal(user.getUserId(), user.getEmail());
+		Set<String> roles = ImmutableSet.of(role, Role.GAE, Role.AUTHENTICATED);
+
+		request.setSecurityContext(
+				new GaeSecurityContext(userPrincipal, request.isSecure(), roles));
+	}
+
+	private UserPrincipal verifyOauthToken(ContainerRequest request) {
 		Map<String,Cookie> cookies = request.getCookies();
 		Cookie cookie = cookies.get(COOKIE_NAME_AUTH_TOKEN);
 		if (cookie == null) {
 			logger.warn("No authToken auth, Deny: " + request);
 			throw new WebApplicationException(
-					getForbiddenResponse(request, "No Auth Cookie " + COOKIE_NAME_AUTH_TOKEN));
+					getForbiddenResponse(request, "No Cookie '" + COOKIE_NAME_AUTH_TOKEN + "'"));
 		}
 
 		try {
 			return tokenVerifier.verify(cookie.getValue());
 		} catch (GeneralSecurityException e) {
 			logger.info("Invalid token", e);
-			// TODO test whether it reports cause to client, and is it bad
 			throw new WebApplicationException(e, getForbiddenResponse(request, "Invalid token"));
 		} catch (IOException e) {
 			logger.error("IOException verifying OAuth token", e);
@@ -108,12 +127,14 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 	}
 
 	private Response getForbiddenResponse(ContainerRequest request, String reason) {
-		String url = composeLoginUrl(request);
+		// In case request is AJAX, we want to tell client how to authenticate user.
+		String loginUrl = composeLoginUrl(request);
+
 		return Response
 				.status(Status.FORBIDDEN)
 				.type(MediaType.TEXT_PLAIN_TYPE)
+				.header("X-Login-URL", loginUrl)
 				.entity(reason)
-				.header("X-Login-URL", url)
 				.build();
 	}
 
