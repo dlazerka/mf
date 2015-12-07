@@ -16,10 +16,9 @@ import java.security.InvalidKeyException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.*;
 import static org.testng.Assert.fail;
 
 /**
@@ -35,6 +34,7 @@ public class TokenVerifierSignatureTest extends PowerMockTestCase {
 	String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQiLCJhenAiOiIxMDA4NzE5OTcwOTc4LWhiMjRuMmRzdGI0MG80NWQ0ZmV1bzJ1a3FtY2M2MzgxLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiZW1haWxfdmVyaWZpZWQiOiJ0cnVlIiwiZW1haWwiOiJiaWxsZDE2MDBAZ21haWwuY29tIiwibmFtZSI6IlRlc3QgVGVzdCIsImF1ZCI6IjEwMDg3MTk5NzA5NzgtaGIyNG4yZHN0YjQwbzQ1ZDRmZXVvMnVrcW1jYzYzODEuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJpYXQiOjE0MzM5NzgzNTMsImV4cCI6MTQzMzk4MTk1M30.GC1hAjr8DbAT5CkEL19wCUqZHsDH1SklFPL2ZJxezW8";
 
 	TokenVerifierSignature unit;
+	private GoogleIdToken idToken;
 
 	@BeforeMethod
 	public void setUp() throws URISyntaxException, IOException {
@@ -42,20 +42,23 @@ public class TokenVerifierSignatureTest extends PowerMockTestCase {
 		unit.tokenVerifier = mock(GoogleIdTokenVerifier.class);
 		when(unit.tokenVerifier.getJsonFactory())
 				.thenReturn(JacksonFactory.getDefaultInstance());
+
+		idToken = mock(GoogleIdToken.class);
+		when(idToken.getPayload())
+				.thenReturn(new Payload().setSubject("1234").setEmail("test@example.com"));
 		mockStatic(GoogleIdToken.class);
+		when(GoogleIdToken.parse(any(JsonFactory.class), any(String.class)))
+				.thenReturn(idToken);
+
 	}
 
 	@Test
 	public void testVerifyOk() throws Exception {
-		GoogleIdToken idToken = mock(GoogleIdToken.class);
-		when(idToken.getPayload())
-				.thenReturn(new Payload().setSubject("1234").setEmail("test@example.com"));
-		when(GoogleIdToken.parse(any(JsonFactory.class), any(String.class)))
-				.thenReturn(idToken);
 		when(unit.tokenVerifier.verify(idToken))
 				.thenReturn(true);
+		UserPrincipal userPrincipal = unit.verify(token);
 
-		unit.verify(token);
+		assertThat(userPrincipal.getId(), is("1234"));
 	}
 
 	@Test

@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Path(LocationRequest.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
-@RolesAllowed(Role.OAUTH)
+@RolesAllowed(Role.USER)
 public class LocationRequestResource {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestResource.class);
 

@@ -4,6 +4,7 @@ import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.appengine.api.utils.SystemProperty.Environment.Value;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
@@ -23,7 +24,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static com.google.appengine.api.utils.SystemProperty.Environment.Value.Development;
@@ -45,10 +45,10 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 	@Inject
 	TokenVerifier tokenVerifier;
 
-	Set<String> roles;
+	Set<String> rolesAllowed;
 
-	protected void setRoles(Set<String> roles) {
-		this.roles = roles;
+	protected void setRolesAllowed(Set<String> rolesAllowed) {
+		this.rolesAllowed = rolesAllowed;
 	}
 
 	private boolean isDevServer() {
@@ -59,71 +59,77 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 	@Override
 	@Nonnull
 	public ContainerRequest filter(ContainerRequest request) {
-		checkNotNull(roles);
+		checkNotNull(rolesAllowed);
 
-		// Allow HTTP on local dev server only.
-		if (roles.contains(Role.DEVSERVER) && isDevServer() && userService.isUserLoggedIn()) {
-			logger.info("Dev auth, OK: " + request);
-			setGaeSecurityContext(request, Role.DEVSERVER);
-			return request;
+		AuthSecurityContext securityContext = getSecurityContext(request);
+
+		for(String roleAllowed : rolesAllowed) {
+			if (securityContext.isUserInRole(roleAllowed)) {
+				request.setSecurityContext(securityContext);
+				return request;
+			}
 		}
 
-		// Deny all insecure requests (@PermitAll requests do not come here at all).
+		UserPrincipal principal = securityContext.getUserPrincipal();
+		logger.warn("User {} not in roles {}", principal, rolesAllowed);
+
+		throw new WebApplicationException(getForbiddenResponse(request, "Not Authorized"));
+	}
+
+	private AuthSecurityContext getSecurityContext(ContainerRequest request) {
+		// Deny all insecure requests on production (@PermitAll requests do not come here at all).
 		if (!request.isSecure() && !isDevServer()) {
 			logger.warn("Insecure auth, Deny: " + request);
 			throw new WebApplicationException(getForbiddenResponse(request, "Request insecure"));
 		}
 
+		// Check regular GAE authentication.
 		if (userService.isUserLoggedIn()) {
-			if (roles.contains(Role.ADMIN) && userService.isUserAdmin()) {
-				logger.info("GAE admin auth, OK: " + request);
-				setGaeSecurityContext(request, Role.ADMIN);
-			} else {
-				logger.info("GAE regular auth, OK: " + request);
-				setGaeSecurityContext(request, Role.GAE);
-			}
-			return request;
+			return useGaeAuthentication(request);
 		}
 
-		if (roles.contains(Role.OAUTH)) {
-			logger.trace("Authenticating OAuth user...");
-
-			UserPrincipal user = verifyOauthToken(request);
-			request.setSecurityContext(new OauthSecurityContext(user, true));
-			return request;
+		// Check OAuth authentication.
+		Cookie cookie = request.getCookies().get(COOKIE_NAME_AUTH_TOKEN);
+		if (cookie != null) {
+			return useOauthAuthentication(request, cookie);
 		}
 
-		logger.error("No known roles specified for endpoint {}", request.getPath());
-		throw new WebApplicationException(getForbiddenResponse(request, "Forbidden"));
+		logger.warn("No credentials provided for {}", request.getPath());
+		throw new WebApplicationException(getForbiddenResponse(request, "No credentials provided"));
 	}
 
-	private void setGaeSecurityContext(ContainerRequest request, String role) {
-		User user = userService.getCurrentUser();
-		UserPrincipal userPrincipal = new UserPrincipal(user.getUserId(), user.getEmail());
-		Set<String> roles = ImmutableSet.of(role, Role.GAE, Role.AUTHENTICATED);
-
-		request.setSecurityContext(
-				new GaeSecurityContext(userPrincipal, request.isSecure(), roles));
-	}
-
-	private UserPrincipal verifyOauthToken(ContainerRequest request) {
-		Map<String,Cookie> cookies = request.getCookies();
-		Cookie cookie = cookies.get(COOKIE_NAME_AUTH_TOKEN);
-		if (cookie == null) {
-			logger.warn("No authToken auth, Deny: " + request);
-			throw new WebApplicationException(
-					getForbiddenResponse(request, "No Cookie '" + COOKIE_NAME_AUTH_TOKEN + "'"));
-		}
-
+	private AuthSecurityContext useOauthAuthentication(ContainerRequest request, Cookie cookie) {
+		logger.trace("Authenticating OAuth2.0 user...");
 		try {
-			return tokenVerifier.verify(cookie.getValue());
+			UserPrincipal userPrincipal = tokenVerifier.verify(cookie.getValue());
+			return new AuthSecurityContext(
+					userPrincipal,
+					request.isSecure(),
+					ImmutableSet.of(Role.USER),
+					"OAuth2.0"
+			);
 		} catch (GeneralSecurityException e) {
 			logger.info("Invalid token", e);
-			throw new WebApplicationException(e, getForbiddenResponse(request, "Invalid token"));
+			throw new WebApplicationException(e, getForbiddenResponse(request, "Invalid OAuth2.0 token"));
 		} catch (IOException e) {
 			logger.error("IOException verifying OAuth token", e);
-			throw new WebApplicationException(e, getForbiddenResponse(request, "Error verifying token"));
+			throw new WebApplicationException(e, getForbiddenResponse(request, "Error verifying OAuth2.0 token"));
 		}
+	}
+
+	private AuthSecurityContext useGaeAuthentication(ContainerRequest request) {
+		Set<String> roles = userService.isUserAdmin()
+				? ImmutableSet.of(Role.USER, Role.ADMIN)
+				: ImmutableSet.of(Role.USER);
+
+		User user = userService.getCurrentUser();
+		UserPrincipal userPrincipal = new UserPrincipal(user.getUserId(), user.getEmail());
+		return new AuthSecurityContext(
+				userPrincipal,
+				request.isSecure(),
+				roles,
+				"GAE"
+		);
 	}
 
 	private Response getForbiddenResponse(ContainerRequest request, String reason) {
@@ -161,6 +167,8 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 
 	@Override
 	public String toString() {
-		return roles.isEmpty() ? "FORBIDDEN" : roles.toString();
+		return MoreObjects.toStringHelper(this)
+				.add("rolesAllowed", rolesAllowed)
+				.toString();
 	}
 }

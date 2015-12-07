@@ -53,6 +53,6 @@ public class UserPrincipal implements Principal {
 
 	@Override
 	public String toString() {
-		return email + '(' + id + ')';
+		return email + ' ' + id;
 	}
 }

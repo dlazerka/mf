@@ -48,7 +48,7 @@ public class AuthFilterTest {
 		unit = new AuthFilter();
 		unit.tokenVerifier = mock(TokenVerifier.class);
 
-		unit.setRoles(ImmutableSet.of(Role.OAUTH));
+		unit.setRolesAllowed(ImmutableSet.of(Role.USER));
 		unit.userService = mock(UserService.class);
 
 		when(request.getRequestUri())
@@ -67,7 +67,7 @@ public class AuthFilterTest {
 
 		unit.filter(request);
 
-		verify(request).setSecurityContext(any(OauthSecurityContext.class));
+		verify(request).setSecurityContext(any(AuthSecurityContext.class));
 	}
 
 	@Test
@@ -86,7 +86,7 @@ public class AuthFilterTest {
 		} catch (WebApplicationException e) {
 			assertThat(e.getCause(), instanceOf(InvalidKeyException.class));
 			assertThat(e.getResponse().getStatus(), is(403));
-			verify(request, never()).setSecurityContext(any(OauthSecurityContext.class));
+			verify(request, never()).setSecurityContext(any(AuthSecurityContext.class));
 		}
 	}
 

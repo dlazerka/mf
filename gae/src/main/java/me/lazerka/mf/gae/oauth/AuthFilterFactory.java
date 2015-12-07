@@ -70,7 +70,7 @@ public class AuthFilterFactory implements ResourceFilterFactory {
 
 	private ResourceFilter getFilter(String[] roles) {
 		AuthFilter authFilter = authFilterProvider.get();
-		authFilter.setRoles(ImmutableSet.copyOf(roles));
+		authFilter.setRolesAllowed(ImmutableSet.copyOf(roles));
 		return authFilter;
 	}
 

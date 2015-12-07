@@ -29,7 +29,7 @@ import static me.lazerka.mf.gae.user.UserService.normalizeEmail;
  */
 @Path("/rest/user")
 @Produces(ApiConstants.APPLICATION_JSON)
-@RolesAllowed(Role.OAUTH)
+@RolesAllowed(Role.USER)
 public class UserResource {
 	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
 

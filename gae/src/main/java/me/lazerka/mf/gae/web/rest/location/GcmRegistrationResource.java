@@ -25,7 +25,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
  */
 @Path(GcmRegistration.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
-@RolesAllowed(Role.OAUTH)
+@RolesAllowed(Role.USER)
 public class GcmRegistrationResource {
 	private static final Logger logger = LoggerFactory.getLogger(GcmRegistrationResource.class);
 

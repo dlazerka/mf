@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response.Status;
  */
 @Path(MyLocation.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
-@RolesAllowed(Role.OAUTH)
+@RolesAllowed(Role.USER)
 public class MyLocationResource {
 	private static final Logger logger = LoggerFactory.getLogger(MyLocationResource.class);
 

@@ -76,6 +76,7 @@ public class UserService {
 		return (UserPrincipal) checkNotNull(securityContext.getUserPrincipal());
 	}
 
+	@Nonnull
 	public MfUser getCurrentUser() {
 		UserPrincipal oauthUser = getCurrentOauthUser();
 		EmailNormalized normalized = normalizeEmail(oauthUser.getEmail());
@@ -91,6 +92,7 @@ public class UserService {
 	}
 
 
+	@Nonnull
 	public MfUser create(final MfUser newEntity) {
 		Work<MfUser> createWork = new CreateOrFetch<>(newEntity);
 		return ofy().transact(createWork);
