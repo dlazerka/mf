@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 public class LoginActivity extends FragmentActivity {
 	private static final Logger logger = LoggerFactory.getLogger(LoginActivity.class);
 
+	private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 	private static final int RC_SIGN_IN = 9001;
 	private static final int RC_PLAY_ERROR_DIALOG = 123;
 

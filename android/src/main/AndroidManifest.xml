@@ -22,7 +22,7 @@
 	<!-- To retrieve the account name (email) as part of sign-in. -->
 	<uses-permission android:name="android.permission.GET_ACCOUNTS" />
 	<!-- To auto-complete the email text field in the login form with the user's emails. -->
-	<uses-permission android:name="android.permission.READ_PROFILE" />
+	<!--<uses-permission android:name="android.permission.READ_PROFILE" />-->
 	<!-- For adding friends from Android contacts. -->
 	<uses-permission android:name="android.permission.READ_CONTACTS" />
 
@@ -52,6 +52,7 @@
 	-->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 
+	<!-- TODO implement proper backup. -->
 	<application
 		android:name=".Application"
 		android:allowBackup="true"
@@ -80,47 +81,58 @@
 			android:name="com.google.android.gms.version"
 			android:value="@integer/google_play_services_version" />
 
-		<!-- TODO backing up -->
 		<meta-data
 			android:name="com.google.android.backup.api_key"
 			android:value="AEdPqrEAAAAIa7dbTRQVuUzcdsYSq-lPAzc_gcC5q0MvGAMCbw" />
 
-		<!-- GcmBroadcastReceiver is deprecated, but seems that it's only working way for Sony Xperia Ultra -->
+		<!-- Called by Android on a GCM message received -->
 		<receiver
-			android:name=".background.GcmBroadcastReceiver"
+			android:name=".background.gcm.GcmBroadcastReceiver"
 			android:exported="true"
-			android:permission="com.google.android.c2dm.permission.RECEIVE"
+			android:permission="com.google.android.c2dm.permission.SEND"
 			>
-			<!-- We don't need android:permission="com.google.android.c2dm.permission.SEND" -->
+			<!--android:permission="com.google.android.c2dm.permission.RECEIVE"-->
 			<intent-filter>
+				<category android:name="me.lazerka.mf.android" />
+				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
 				<!-- This is needed for pre-4.4 KitKat devices. -->
 				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-
-				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
-				<category android:name="me.lazerka.mf.android" />
 			</intent-filter>
 		</receiver>
-<!--
-		<service
-			android:name=".background.GcmIntentService"
-			android:exported="false"
-			/>
--->
-		<service
-			android:name=".background.gcm.RenewGcmTokenService"
-			android:exported="false"
-			/>
+
+		<!-- Called by receiver above on a new GCM token obtained. -->
 		<service android:name=".background.gcm.InstanceIdService" android:exported="false">
 			<intent-filter>
 				<action android:name="com.google.android.gms.iid.InstanceID"/>
 			</intent-filter>
 		</service>
+
+		<!-- Called by receiver above to handle our own GCM messages. -->
+		<service
+			android:name=".background.gcm.GcmReceiveService"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
+			</intent-filter>
+		</service>
+
+		<!-- Called by Android on device boot. -->
 		<receiver android:name=".background.BootReceiver">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED"/>
 				<action android:name="android.intent.action.QUICKBOOT_POWERON"/>
 			</intent-filter>
 		</receiver>
+
+		<!--
+			Called by boot receiver above, and on app start.
+			Makes sure server knows our GCM token, to send messages to this device.
+		-->
+		<service
+			android:name=".background.gcm.RenewGcmTokenService"
+			android:exported="false"
+			/>
+
 	</application>
 
 </manifest>

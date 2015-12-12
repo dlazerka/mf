@@ -3,10 +3,15 @@ package me.lazerka.mf.android.background.gcm;
 import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.WorkerThread;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.api.object.GcmRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +35,6 @@ public class RenewGcmTokenService extends IntentService {
 		}
 
 		renewRegistration();
-
 	}
 
 	/**
@@ -65,7 +69,13 @@ public class RenewGcmTokenService extends IntentService {
 	 * @param gcmToken to store.
 	 */
 	@WorkerThread
-	public void sendGcmToken(final String gcmToken) throws IOException {
-	}
+	public void sendGcmToken(String gcmToken) throws IOException {
+		AndroidAuthenticator authenticator = new AndroidAuthenticator(this);
+		GoogleSignInAccount account = authenticator.blockingGetAccount();
 
+		ApiPost post = new ApiPost(new GcmRegistration(gcmToken, Application.getVersion()));
+		Response response = post.newCall(account).execute();
+
+		here
+	}
 }

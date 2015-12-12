@@ -79,13 +79,6 @@ public class MapFragment extends Fragment {
 	}
 
 	@Override
-	public void onStart() {
-		super.onStart();
-		//Intent intent = new Intent(getActivity(), GcmIntentService.class);
-		//getActivity().bindService(intent, gcmServiceConnection, Context.BIND_AUTO_CREATE);
-	}
-
-	@Override
 	public void onResume() {
 		super.onResume();
 		mapView.onResume();
@@ -105,12 +98,6 @@ public class MapFragment extends Fragment {
 		}
 
 		mapView.onPause();
-	}
-
-	@Override
-	public void onStop() {
-		super.onStop();
-		//getActivity().unbindService(gcmServiceConnection);
 	}
 
 	@Override

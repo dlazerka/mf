@@ -1,10 +1,8 @@
 package me.lazerka.mf.android;
 
-import android.accounts.Account;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.support.annotation.WorkerThread;
 import org.slf4j.Logger;
@@ -31,23 +29,6 @@ public class Preferences {
 	public Preferences(Application app) {
 		// Same file name as RoboGuice default.
 		preferences = app.getSharedPreferences("default.xml", Context.MODE_PRIVATE);
-	}
-
-	//@Nullable
-	public Account getAccount() {
-		String name = preferences.getString(ACCOUNT_NAME, null);
-		String type = preferences.getString(ACCOUNT_TYPE, null);
-		if (name == null || type == null) {
-			return null;
-		}
-		return new Account(name, type);
-	}
-
-	public void setAccount(@Nonnull Account account) {
-		Editor editor = preferences.edit();
-		editor.putString(ACCOUNT_NAME, account.name);
-		editor.putString(ACCOUNT_TYPE, account.type);
-		editor.apply();
 	}
 
 	public void clearAccount() {

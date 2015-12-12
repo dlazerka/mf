@@ -50,6 +50,8 @@ public class MainActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 
+		Application.preferences.clearAccount();
+
 		// Make sure server has our GCM token.
 		startService(new Intent(this, RenewGcmTokenService.class));
 	}
