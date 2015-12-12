@@ -13,7 +13,7 @@ import com.android.volley.Request.Method;
 import com.android.volley.VolleyError;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.background.RenewGcmTokenService;
+import me.lazerka.mf.android.background.gcm.RenewGcmTokenService;
 import me.lazerka.mf.android.http.HttpUtils;
 import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
@@ -71,7 +71,8 @@ public class MainActivity extends Activity {
 				finish();
 				break;
 			case R.id.clear_token:
-				Application.preferences.clearGcmToken();
+				//
+				//Application.preferences.clearGcmToken();
 				recreate();
 				break;
 			case R.id.action_quit:

@@ -1,108 +1,85 @@
 package me.lazerka.mf.android.auth;
 
-import android.accounts.*;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import com.google.android.gms.common.AccountPicker;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.activity.LoginActivity;
-import me.lazerka.mf.api.ApiConstants;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.Builder;
+import com.google.android.gms.common.api.OptionalPendingResult;
+import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 
 /**
- * Handles on-device authentication, i.e.obtains Android token.
+ * Obtains OAuth token to talk to our backend API.
  *
- * The Android-token will then be used only to exchange it for GAE-token, see {@link GaeAuthenticator}.
- *
- * Must be called from main thread, because user will be prompted for permissions to access GAE.
- *
- * @see me.lazerka.mf.android.auth.GaeAuthenticator
  * @author Dzmitry Lazerka
  */
 public class AndroidAuthenticator {
 	private static final Logger logger = LoggerFactory.getLogger(AndroidAuthenticator.class);
 
-	static final String ACCOUNT_TYPE = "com.google";
+	private final Context context;
+
+	public AndroidAuthenticator(Context context) {
+		this.context = context;
+	}
+
+	public Builder getGoogleApiClient() {
+		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
+				.requestId()
+						//.requestProfile() // We don't need profile.
+				.requestEmail()
+				.requestIdToken(context.getString(R.string.server_oauth_key))
+				.build();
+
+		// If there's only one account on device, we're sure user would want to use it.
+		AccountManager accountManager = AccountManager.get(context);
+		Account[] accounts = accountManager.getAccountsByType("com.google");
+		if (accounts.length == 1) {
+			String accountName = accounts[0].name;
+			gso = new GoogleSignInOptions.Builder(gso)
+					.setAccountName(accountName)
+					.build();
+		}
+
+		return new Builder(context)
+				.addApi(Auth.GOOGLE_SIGN_IN_API, gso);
+	}
+
+	/** Creates a new GoogleApiClient and synchronously requests account. */
+	public GoogleSignInAccount blockingGetAccount() throws GoogleApiException {
+		GoogleApiClient client = getGoogleApiClient().build();
+
+		ConnectionResult connectionResult = client.blockingConnect();
+
+		if (!connectionResult.isSuccess()) {
+			throw new GoogleApiConnectionException(connectionResult);
+		}
+		return blockingGetAccount(client);
+	}
 
 	/**
-	 * @return null if valid, intent to show otherwise.
-	 */
-	public Intent checkAccountValid() {
-		Account account = Application.preferences.getAccount();
-		if (account == null || !isAccountAvailable(account)) {
-			return AccountPicker.newChooseAccountIntent(
-					account, // selectedAccount
-					null, // allowable accounts
-					new String[]{ACCOUNT_TYPE}, // allowable account types
-					false, // alwaysPromptForAccount
-					null, // descriptionOverrideText
-					null, // addAccountAuthTokenType
-					null, // addAccountRequiredFeatures
-					null // addAccountOptions
-			);
+	 * Synchronously requests account.
+	 * @param client must be already connected.
+     */
+	public GoogleSignInAccount blockingGetAccount(GoogleApiClient client) throws GoogleApiException {
+
+		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
+
+		opr.await();// Blocks
+		GoogleSignInResult signInResult = opr.get();
+		if (!signInResult.isSuccess()) {
+			throw new GoogleSignInException(signInResult.getStatus());
 		}
-		return null;
+
+		return signInResult.getSignInAccount();
 	}
 
-	private boolean isAccountAvailable(Account account) {
-		AccountManager accountManager = getAccountManager();
-		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
-		for (Account availableAccount : accounts) {
-			if (account.equals(availableAccount)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public interface AuthenticatorCallback {
-		void onSuccess(String authToken);
-		void onUserInputRequired(Intent intent);
-		void onIOException(IOException e);
-		void onAuthenticatorException(AuthenticatorException e);
-		void onOperationCanceledException(OperationCanceledException e);
-	}
-
-	/**
-	 * For invoking from foreground.
-	 * Launches credentials prompt user hasn't approved service usage, and token cannot be issued.
-	 * If user approved, do nothing with the token (see {@link GaeAuthenticator} for real authentication).
-	 *
-	 * Note that GoogleAuthUtil.getToken() is completely different from AccountManager.
-	 */
-	public void checkUserPermission(final LoginActivity activity, final AuthenticatorCallback callback) {
-		Account account = Application.preferences.getAccount();
-
-		// It may start activity asking user for permission.
-		AccountManagerCallback<Bundle> myCallback = new AccountManagerCallback<Bundle>() {
-			@Override
-			public void run(AccountManagerFuture<Bundle> future) {
-				try {
-					Bundle bundle = future.getResult();
-
-					Intent intent = (Intent) bundle.get(AccountManager.KEY_INTENT);
-					if (intent != null) {
-						callback.onUserInputRequired(intent);
-					}
-					callback.onSuccess(bundle.getString(AccountManager.KEY_AUTHTOKEN));
-				} catch (OperationCanceledException e) {
-					callback.onOperationCanceledException(e);
-				} catch (IOException e) {
-					callback.onIOException(e);
-				} catch (AuthenticatorException e) {
-					callback.onAuthenticatorException(e);
-				}
-			}
-		};
-		AccountManager accountManager = getAccountManager();
-		accountManager.getAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, Bundle.EMPTY, activity, myCallback, null);
-	}
-
-	private AccountManager getAccountManager() {
-		return (AccountManager) Application.context.getSystemService(Context.ACCOUNT_SERVICE);
-	}
 }

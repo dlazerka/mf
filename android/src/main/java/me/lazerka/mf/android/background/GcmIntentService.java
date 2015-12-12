@@ -7,8 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import me.lazerka.mf.android.auth.GcmAuthenticator;
-import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
+import me.lazerka.mf.api.gcm.LocationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +35,7 @@ public class GcmIntentService extends IntentService {
 	public GcmIntentService() {
 		super("GcmIntentService");
 
-		binder.bind(LocationRequestGcmPayload.TYPE, new LocationRequestHandler(this));
-	}
-
-	@Override
-	public void onCreate() {
-		super.onCreate();
-
-		// Mostly for calling from BootReceiver.
-		new GcmAuthenticator(this)
-				.renewRegistration();
+		binder.bind(LocationRequest.TYPE, new LocationRequestHandlerOld(this));
 	}
 
 	@Override

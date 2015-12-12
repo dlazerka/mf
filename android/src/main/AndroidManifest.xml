@@ -10,7 +10,8 @@
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 	<uses-permission android:name="android.permission.INTERNET"/>
-	<!-- Required by Maps API. -->
+
+	<!-- Required by Google Maps. -->
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
 	<!--
@@ -30,26 +31,24 @@
 
 	<!--
 		Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
-		More at https://developer.android.com/google/gcm/client.html
+		More at https://developers.google.com/cloud-messaging/android/client
 	-->
 	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+	<!-- To prevent other Android applications from registering and receiving the Android application's messages -->
 	<permission
 		android:name="me.lazerka.mf.android.permission.C2D_MESSAGE"
 		android:protectionLevel="signature" />
 	<uses-permission android:name="me.lazerka.mf.android.permission.C2D_MESSAGE" />
-	<!-- Not needed?
-		<uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
-	-->
 
-	<!-- This notifies external services of the OpenGL ES requirement. In particular,
+	<!--
+		This notifies external services of the OpenGL ES requirement. In particular,
 		it has the effect of preventing Google Play Store from displaying your app on devices
 		that don't support OpenGL ES version 2.
 	-->
 	<uses-feature android:glEsVersion="0x00020000" android:required="true"/>
 
 	<!--
-		Needed for GcmBroadcastReceiver that processes incoming messages and transfers them to a Service,
-		ensuring that the phone doesn't go to sleep in the meantime.
+		For GCM Receiver, ensures that device doesn't go to sleep while processing an incoming message.
 	-->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -89,24 +88,33 @@
 		<!-- GcmBroadcastReceiver is deprecated, but seems that it's only working way for Sony Xperia Ultra -->
 		<receiver
 			android:name=".background.GcmBroadcastReceiver"
+			android:exported="true"
 			android:permission="com.google.android.c2dm.permission.RECEIVE"
 			>
 			<!-- We don't need android:permission="com.google.android.c2dm.permission.SEND" -->
 			<intent-filter>
+				<!-- This is needed for pre-4.4 KitKat devices. -->
 				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
 
 				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
 				<category android:name="me.lazerka.mf.android" />
 			</intent-filter>
 		</receiver>
+<!--
 		<service
 			android:name=".background.GcmIntentService"
 			android:exported="false"
 			/>
+-->
 		<service
-			android:name=".background.RenewGcmTokenService"
+			android:name=".background.gcm.RenewGcmTokenService"
 			android:exported="false"
 			/>
+		<service android:name=".background.gcm.InstanceIdService" android:exported="false">
+			<intent-filter>
+				<action android:name="com.google.android.gms.iid.InstanceID"/>
+			</intent-filter>
+		</service>
 		<receiver android:name=".background.BootReceiver">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED"/>

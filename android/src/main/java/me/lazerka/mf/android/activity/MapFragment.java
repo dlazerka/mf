@@ -1,15 +1,8 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Fragment;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
 import android.util.DisplayMetrics;
 import android.view.*;
 import com.google.android.gms.maps.*;
@@ -19,17 +12,16 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.background.GcmIntentService;
-import me.lazerka.mf.android.background.GcmIntentService.ServiceBinder;
-import me.lazerka.mf.android.background.GcmMessageHandler;
+import me.lazerka.mf.android.background.gcm.GcmReceiveService;
 import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.util.Locale;
 import java.util.Map;
@@ -53,15 +45,13 @@ public class MapFragment extends Fragment {
 	private final Map<String, Item> items = Maps.newHashMap();
 	private MapView mapView;
 
-	private GcmServiceConnection gcmServiceConnection;
+	private final FriendLocationObserver observer = new FriendLocationObserver();
+	private Subscription subscription = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRetainInstance(true);
-
-		FriendLocationHandler handler = new FriendLocationHandler(this);
-		gcmServiceConnection = new GcmServiceConnection(handler);
 	}
 
 	@Override
@@ -91,20 +81,36 @@ public class MapFragment extends Fragment {
 	@Override
 	public void onStart() {
 		super.onStart();
-		Intent intent = new Intent(getActivity(), GcmIntentService.class);
-		getActivity().bindService(intent, gcmServiceConnection, Context.BIND_AUTO_CREATE);
+		//Intent intent = new Intent(getActivity(), GcmIntentService.class);
+		//getActivity().bindService(intent, gcmServiceConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		mapView.onResume();
+
+		subscription =
+				GcmReceiveService.getLocationReceivedObservable()
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(observer);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+
+		if (subscription != null) {
+			subscription.unsubscribe();
+		}
+
+		mapView.onPause();
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		getActivity().unbindService(gcmServiceConnection);
-	}
-
-	@Override
-	public void onResume() {
-		mapView.onResume();
-		super.onResume();
+		//getActivity().unbindService(gcmServiceConnection);
 	}
 
 	@Override
@@ -247,45 +253,20 @@ public class MapFragment extends Fragment {
 
 	}
 
-	/**
-	 * Passes message from background to foreground.
-	 *
-	 * @author Dzmitry Lazerka
-	 */
-	public static class FriendLocationHandler extends GcmMessageHandler<MyLocationGcmPayload> {
-		private final String TAG = getClass().getName();
-
-		/**
-		 * If passing this as usual, then outer class cannot get GCed.
-		 */
-		private final WeakReference<MapFragment> fragmentWeakReference;
-
-		public FriendLocationHandler(MapFragment fragmentWeakReference) {
-			this.fragmentWeakReference = new WeakReference<>(fragmentWeakReference);
+	private class FriendLocationObserver extends Subscriber<MyLocationGcmPayload> {
+		@Override
+		public void onNext(MyLocationGcmPayload payload) {
+			showLocation(payload.getLocation());
 		}
 
 		@Override
-		public void handleMessage(Message message) {
-			MapFragment mapFragment = fragmentWeakReference.get();
-			if (mapFragment == null) {
-				logger.info("MapFragment got GCed, not handling friend's location");
-				return;
-			}
+		public void onCompleted() {
+			logger.error("onCompleted() aren't to be called.");
+		}
 
-			MainActivity activity;
-			try {
-				activity = mapFragment.getMyActivity();
-			} catch (ActivityIsNullException e) {
-				logger.info("ActivityIsNullException, not handling friend's location");
-				return;
-			}
-
-			try {
-				MyLocationGcmPayload payload = parseGcmPayload(message, MyLocationGcmPayload.class, activity);
-				mapFragment.showLocation(payload.getLocation());
-			} catch (IOException e) {
-				// Nothing, already reported
-			}
+		@Override
+		public void onError(Throwable e) {
+			logger.warn("onError {}", e.getMessage());
 		}
 	}
 
@@ -312,28 +293,5 @@ public class MapFragment extends Fragment {
 	}
 
 	private class ActivityIsNullException extends Exception {}
-
-	/**
-	 * @author Dzmitry Lazerka
-	 */
-	public static class GcmServiceConnection implements ServiceConnection {
-		private Handler handler;
-
-		public GcmServiceConnection(Handler handler) {
-			this.handler = handler;
-		}
-
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder binder) {
-			logger.trace("onServiceConnected: " + name.toString());
-			ServiceBinder serviceBinder = (ServiceBinder) binder;
-			serviceBinder.bind(MyLocationGcmPayload.TYPE, handler);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			logger.trace("onServiceDisconnected: " + name.toString());
-		}
-	}
 }
 

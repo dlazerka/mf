@@ -25,6 +25,7 @@ import org.acra.sender.HttpSender.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 
@@ -77,6 +78,7 @@ public class Application extends MultiDexApplication {
 	 *
 	 * @see LoginActivity where it's set.
 	 */
+	@Nullable
 	public static GoogleSignInAccount account;
 
 	@Override
@@ -147,4 +149,5 @@ public class Application extends MultiDexApplication {
 			throw new RuntimeException("Could not get package name: " + e);
 		}
 	}
+
 }

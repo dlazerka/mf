@@ -33,5 +33,19 @@
 -printmapping ./build/proguard_mapping.txt
 
 -dontwarn org.joda.convert.**
--dontwarn sun.misc.Unsafe
+
+
+## --------------- Start Project specifics --------------- ##
+
+# Keep the BuildConfig
+-keep class me.lazerka.mf.android.BuildConfig { *; }
+
+# Keep the support library
+-keep class android.support.v4.** { *; }
+-keep interface android.support.v4.** { *; }
+
+# Application classes that will be serialized/deserialized over Gson
+# or have been blown up by ProGuard in the past
+
+## ---------------- End Project specifics ---------------- ##
 

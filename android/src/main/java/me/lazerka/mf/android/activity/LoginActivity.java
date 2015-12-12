@@ -1,7 +1,5 @@
 package me.lazerka.mf.android.activity;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,17 +8,16 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.*;
-import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.auth.AndroidAuthenticator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,24 +37,9 @@ public class LoginActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_signing_progress);
 
-		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
-				.requestId()
-				//.requestProfile() // We don't need profile.
-				.requestEmail()
-				.requestIdToken(getString(R.string.server_oauth_key))
-				.build();
-
-		// If there's only one account on device, we're sure user would want to use it.
-		AccountManager accountManager = AccountManager.get(this);
-		Account[] accounts = accountManager.getAccountsByType("com.google");
-		if (accounts.length == 1) {
-			String accountName = accounts[0].name;
-			gso = new GoogleSignInOptions.Builder(gso)
-					.setAccountName(accountName)
-					.build();
-		}
-
-		googleApiClient = new Builder(this).enableAutoManage(
+		AndroidAuthenticator authenticator = new AndroidAuthenticator(this);
+		GoogleApiClient.Builder builder = authenticator.getGoogleApiClient();
+		googleApiClient = builder.enableAutoManage(
 				this, new OnConnectionFailedListener() {
 					@Override
 					public void onConnectionFailed(ConnectionResult connectionResult) {
@@ -67,8 +49,7 @@ public class LoginActivity extends FragmentActivity {
 						showSignInButton();
 					}
 				})
-				.addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-				.build();
+		.build();
 	}
 
 	@Override

@@ -69,7 +69,7 @@ public class TokenVerifierSignatureTest extends PowerMockTestCase {
 		try {
 			unit.verify(token);
 		} catch (InvalidKeyException e ){
-			assertThat(e.getMessage(), containsString("billd1600@gmail.com"));
+			assertThat(e.getMessage(), containsString("test@example.com"));
 			return;
 		}
 		fail();

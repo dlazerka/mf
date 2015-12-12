@@ -1,7 +1,5 @@
 package me.lazerka.mf.android.http;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import com.android.volley.*;
 import com.android.volley.toolbox.BasicNetwork;
 import com.android.volley.toolbox.HttpStack;
@@ -9,12 +7,9 @@ import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.NoCache;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GaeAuthenticator;
-import me.lazerka.mf.android.auth.GaeAuthenticator.AuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -66,11 +61,8 @@ public class GaeRequestQueue extends RequestQueue {
 			checkArgument(req instanceof JsonSerializingRequest);
 			JsonSerializingRequest<?> request = (JsonSerializingRequest<?>) req;
 
-			String gaeAuthToken = Application.preferences.getGaeAuthToken();
-			if (gaeAuthToken == null) {
-				gaeAuthToken = obtainGaeAuthToken();
-				Application.preferences.setGaeAuthToken(gaeAuthToken);
-			}
+			String gaeAuthToken = "TODO";
+			//String gaeAuthToken = Application.preferences.getGaeAuthToken();
 
 			setAuthCookie(gaeAuthToken, request);
 
@@ -78,10 +70,10 @@ public class GaeRequestQueue extends RequestQueue {
 
 			if (shouldAuthenticateResponse(response)) {
 				logger.info("Should authenticate request #" + request.getSequence());
-				gaeAuthToken = obtainGaeAuthToken();
+				gaeAuthToken = "TODO";
 
 				// Race condition (between concurrent requests) OK.
-				Application.preferences.setGaeAuthToken(gaeAuthToken);
+				//Application.preferences.setGaeAuthToken(gaeAuthToken);
 
 				setAuthCookie(gaeAuthToken, request);
 
@@ -142,18 +134,6 @@ public class GaeRequestQueue extends RequestQueue {
 				}
 			}
 			return result;
-		}
-
-		@Nonnull
-		private String obtainGaeAuthToken() throws AuthFailureError, NetworkError {
-			logger.info("GaeAuthToken null, authenticating");
-			try {
-				return authenticator.authenticate();
-			} catch (AuthenticationException | AuthenticatorException e) {
-				throw new AuthFailureError(e.getMessage(), e);
-			} catch (IOException | OperationCanceledException e) {
-				throw new NetworkError(e);
-			}
 		}
 	}
 

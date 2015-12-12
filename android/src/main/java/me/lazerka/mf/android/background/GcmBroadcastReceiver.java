@@ -5,6 +5,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Receiver of GCM messages.
@@ -14,10 +16,11 @@ import android.support.v4.content.WakefulBroadcastReceiver;
  * @author Dzmitry Lazerka
  */
 public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
-	protected final String TAG = getClass().getName();
+	private static final Logger logger = LoggerFactory.getLogger(GcmBroadcastReceiver.class);
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
+		logger.info("onReceive");
 		// Explicitly specify that GcmIntentService will handle the intent.
 		intent.setComponent(new ComponentName(context, GcmIntentService.class));
 

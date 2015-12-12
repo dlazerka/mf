@@ -8,7 +8,7 @@ import com.google.common.collect.ImmutableSet;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.GcmConstants;
 import me.lazerka.mf.api.gcm.GcmPayload;
-import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
+import me.lazerka.mf.api.gcm.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.gae.GaeTest;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
@@ -16,6 +16,7 @@ import me.lazerka.mf.gae.user.EmailNormalized;
 import me.lazerka.mf.gae.user.MfUser;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.testng.annotations.BeforeMethod;
@@ -69,7 +70,11 @@ public class GcmServiceTest extends GaeTest {
 		ofy().save().entity(new GcmRegistrationEntity(recipient, "gcmTestToken", may1));
 		ofy().save().entity(recipient).now();
 
-		payload = new LocationRequestGcmPayload("testRequestId", user.getEmail().getEmail(), may1);
+		payload = new LocationRequest(
+				"testRequestId",
+				user.getEmail().getEmail(),
+				may1,
+				Duration.standardMinutes(1));
 	}
 
 	void initResponse(String fileName) throws Exception {

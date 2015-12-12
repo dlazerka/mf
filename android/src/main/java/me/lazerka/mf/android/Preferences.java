@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -23,12 +22,9 @@ public class Preferences {
 	private final String ACCOUNT_NAME = "account.name";
 	private final String ACCOUNT_TYPE = "account.type";
 
-	private final String GAE_AUTH_TOKEN = "gae.auth.token";
-
 	private final String FRIENDS = "mf.friends";
 	private final String GCM_APP_VERSION = "gcm.app.version";
-	private final String GCM_TOKEN = "gcm.token";
-	private final String GCM_TOKEN_SENT = "gcm.token.sent";
+	private final String GCM_TOKEN_SENT_AT = "gcm.token.sent";
 
 	private final SharedPreferences preferences;
 
@@ -105,64 +101,27 @@ public class Preferences {
 		}
 	}
 
-	@Nullable
-	public String getGcmToken() {
+
+	public boolean getGcmToken() {
 		synchronized (preferences) {
-			String result = preferences.getString(GCM_TOKEN, null);
+			long sentAt = preferences.getLong(GCM_TOKEN_SENT_AT, -1);
 			int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
 
-			if (result == null) {
-				logger.info("GCM Registration ID not found.");
-				return null;
-			} else {
-				// Do not log real registration ID as it should be private.
-				logger.info("GCM Registration ID found.");
-			}
-
-			// Check if app was updated; if so, it must clear the registration ID
-			// since the existing regID is not guaranteed to work with the new
-			// app version.
-			// See build.gradle where it's defined
-			int currentVersion = Application.getVersion();
-			if (registeredVersion != currentVersion) {
-				logger.info("App version changed.");
-				return null;
-			}
-
-			return result;
+			return sentAt != -1 && Application.getVersion() == registeredVersion;
 		}
 	}
 
 	/**
 	 * This should not be backed up when user uses Backup/Restore feature.
 	 * See MfBackupAgent for that.
-	 */
-	public void setGcmToken(@Nonnull String gcmToken) {
-		logger.info("GCM Registration ID stored.");
-		preferences.edit()
-				.putString(GCM_TOKEN, gcmToken)
-				.putInt(GCM_APP_VERSION, Application.getVersion())
-				.apply();
-	}
-
-	@SuppressLint("CommitPrefEdits")
-	public void clearGcmToken() {
-		preferences.edit()
-				.remove(GCM_TOKEN)
-				.remove(GCM_APP_VERSION)
-				.commit();
-	}
-
-	/**
-	 * This should not be backed up when user uses Backup/Restore feature.
-	 * See MfBackupAgent for that.
+	 * @param token
 	 */
 	@SuppressLint("CommitPrefEdits")
 	@WorkerThread
-	public void setGcmTokenSent(@Nonnull String gcmToken) {
+	public void setGcmTokenSent(String token) {
 		logger.info("setGcmTokenSent()");
 		preferences.edit()
-				.putString(GCM_TOKEN_SENT, gcmToken)
+				.putLong(GCM_TOKEN_SENT_AT, System.currentTimeMillis())
 				.putInt(GCM_APP_VERSION, Application.getVersion())
 				.commit();
 	}
@@ -173,28 +132,17 @@ public class Preferences {
 	 */
 	@SuppressLint("CommitPrefEdits")
 	@WorkerThread
-	public void clearGcmTokenSent(@Nonnull String gcmToken) {
+	public void clearGcmTokenSent() {
 		logger.info("setGcmTokenSent()");
 		preferences.edit()
-				.remove(GCM_TOKEN_SENT)
+				.remove(GCM_TOKEN_SENT_AT)
 				.remove(GCM_APP_VERSION)
 				.commit();
 	}
 
-
-	@Nullable
-	public String getGaeAuthToken() {
-		return preferences.getString(GAE_AUTH_TOKEN, null);
-	}
-
-	public void setGaeAuthToken(@Nonnull String gaeAuthToken) {
-		preferences.edit()
-				.putString(GAE_AUTH_TOKEN, gaeAuthToken)
-				.apply();
-	}
 
 	public void onBeforeBackup() {
 		logger.info("onBeforeBackup");
-		clearGcmToken();
+		clearGcmTokenSent();
 	}
 }

@@ -1,11 +1,11 @@
 package me.lazerka.mf.api.gcm;
 
-import javax.annotation.Nonnull;
-
 /**
  * @author Dzmitry Lazerka
  */
 public abstract class GcmPayload {
-	@Nonnull
+	public static final String CLASS = "class";
+	public static final String DATA = "data";
+
 	public abstract String getType();
 }

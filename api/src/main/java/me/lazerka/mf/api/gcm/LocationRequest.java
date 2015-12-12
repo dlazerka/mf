@@ -3,18 +3,22 @@ package me.lazerka.mf.api.gcm;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
+
+import javax.annotation.Nullable;
 
 /**
  * The `data` field of a request for location that comes to a friend's device.
  *
  * @author Dzmitry Lazerka
  */
-public class LocationRequestGcmPayload extends GcmPayload {
+public class LocationRequest extends GcmPayload {
 	public static final String TYPE = "LocationRequest";
 
 	public static final String SENT_AT = "sentAt";
 	public static final String REQUEST_ID = "requestId";
 	public static final String REQUESTER_EMAIL = "requesterEmail";
+	public static final String DURATION = "duration";
 
 	@JsonProperty(REQUEST_ID)
 	private String requestId;
@@ -33,13 +37,17 @@ public class LocationRequestGcmPayload extends GcmPayload {
 	@JsonProperty(SENT_AT)
 	private DateTime sentAt;
 
-	// For Jackson.
-	private LocationRequestGcmPayload() {}
+	@JsonProperty(DURATION)
+	private Duration duration;
 
-	public LocationRequestGcmPayload(String requestId, String requesterEmail, DateTime sentAt) {
+	// For Jackson.
+	private LocationRequest() {}
+
+	public LocationRequest(String requestId, String requesterEmail, DateTime sentAt, Duration duration) {
 		this.requestId = requestId;
 		this.requesterEmail = requesterEmail;
 		this.sentAt = sentAt;
+		this.duration = duration;
 	}
 
 	@Override
@@ -47,16 +55,24 @@ public class LocationRequestGcmPayload extends GcmPayload {
 		return TYPE;
 	}
 
+	@Nullable
 	public String getRequestId() {
 		return requestId;
 	}
 
+	@Nullable
 	public String getRequesterEmail() {
 		return requesterEmail;
 	}
 
+	@Nullable
 	public DateTime getSentAt() {
 		return sentAt;
+	}
+
+	@Nullable
+	public Duration getDuration() {
+		return duration;
 	}
 
 	@Override
@@ -65,6 +81,7 @@ public class LocationRequestGcmPayload extends GcmPayload {
 				.add("requestId", requestId)
 				.add("requesterEmail", requesterEmail)
 				.add("sentAt", sentAt)
+				.add("duration", duration)
 				.toString();
 	}
 }

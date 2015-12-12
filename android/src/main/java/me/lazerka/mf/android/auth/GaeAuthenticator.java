@@ -1,13 +1,8 @@
 package me.lazerka.mf.android.auth;
 
 import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.content.Context;
 import com.squareup.okhttp.*;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.api.ApiConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +11,6 @@ import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.net.HttpCookie;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Authenticates our Android device to App Engine servers, using Google's default authentication mechanism.
@@ -49,34 +42,6 @@ public class GaeAuthenticator {
 		httpClient = new OkHttpClient();
 		httpClient.setFollowRedirects(false);
 		httpClient.setCookieHandler(cookieManager);
-	}
-
-	/**
-	 * For invoking from background.
-	 *
-	 *
-	 * Invalidates token. Is called only when authentication fails, so probably token has expired.
-	 * Shows notification on auth failure.
-	 * @return authToken
-	 */
-	@Nonnull
-	public String authenticate()
-			throws IOException, AuthenticatorException, OperationCanceledException, AuthenticationException {
-		Account account = checkNotNull(Application.preferences.getAccount());
-		String androidAuthToken;
-		try {
-			AccountManager accountManager =
-					(AccountManager) Application.context.getSystemService(Context.ACCOUNT_SERVICE);
-			androidAuthToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
-			if (androidAuthToken != null) {
-				accountManager.invalidateAuthToken(AndroidAuthenticator.ACCOUNT_TYPE, androidAuthToken);
-				androidAuthToken = accountManager.blockingGetAuthToken(account, ApiConstants.ANDROID_AUTH_SCOPE, true);
-			}
-			return fetchGaeAuthToken(androidAuthToken);
-		} catch (OperationCanceledException | AuthenticatorException e) {
-			logger.error("Cannot get token", e);
-			throw e;
-		}
 	}
 
 	@Nonnull

@@ -1,8 +1,7 @@
 package me.lazerka.mf.gae.web.rest.location;
 
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.gcm.LocationRequestGcmPayload;
-import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.gcm.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import me.lazerka.mf.gae.user.MfUser;
@@ -10,6 +9,7 @@ import me.lazerka.mf.gae.gcm.GcmService;
 import me.lazerka.mf.gae.user.UserService;
 import me.lazerka.mf.gae.oauth.Role;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * @author Dzmitry Lazerka
  */
-@Path(LocationRequest.PATH)
+@Path(me.lazerka.mf.api.object.LocationRequest.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
 @RolesAllowed(Role.USER)
 public class LocationRequestResource {
@@ -52,7 +52,7 @@ public class LocationRequestResource {
 	 */
 	@POST
 	@Consumes("application/json")
-	public LocationRequestResult byEmail(LocationRequest locationRequest) {
+	public LocationRequestResult byEmail(me.lazerka.mf.api.object.LocationRequest locationRequest) {
 		MfUser user = userService.getCurrentUser();
 		logger.trace("byEmail for {}", locationRequest.getEmails());
 
@@ -63,10 +63,11 @@ public class LocationRequestResource {
 			throw new WebApplicationException(Response.status(404).entity("User not found").build());
 		}
 
-		LocationRequestGcmPayload payload = new LocationRequestGcmPayload(
+		LocationRequest payload = new LocationRequest(
 				locationRequest.getRequestId(),
 				user.getEmail().getEmail(),
-				now
+				now,
+				Duration.standardMinutes(1) // TODO make configurable
 		);
 
 		List<GcmResult> gcmResults = gcmService.send(recipientUser, payload);

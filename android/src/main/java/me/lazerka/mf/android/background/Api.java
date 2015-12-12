@@ -1,12 +1,11 @@
 package me.lazerka.mf.android.background;
 
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.squareup.okhttp.Call;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.object.ApiObject;
-
-import java.io.IOException;
 
 /**
  * @author Dzmitry Lazerka
@@ -22,5 +21,5 @@ abstract class Api {
 		return HttpUrl.get(Application.SERVER_ROOT).resolve(object.getPath());
 	}
 
-	public abstract Response execute() throws IOException;
+	public abstract Call newCall(GoogleSignInAccount account);
 }

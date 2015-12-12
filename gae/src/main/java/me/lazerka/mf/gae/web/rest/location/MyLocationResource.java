@@ -1,19 +1,21 @@
 package me.lazerka.mf.gae.web.rest.location;
 
 import me.lazerka.mf.api.ApiConstants;
+import me.lazerka.mf.api.gcm.LocationRequest;
 import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.MyLocation;
 import me.lazerka.mf.api.object.MyLocationResponse;
-import me.lazerka.mf.gae.user.MfUser;
 import me.lazerka.mf.gae.gcm.GcmService;
-import me.lazerka.mf.gae.user.UserService;
 import me.lazerka.mf.gae.oauth.Role;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.user.UserService;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -42,16 +44,12 @@ public class MyLocationResource {
 	@Consumes("application/json")
 	public MyLocationResponse post(MyLocation myLocation) {
 		logger.trace(myLocation.toString());
-		String requesterEmail = myLocation.getRequesterEmail();
-		Location location = myLocation.getLocation();
-		String requestId = myLocation.getRequestId();
+		LocationRequest sourceRequest = checkNotNull(myLocation.getLocationRequest());
+		String requesterEmail = checkNotNull(sourceRequest.getRequesterEmail());
+		String requestId = checkNotNull(sourceRequest.getRequestId());
+		Location location = checkNotNull(myLocation.getLocation());
 
 		logger.info("post {} for {}", requestId, requesterEmail);
-
-		if (requesterEmail == null || location == null || requestId == null) {
-			logger.warn("Something is null");
-			throw new WebApplicationException(Status.BAD_REQUEST);
-		}
 
 		MfUser user = userService.getCurrentUser();
 
@@ -79,5 +77,15 @@ public class MyLocationResource {
 		gcmService.send(requester, payload);
 
 		return new MyLocationResponse(requestId);
+	}
+
+	@Nonnull
+	private <T> T checkNotNull(T obj) throws WebApplicationException {
+		if (obj == null) {
+			logger.warn("Something is null", new RuntimeException());
+			throw new WebApplicationException(Status.BAD_REQUEST);
+		}
+
+		return obj;
 	}
 }
