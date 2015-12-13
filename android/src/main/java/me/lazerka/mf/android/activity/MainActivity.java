@@ -13,7 +13,7 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.android.background.gcm.RenewGcmTokenService;
+import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
@@ -56,7 +56,7 @@ public class MainActivity extends GoogleApiActivity {
 		super.onStart();
 
 		// Make sure server knows our GCM token.
-		startService(new Intent(this, RenewGcmTokenService.class));
+		startService(new Intent(this, GcmRegisterIntentService.class));
 	}
 
 	@Override

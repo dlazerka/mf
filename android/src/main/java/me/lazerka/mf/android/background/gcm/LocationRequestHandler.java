@@ -91,8 +91,8 @@ public class LocationRequestHandler extends Service implements Observer<Location
 		// TODO show confirmation dialog
 		sendNotification(requesterEmail + " requested your location");
 
-		AndroidAuthenticator authenticator = new AndroidAuthenticator(this);
-		GoogleApiClient apiClient = authenticator.getGoogleApiClient().build();
+		AndroidAuthenticator authenticator = new AndroidAuthenticator();
+		GoogleApiClient apiClient = authenticator.getGoogleApiClient(this).build();
 
 		ConnectionResult connectionResult = apiClient.blockingConnect();
 		if (!connectionResult.isSuccess()) {

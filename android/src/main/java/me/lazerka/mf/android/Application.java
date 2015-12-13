@@ -32,7 +32,6 @@ import java.net.URI;
  */
 
 @ReportsCrashes(
-		formUri = Application.SERVER_ADDRESS + AcraException.PATH,
 		sharedPreferencesName = "ACRA",
 		httpMethod = Method.PUT,
 		mode = ReportingInteractionMode.TOAST,
@@ -46,8 +45,7 @@ public class Application extends MultiDexApplication {
 	public static final boolean IS_SERVER_LOCAL = true;
 	//public static final boolean IS_SERVER_LOCAL = false;
 
-	// Public for @ReportsCrashes above.
-	public static final String SERVER_ADDRESS = IS_SERVER_LOCAL
+	private static final String SERVER_ADDRESS = IS_SERVER_LOCAL
 			? "http://192.168.1.70:8380"
 			: "https://lazerka-mf.appspot.com";
 
@@ -76,7 +74,7 @@ public class Application extends MultiDexApplication {
 		ACRA.init(this);
 		ACRAConfiguration config = ACRA.getConfig();
 		// Unable to set that in annotation, because not constant.
-		config.setFormUri(SERVER_ROOT + AcraException.PATH);
+		config.setFormUri(SERVER_ROOT.resolve(AcraException.PATH).toString());
 
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();

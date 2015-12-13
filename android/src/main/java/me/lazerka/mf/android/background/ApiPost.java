@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author Dzmitry Lazerka
  */
-public class ApiPost extends Api {
+public class ApiPost extends ApiRequest {
 	private final ApiObject content;
 
 	public ApiPost(ApiObject content) {
@@ -36,6 +36,7 @@ public class ApiPost extends Api {
 		return httpClient.newCall(request);
 	}
 
+	/** Serializes JSON. */
 	private static class JsonRequestBody<T extends ApiObject> extends RequestBody {
 		private static final MediaType MEDIA_TYPE = MediaType.parse(ApiConstants.APPLICATION_JSON);
 		private final T object;

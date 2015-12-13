@@ -25,13 +25,7 @@ import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 public class AndroidAuthenticator {
 	private static final Logger logger = LoggerFactory.getLogger(AndroidAuthenticator.class);
 
-	private final Context context;
-
-	public AndroidAuthenticator(Context context) {
-		this.context = context;
-	}
-
-	public Builder getGoogleApiClient() {
+	public Builder getGoogleApiClient(Context context) {
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
 				.requestId()
 						//.requestProfile() // We don't need profile.
@@ -54,8 +48,8 @@ public class AndroidAuthenticator {
 	}
 
 	/** Creates a new GoogleApiClient and synchronously requests account. */
-	public GoogleSignInAccount blockingGetAccount() throws GoogleApiException {
-		GoogleApiClient client = getGoogleApiClient().build();
+	public GoogleSignInAccount blockingGetAccount(Context context) throws GoogleApiException {
+		GoogleApiClient client = getGoogleApiClient(context).build();
 
 		ConnectionResult connectionResult = client.blockingConnect();
 
@@ -74,6 +68,7 @@ public class AndroidAuthenticator {
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
 
 		if (!opr.isDone()) {
+			logger.info("SignIn not done, blocking with await()...");
 			opr.await();// Blocks
 		}
 		GoogleSignInResult signInResult = opr.get();

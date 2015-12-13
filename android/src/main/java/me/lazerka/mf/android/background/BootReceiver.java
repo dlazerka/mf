@@ -5,8 +5,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
+import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
 import me.lazerka.mf.android.background.gcm.LocationRequestHandler;
-import me.lazerka.mf.android.background.gcm.RenewGcmTokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 		logger.info("onReceive");
 
 		// Renew GCM token.
-		intent.setComponent(new ComponentName(context, RenewGcmTokenService.class));
+		intent.setComponent(new ComponentName(context, GcmRegisterIntentService.class));
 		startWakefulService(context, intent);
 
 

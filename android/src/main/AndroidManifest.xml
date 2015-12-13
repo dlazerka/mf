@@ -125,13 +125,13 @@
 		</receiver>
 
 		<!--
-			Called by boot receiver above, and on app start.
-			Makes sure server knows our GCM token, to send messages to this device.
+			Called by boot receiver above, on app start, and by InstanceIdService.
+			Makes sure server knows our GCM token, so it can send GCM messages to this device.
 		-->
 		<service
-			android:name=".background.gcm.RenewGcmTokenService"
-			android:exported="false"
-			/>
+			android:name=".background.gcm.GcmRegisterIntentService"
+			android:exported="false">
+		</service>
 
 	</application>
 

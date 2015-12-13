@@ -35,8 +35,8 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		AndroidAuthenticator authenticator = new AndroidAuthenticator(this);
-		googleApiClient = authenticator.getGoogleApiClient()
+		AndroidAuthenticator authenticator = new AndroidAuthenticator();
+		googleApiClient = authenticator.getGoogleApiClient(this)
 				.enableAutoManage(this, this)
 				.build();
 	}

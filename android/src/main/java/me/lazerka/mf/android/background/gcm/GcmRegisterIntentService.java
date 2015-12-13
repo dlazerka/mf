@@ -22,17 +22,21 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 
 /**
+ * Requests GCM token, and sends it to server.
+ *
+ * If an old token is still valid, Android will not create a new one. But we will send it again just in case.
+ *
  * @author Dzmitry Lazerka
  */
-public class RegistrationIntentService extends IntentService {
-	private static final Logger logger = LoggerFactory.getLogger(RegistrationIntentService.class);
+public class GcmRegisterIntentService extends IntentService {
+	private static final Logger logger = LoggerFactory.getLogger(GcmRegisterIntentService.class);
 
 	public static final String GCM_REGISTRATION_COMPLETE = "GCM_REGISTRATION_COMPLETE";
 
 	private static final String TAG = "RegIntentService";
 	private static final String[] TOPICS = {"global"};
 
-	public RegistrationIntentService() {
+	public GcmRegisterIntentService() {
 		super(TAG);
 	}
 
@@ -41,7 +45,6 @@ public class RegistrationIntentService extends IntentService {
 		try {
 			// Initially this call goes out to the network to retrieve the token, subsequent calls are local.
 			// R.string.gcm_defaultSenderId (the Sender ID) is typically derived from google-services.json.
-			// See https://developers.google.com/cloud-messaging/android/start for details on this file.
 			InstanceID instanceID = InstanceID.getInstance(this);
 			String senderId = getString(R.string.gcm_defaultSenderId);
 			String token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
@@ -51,7 +54,7 @@ public class RegistrationIntentService extends IntentService {
 			sendRegistrationToServer(token);
 
 			// Subscribe to topic channels
-			subscribeTopics(token);
+			//subscribeTopics(token);
 
 			// You should store a boolean that indicates whether the generated token has been
 			// sent to your server. If the boolean is false, send the token to your server,
@@ -62,6 +65,11 @@ public class RegistrationIntentService extends IntentService {
 			// If an exception happens while fetching the new token or updating our registration data
 			// on a third-party server, this ensures that we'll attempt the update at a later time.
 			Application.preferences.clearGcmTokenSent();
+
+			// TODO retry GCM registration
+			// If there is an error, don't just keep trying to register.
+			// Require the user to click a button again, or perform
+			// exponential back-off.
 		}
 
 		// Notify UI that registration has completed, so the progress indicator can be hidden.
@@ -76,8 +84,8 @@ public class RegistrationIntentService extends IntentService {
 	 * Make backend aware of the token.
 	 */
 	private void sendRegistrationToServer(String gcmToken) throws IOException {
-		GoogleSignInAccount signInAccount = new AndroidAuthenticator(this)
-				.blockingGetAccount();
+		GoogleSignInAccount signInAccount = new AndroidAuthenticator()
+				.blockingGetAccount(this);
 
 		GcmRegistration content = new GcmRegistration(gcmToken, Application.getVersion());
 		ApiPost apiPost = new ApiPost(content);
