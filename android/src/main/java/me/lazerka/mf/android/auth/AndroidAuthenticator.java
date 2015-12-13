@@ -73,7 +73,9 @@ public class AndroidAuthenticator {
 
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
 
-		opr.await();// Blocks
+		if (!opr.isDone()) {
+			opr.await();// Blocks
+		}
 		GoogleSignInResult signInResult = opr.get();
 		if (!signInResult.isSuccess()) {
 			throw new GoogleSignInException(signInResult.getStatus());

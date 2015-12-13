@@ -103,7 +103,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 					null
 			);
 			data.put(friendInfo.lookupKey, friendInfo);
-		};
+		}
 
 		// Handle emails.
 		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
@@ -116,11 +116,12 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 				logger.error(msg);
 				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 			}
-		};
+		}
 
 		return new ArrayList<>(data.values());
 	}
 
+	@Override
 	public void cancelLoadInBackground() {
 		contactsLoader.cancelLoadInBackground();
 		emailsLoader.cancelLoadInBackground();

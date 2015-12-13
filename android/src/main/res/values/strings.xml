@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
+-->
 <resources>
 	<string name="app_name">Find Us</string>
 	<string name="action_logout">Logout</string>
@@ -28,5 +31,12 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="duration_for">For</string>
 	<string name="duration_minutes">minutes</string>
 	<string name="signing_in">Signing in…</string>
+	<string name="sign_in_account_null">GoogleSignIn account is not set, try restarting application</string>
+	<string name="contact_havent_installed_app">%1$s haven\'t installed the app yet</string>
+	<string name="error_relaying_request">Error relaying request: %1$d, %2$s</string>
+	<string name="error_sending_request">Error sending request: %1$s</string>
+	<string name="sending_location_request">Contacting %1$s…</string>
+	<string name="sent_location_request">Sent location request to %1$s</string>
+	<string name="gcm_error">GCM error: %1$s</string>
 
 </resources>

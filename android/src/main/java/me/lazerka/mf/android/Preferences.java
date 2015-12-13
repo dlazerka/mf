@@ -82,16 +82,6 @@ public class Preferences {
 		}
 	}
 
-
-	public boolean getGcmToken() {
-		synchronized (preferences) {
-			long sentAt = preferences.getLong(GCM_TOKEN_SENT_AT, -1);
-			int registeredVersion = preferences.getInt(GCM_APP_VERSION, Integer.MIN_VALUE);
-
-			return sentAt != -1 && Application.getVersion() == registeredVersion;
-		}
-	}
-
 	/**
 	 * This should not be backed up when user uses Backup/Restore feature.
 	 * See MfBackupAgent for that.

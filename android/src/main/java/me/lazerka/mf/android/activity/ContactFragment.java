@@ -17,8 +17,6 @@ import me.lazerka.mf.android.adapter.FriendViewHolder;
  * TODO: add null activity handling
  */
 public class ContactFragment extends Fragment {
-	private static final String TAG = ContactFragment.class.getName();
-
 	private FriendInfo friendInfo;
 
 	@Nullable
@@ -41,7 +39,7 @@ public class ContactFragment extends Fragment {
 					public void onClick(View v) {
 						MainActivity activity = (MainActivity) getActivity();
 						if (!friendInfo.emails.isEmpty()) {
-							activity.showLocation(friendInfo.emails);
+							activity.requestLocationUpdates(friendInfo);
 						} else {
 							String msg = getString(R.string.contact_no_emails);
 							Toast.makeText(activity, msg, Toast.LENGTH_LONG)

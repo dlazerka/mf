@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class UsersInfoRequest {
+public class UsersInfoRequest implements ApiObject {
 	public static final String PATH = "/rest/user/friends";
 
 	@JsonProperty
@@ -24,6 +24,11 @@ public class UsersInfoRequest {
 
 	public UsersInfoRequest(Set<String> emails) {
 		this.emails = checkNotNull(emails);
+	}
+
+	@Override
+	public String getPath() {
+		return PATH;
 	}
 
 	@Nullable

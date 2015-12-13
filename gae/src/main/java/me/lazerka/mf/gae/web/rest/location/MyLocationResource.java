@@ -1,9 +1,9 @@
 package me.lazerka.mf.gae.web.rest.location;
 
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.gcm.LocationRequest;
 import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.MyLocation;
 import me.lazerka.mf.api.object.MyLocationResponse;
 import me.lazerka.mf.gae.gcm.GcmService;
@@ -15,12 +15,12 @@ import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+
+import static me.lazerka.mf.gae.web.rest.JerseyUtil.throwIfNull;
 
 /**
  * @author Dzmitry Lazerka
@@ -44,10 +44,10 @@ public class MyLocationResource {
 	@Consumes("application/json")
 	public MyLocationResponse post(MyLocation myLocation) {
 		logger.trace(myLocation.toString());
-		LocationRequest sourceRequest = checkNotNull(myLocation.getLocationRequest());
-		String requesterEmail = checkNotNull(sourceRequest.getRequesterEmail());
-		String requestId = checkNotNull(sourceRequest.getRequestId());
-		Location location = checkNotNull(myLocation.getLocation());
+		LocationRequest sourceRequest = throwIfNull(myLocation.getLocationRequest(), MyLocation.LOCATION_REQUEST);
+		String requesterEmail = throwIfNull(sourceRequest.getRequesterEmail(), LocationRequest.REQUESTER_EMAIL);
+		String requestId = throwIfNull(sourceRequest.getRequestId(), LocationRequest.REQUEST_ID);
+		Location location = throwIfNull(myLocation.getLocation(), MyLocation.LOCATION);
 
 		logger.info("post {} for {}", requestId, requesterEmail);
 
@@ -77,15 +77,5 @@ public class MyLocationResource {
 		gcmService.send(requester, payload);
 
 		return new MyLocationResponse(requestId);
-	}
-
-	@Nonnull
-	private <T> T checkNotNull(T obj) throws WebApplicationException {
-		if (obj == null) {
-			logger.warn("Something is null", new RuntimeException());
-			throw new WebApplicationException(Status.BAD_REQUEST);
-		}
-
-		return obj;
 	}
 }

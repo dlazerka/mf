@@ -2,7 +2,6 @@ package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
-import me.lazerka.mf.api.gcm.LocationRequest;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -19,11 +18,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class MyLocation implements ApiObject {
 	public static final String PATH = "/rest/myLocation";
+	public static final String LOCATION = "location";
+	public static final String LOCATION_REQUEST = "locationRequest";
 
-	@JsonProperty
+	@JsonProperty(LOCATION)
 	private Location location;
 
-	@JsonProperty
+	@JsonProperty(LOCATION_REQUEST)
 	private LocationRequest locationRequest;
 
 	// For Jackson.

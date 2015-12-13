@@ -21,7 +21,7 @@ public class GcmModule extends AbstractModule {
 	}
 
 	String readGcmApiKey() {
-		File file = new File("WEB-INF/secret/gcm.api.key");
+		File file = new File("WEB-INF/keys/secret/gcm.api.key");
 		String notFoundMsg = "Put there Google Cloud Messaging API key obtained as described here " +
 				"http://developer.android.com/google/gcm/gs.html";
 		return MainModule.readFileString(file, notFoundMsg);

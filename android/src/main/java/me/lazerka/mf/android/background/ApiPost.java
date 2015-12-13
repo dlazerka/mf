@@ -9,7 +9,10 @@ import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.object.ApiObject;
 import okio.BufferedSink;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka
@@ -21,11 +24,12 @@ public class ApiPost extends Api {
 		this.content = content;
 	}
 
-	public Call newCall(GoogleSignInAccount account) {
-		String oauthToken = account.getIdToken();
+	@Override
+	public Call newCall(@Nonnull GoogleSignInAccount account) {
+		String oauthToken = checkNotNull(account.getIdToken());
 		Request request = new Builder()
 				.url(url(content))
-				.header(ApiConstants.COOKIE_NAME_AUTH_TOKEN, oauthToken)
+				.header("Authorization", "Bearer " + oauthToken)
 				.post(new JsonRequestBody<>(content))
 				.build();
 

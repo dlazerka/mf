@@ -68,7 +68,7 @@ public class OauthModule extends AbstractModule {
 	}
 
 	String readOauthClientId() {
-		File file = new File("WEB-INF/secret/oauth.client_id.key");
+		File file = new File("WEB-INF/keys/oauth.client_id.key");
 		String notFoundMsg = "Put there OAuth2.0 Client ID obtained as described here " +
 				"https://developers.google.com/identity/sign-in/android/";
 

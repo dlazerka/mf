@@ -1,13 +1,13 @@
 package me.lazerka.mf.gae.web.rest.location;
 
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.gcm.LocationRequest;
+import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
-import me.lazerka.mf.gae.user.MfUser;
 import me.lazerka.mf.gae.gcm.GcmService;
-import me.lazerka.mf.gae.user.UserService;
 import me.lazerka.mf.gae.oauth.Role;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.user.UserService;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -18,8 +18,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static me.lazerka.mf.gae.web.rest.JerseyUtil.throwIfNull;
 
 /**
  * @author Dzmitry Lazerka
@@ -53,27 +55,31 @@ public class LocationRequestResource {
 	@POST
 	@Consumes("application/json")
 	public LocationRequestResult byEmail(me.lazerka.mf.api.object.LocationRequest locationRequest) {
-		MfUser user = userService.getCurrentUser();
-		logger.trace("byEmail for {}", locationRequest.getEmails());
+		Set<String> forEmails = throwIfNull(locationRequest.getEmails(), LocationRequest.EMAILS);
+		logger.trace("byEmail for {}", forEmails);
 
-		ArrayList<String> emails = new ArrayList<>(locationRequest.getEmails());
-		MfUser recipientUser = userService.getUserByEmails(emails);
-		if (recipientUser == null) {
-			logger.warn("No user found by emails: {}", emails);
+		MfUser sender = userService.getCurrentUser();
+		MfUser recipient = userService.getUserByEmails(forEmails);
+
+		if (recipient == null) {
+			logger.warn("No user found by emails: {}", forEmails);
 			throw new WebApplicationException(Response.status(404).entity("User not found").build());
 		}
 
+		Duration duration = locationRequest.getDuration() == null
+				? Duration.standardMinutes(15)
+				: locationRequest.getDuration();
 		LocationRequest payload = new LocationRequest(
 				locationRequest.getRequestId(),
-				user.getEmail().getEmail(),
+				sender.getEmail().getEmail(), // requesterEmail
 				now,
-				Duration.standardMinutes(1) // TODO make configurable
+				duration // TODO make configurable
 		);
 
-		List<GcmResult> gcmResults = gcmService.send(recipientUser, payload);
+		List<GcmResult> gcmResults = gcmService.send(recipient, locationRequest);
 
 		LocationRequestResult result = new LocationRequestResult(
-				recipientUser.getEmail().getEmail(),
+				recipient.getEmail().getEmail(),
 				gcmResults
 		);
 		return result;

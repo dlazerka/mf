@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -28,7 +27,6 @@ import java.util.Set;
 
 import static com.google.appengine.api.utils.SystemProperty.Environment.Value.Development;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static me.lazerka.mf.api.ApiConstants.COOKIE_NAME_AUTH_TOKEN;
 
 /**
  * Checks requests whether they are authenticated using either GAE or OAuth authentication.
@@ -89,19 +87,25 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 		}
 
 		// Check OAuth authentication.
-		Cookie cookie = request.getCookies().get(COOKIE_NAME_AUTH_TOKEN);
-		if (cookie != null) {
-			return useOauthAuthentication(request, cookie);
+		String authorizationHeader = request.getHeaderValue("Authorization");
+		if (authorizationHeader != null) {
+			if (authorizationHeader.startsWith("Bearer ")) {
+				String token = authorizationHeader.substring("Bearer ".length());
+				return useOauthAuthentication(request, token);
+			} else {
+				logger.warn("Authorization should use Bearer protocol {}", request.getPath());
+				throw new WebApplicationException(getForbiddenResponse(request, "Not Bearer Authorization"));
+			}
 		}
 
 		logger.warn("No credentials provided for {}", request.getPath());
 		throw new WebApplicationException(getForbiddenResponse(request, "No credentials provided"));
 	}
 
-	private AuthSecurityContext useOauthAuthentication(ContainerRequest request, Cookie cookie) {
+	private AuthSecurityContext useOauthAuthentication(ContainerRequest request, String token) {
 		logger.trace("Authenticating OAuth2.0 user...");
 		try {
-			UserPrincipal userPrincipal = tokenVerifier.verify(cookie.getValue());
+			UserPrincipal userPrincipal = tokenVerifier.verify(token);
 			return new AuthSecurityContext(
 					userPrincipal,
 					request.isSecure(),
@@ -109,7 +113,7 @@ public class AuthFilter implements ResourceFilter, ContainerRequestFilter {
 					"OAuth2.0"
 			);
 		} catch (GeneralSecurityException e) {
-			logger.info("Invalid token", e);
+			logger.info(e.getClass().getName() + ": " + e.getMessage());
 			throw new WebApplicationException(e, getForbiddenResponse(request, "Invalid OAuth2.0 token"));
 		} catch (IOException e) {
 			logger.error("IOException verifying OAuth token", e);

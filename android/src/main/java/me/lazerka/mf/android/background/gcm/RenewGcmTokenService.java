@@ -2,7 +2,6 @@ package me.lazerka.mf.android.background.gcm;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.support.annotation.WorkerThread;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
@@ -18,7 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * Makes sure GCM registration is active in background.
+ * Renews GCM token, and sends it to server.
+ * If an old token is still valid, Android will not create a new one. But we will send it again just in case.
  */
 public class RenewGcmTokenService extends IntentService {
 	private static final Logger logger = LoggerFactory.getLogger(RenewGcmTokenService.class);
@@ -29,26 +29,14 @@ public class RenewGcmTokenService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		if (Application.preferences.getAccount() == null) {
-			logger.warn("Account is null, no use registering for GCM");
-			return;
-		}
-
-		renewRegistration();
-	}
-
-	/**
-	 * Checks and renews GCM token.
-	 * Sends to server the new one.
-	 */
-	@WorkerThread
-	public void renewRegistration() {
 		try {
 			String token = getToken();
 			sendGcmToken(token);
 		} catch (IOException e) {
 			// On Sony Xperia happens all the time, but fortunately GcmBroadcastReceiver receives the regId.
-			logger.warn("GCM.register() failed: " + e.getMessage());
+			logger.warn("GCM token renewal failed: " + e.getMessage());
+
+			// TODO retry GCM registration
 			// If there is an error, don't just keep trying to register.
 			// Require the user to click a button again, or perform
 			// exponential back-off.
@@ -64,18 +52,20 @@ public class RenewGcmTokenService extends IntentService {
 				GoogleCloudMessaging.INSTANCE_ID_SCOPE);
 	}
 
-
 	/**
 	 * @param gcmToken to store.
 	 */
-	@WorkerThread
-	public void sendGcmToken(String gcmToken) throws IOException {
+	private void sendGcmToken(String gcmToken) throws IOException {
 		AndroidAuthenticator authenticator = new AndroidAuthenticator(this);
 		GoogleSignInAccount account = authenticator.blockingGetAccount();
 
 		ApiPost post = new ApiPost(new GcmRegistration(gcmToken, Application.getVersion()));
 		Response response = post.newCall(account).execute();
 
-		here
+		if (response.code() != 200) {
+			String msg = "GCM token sending to server unsuccessful";
+			logger.warn(msg + ": {}, {}", response.code(), response.message());
+			throw new IOException(msg);
+		}
 	}
 }

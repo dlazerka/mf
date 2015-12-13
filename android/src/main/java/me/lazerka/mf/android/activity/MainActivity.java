@@ -1,36 +1,41 @@
 package me.lazerka.mf.android.activity;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
-import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request.Method;
-import com.android.volley.VolleyError;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.squareup.okhttp.*;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.background.gcm.RenewGcmTokenService;
-import me.lazerka.mf.android.http.HttpUtils;
-import me.lazerka.mf.android.http.JsonRequester;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import org.acra.ACRA;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.List;
-import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.joda.time.DateTimeZone.UTC;
 
 /**
+ * Extends FragmentActivity only for GoogleApiClient.
+ *
  * @author Dzmitry Lazerka
  */
-public class MainActivity extends Activity {
+public class MainActivity extends GoogleApiActivity {
 	private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
 	@Override
@@ -50,10 +55,15 @@ public class MainActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 
-		Application.preferences.clearAccount();
-
-		// Make sure server has our GCM token.
+		// Make sure server knows our GCM token.
 		startService(new Intent(this, RenewGcmTokenService.class));
+	}
+
+	@Override
+	protected void handleSignInFailed() {
+		Intent intent = new Intent(this, LoginActivity.class);
+		startActivity(intent);
+		finish();
 	}
 
 	@Override
@@ -62,6 +72,7 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
+	// TODO implement settings
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Intent intent;
@@ -84,98 +95,106 @@ public class MainActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void showLocation(Set<String> emails) {
+	public void requestLocationUpdates(@Nonnull FriendInfo friendInfo) {
+		checkArgument(!friendInfo.emails.isEmpty());
+
 		String requestId = String.valueOf(SystemClock.uptimeMillis());
-		LocationRequest locationRequest = new LocationRequest(requestId, emails);
-		new LocationRequester(locationRequest)
-			.send();
+		DateTime sentAt = DateTime.now(UTC);
+		Duration duration = Duration.standardMinutes(15);
+		LocationRequest locationRequest = new LocationRequest(requestId, friendInfo.emails, sentAt, duration);
+
+		GoogleSignInAccount account = getAccount();
+		if (account == null) {
+			String message = "Account is null";
+			ACRA.getErrorReporter().handleException(new IllegalStateException(message));
+			Toast.makeText(this, R.string.sign_in_account_null, Toast.LENGTH_LONG)
+					.show();
+			return;
+		}
+
+		Call call = new ApiPost(locationRequest).newCall(account);
+		call.enqueue(new LocationRequestCallback(friendInfo));
 
 		// Todo change to UI text instead of a Toast.
-		Toast.makeText(this, "Requesting emails: " + emails, Toast.LENGTH_LONG)
+		String text = getString(R.string.sending_location_request, friendInfo.displayName);
+		Toast.makeText(this, text, Toast.LENGTH_LONG)
 				.show();
 	}
 
-	private class LocationRequester extends JsonRequester<LocationRequest, LocationRequestResult> {
-		public LocationRequester(@Nullable LocationRequest request) {
-			super(Method.POST, LocationRequest.PATH, request, LocationRequestResult.class, MainActivity.this);
+	private class LocationRequestCallback implements Callback {
+		private final Context context = MainActivity.this;
+		private final FriendInfo friendInfo;
+
+		public LocationRequestCallback(FriendInfo friendInfo) {
+			this.friendInfo = friendInfo;
 		}
 
 		@Override
-		public void onResponse(LocationRequestResult response) {
-			List<GcmResult> results = response.getResults();
-			if (results == null || results.isEmpty()) {
-				logger.warn("Empty results list in LocationRequestResult " + results);
-			} else {
-
-				// If at least one result is successful -- show it, otherwise show any error.
-				GcmResult oneResult = results.get(0);
-				for(GcmResult result : results) {
-					if (result.getError() == null) {
-						oneResult = result;
-						break;
-					}
-				}
-
-				String error = oneResult.getError();
-				if (error == null) {
-					String msg = "Sent location request to " + response.getEmail();
-					logger.info(msg);
-					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
-						.show();
-				} else {
-					String msg = "Error sending location request to " + response.getEmail() + ": " + error;
-					logger.warn(msg);
-					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
-						.show();
-				}
+		public void onResponse(Response response) throws IOException {
+			if (response.code() == 200) {
+				onOk(response.body());
 			}
-		}
+			else if (response.code() == 404) {
+				// TODO: show dialog suggesting to send a message to friend.
 
-		@Override
-		public void onErrorResponse(VolleyError error) {
-			super.onErrorResponse(error);
-
-			String msg;
-			String errorMessage = error.getMessage() != null ? (": " + error.getMessage()) : "";
-			if (error instanceof AuthFailureError) {
-				logger.error("AuthFailureError", error);
-				msg = "Authentication error" + errorMessage;
-			} else if (error.networkResponse == null) {
-				msg = "Error requesting location" + errorMessage;
-			} else if (error.networkResponse.statusCode == 404) {
-				if (getRequest().getEmails().size() > 1) {
-					msg = "None of your friend's email addresses were found in database. " +
-						"Did your friend installed the app?";
-				} else {
-					String email = getRequest().getEmails().iterator().next();
-					String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, logger);
-					msg = email + " not found: " + responseContent;
-				}
+				String msg = getString(R.string.contact_havent_installed_app, friendInfo.displayName);
 				logger.warn(msg);
-
-			} else {
-				String responseContent = HttpUtils.decodeNetworkResponseCharset(error.networkResponse, logger);
-				if (!responseContent.isEmpty()) {
-					msg = "Error requesting location: " + responseContent;
-				} else {
-					msg = "Error requesting location: " + error.networkResponse.statusCode;
-				}
-				logger.error(msg);
-				ACRA.getErrorReporter().handleException(new IllegalStateException(logger.getName() + ": " + msg));
+				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 			}
-			Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+			else {
+				String msg = getString(R.string.error_relaying_request, response.code(), response.message());
+				logger.error(msg);
+				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+				ACRA.getErrorReporter().handleException(new Exception(logger.getName() + ": " + msg));
+			}
+		}
+
+
+		private void onOk(ResponseBody body) throws IOException {
+			if (body == null || body.contentLength() == 0) {
+				logger.warn("Empty body");
+				ACRA.getErrorReporter().handleException(new Exception("Empty body"));
+				return;
+			}
+
+			LocationRequestResult result = Application.jsonMapper.readValue(
+					body.string(),
+					LocationRequestResult.class);
+
+			List<GcmResult> gcmResults = result.getResults();
+			if (gcmResults == null || gcmResults.isEmpty()) {
+				logger.warn("Empty gcmResults list in LocationRequestResult " + gcmResults);
+				return;
+			}
+
+			// If at least one result is successful -- show it, otherwise show the first error.
+			GcmResult oneResult = gcmResults.get(0);
+			for(GcmResult gcmResult : gcmResults) {
+				if (gcmResult.getError() == null) {
+					oneResult = gcmResult;
+					break;
+				}
+			}
+
+			String error = oneResult.getError();
+			if (error == null) {
+				String msg = getString(R.string.sent_location_request, result.getEmail());
+				logger.info(msg);
+				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+			} else {
+				String msg = getString(R.string.gcm_error, error);
+				logger.warn(msg);
+				Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+				ACRA.getErrorReporter().handleException(new Exception(msg));
+			}
 		}
 
 		@Override
-		protected String getMessage404(NetworkResponse networkResponse) {
-			if (getRequest().getEmails().size() > 1) {
-				return "None of your friend's email addresses were found in database. " +
-						"Did your friend installed the app?";
-			} else {
-				String email = getRequest().getEmails().iterator().next();
-				String responseContent = HttpUtils.decodeNetworkResponseCharset(networkResponse, logger);
-				return email + " not found: " + responseContent;
-			}
+		public void onFailure(Request request, IOException e) {
+			String msg = getString(R.string.error_sending_request, e.getMessage());
+			logger.warn(msg, e);
+			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+			ACRA.getErrorReporter().handleException(e);
 		}
 	}
 }

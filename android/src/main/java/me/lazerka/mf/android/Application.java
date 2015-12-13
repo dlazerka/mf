@@ -12,9 +12,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import me.lazerka.mf.android.activity.LoginActivity;
-import me.lazerka.mf.android.http.GaeRequestQueue;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.object.AcraException;
 import org.acra.ACRA;
@@ -25,7 +22,6 @@ import org.acra.sender.HttpSender.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 
@@ -70,16 +66,6 @@ public class Application extends MultiDexApplication {
 	public static JsonMapper jsonMapper;
 	public static Preferences preferences;
 	public static Context context;
-	public static GaeRequestQueue requestQueue;
-
-	/**
-	 * Account issued to us by Google Sign-In
-	 * Usually valid for 60 minutes.
-	 *
-	 * @see LoginActivity where it's set.
-	 */
-	@Nullable
-	public static GoogleSignInAccount account;
 
 	@Override
 	public void onCreate() {
@@ -95,15 +81,10 @@ public class Application extends MultiDexApplication {
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 		preferences = new Preferences(this);
-		requestQueue = GaeRequestQueue.create();
 	}
 
 	private static boolean isInsideEmulator() {
 		return Build.DEVICE.startsWith("generic");
-	}
-
-	public static boolean isServerDev() {
-		return IS_SERVER_LOCAL || isInsideEmulator();
 	}
 
 	private JsonMapper createJsonMapper() {

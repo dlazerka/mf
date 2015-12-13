@@ -14,23 +14,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import com.android.volley.Request.Method;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
-import me.lazerka.mf.android.http.JsonRequester;
-import me.lazerka.mf.api.object.UserInfo;
-import me.lazerka.mf.api.object.UsersInfoRequest;
-import me.lazerka.mf.api.object.UsersInfoResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,7 +39,6 @@ public class ContactsFragment extends Fragment {
 	/** Result code of ContactPicker dialog. */
 	private final int CONTACT_PICKER_RESULT = 1;
 
-	private FriendListAdapter friendListAdapter;
 	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 
 	@Nullable
@@ -75,7 +67,9 @@ public class ContactsFragment extends Fragment {
 		// Optimization
 		recyclerView.setHasFixedSize(true);
 
-		friendListAdapter = new FriendListAdapter(new OnItemClickListener(), new OnAddFriendClickListener());
+		FriendListAdapter friendListAdapter = new FriendListAdapter(
+				new OnItemClickListener(),
+				new OnAddFriendClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
 		friendsLoaderCallbacks = new FriendsLoaderCallbacks(friendListAdapter);
@@ -147,6 +141,8 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public void onLoadFinished(Loader<List<FriendInfo>> loader, List<FriendInfo> data) {
 			friendListAdapter.setData(data);
+
+/*
 			Set<String> emails = new HashSet<>(data.size());
 			for(FriendInfo friendInfo : data) {
 				emails.addAll(friendInfo.emails);
@@ -154,27 +150,18 @@ public class ContactsFragment extends Fragment {
 
 			if (!emails.isEmpty()) {
 				UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
-				new UsersInfoRequester(usersInfoRequest)
-						.send();
+				MainActivity activity = (MainActivity) getActivity();
+				new ApiPost(usersInfoRequest).newCall().execute();
+
+				List<UserInfo> userInfos = response.getUserInfos();
+				friendListAdapter.setServerInfos(userInfos);
 			}
+*/
 		}
 
 		@Override
 		public void onLoaderReset(Loader<List<FriendInfo>> loader) {
 			friendListAdapter.resetData();
-		}
-	}
-
-	/** Requests server to see if my friends ever installed the app and have me in their friends. */
-	private class UsersInfoRequester extends JsonRequester<UsersInfoRequest, UsersInfoResponse> {
-		public UsersInfoRequester(@Nullable UsersInfoRequest request) {
-			super(Method.POST, UsersInfoRequest.PATH, request, UsersInfoResponse.class, getActivity());
-		}
-
-		@Override
-		public void onResponse(UsersInfoResponse response) {
-			List<UserInfo> userInfos = response.getUserInfos();
-			friendListAdapter.setServerInfos(userInfos);
 		}
 	}
 }

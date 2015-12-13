@@ -23,7 +23,7 @@
 
 	<!-- This enables app to read its own files from filesystem. -->
 	<resource-files>
-		<include path="/WEB-INF/secret/**.key" />
+		<include path="/WEB-INF/keys/**.key" />
 	</resource-files>
 
 	<system-properties>

@@ -3,7 +3,6 @@ package me.lazerka.mf.gae.oauth;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.appengine.api.utils.SystemProperty.Environment.Value;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.spi.container.ContainerRequest;
 import org.powermock.modules.testng.PowerMockObjectFactory;
@@ -13,14 +12,12 @@ import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Cookie;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 
-import static me.lazerka.mf.api.ApiConstants.COOKIE_NAME_AUTH_TOKEN;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -58,8 +55,7 @@ public class AuthFilterTest {
 	@Test
 	public void testFilterOk() throws GeneralSecurityException, IOException {
 		when(request.isSecure()).thenReturn(true);
-		Cookie cookie = new Cookie(COOKIE_NAME_AUTH_TOKEN, token);
-		when(request.getCookies()).thenReturn(ImmutableMap.of(COOKIE_NAME_AUTH_TOKEN, cookie));
+		when(request.getHeaderValue("Authorization")).thenReturn("Bearer " + token);
 		SystemProperty.environment.set(Value.Production);
 
 		when(unit.tokenVerifier.verify(token))
@@ -73,8 +69,7 @@ public class AuthFilterTest {
 	@Test
 	public void testFilterFail() throws GeneralSecurityException, IOException {
 		when(request.isSecure()).thenReturn(true);
-		Cookie cookie = new Cookie(COOKIE_NAME_AUTH_TOKEN, token);
-		when(request.getCookies()).thenReturn(ImmutableMap.of(COOKIE_NAME_AUTH_TOKEN, cookie));
+		when(request.getHeaderValue("Authorization")).thenReturn("Bearer " + token);
 		SystemProperty.environment.set(Value.Production);
 
 		when(unit.tokenVerifier.verify(token))
