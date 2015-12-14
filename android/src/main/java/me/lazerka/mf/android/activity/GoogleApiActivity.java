@@ -49,8 +49,11 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	}
 
 	@Override
-	protected void onResume() {
-		super.onResume();
+	protected void onStart() {
+		super.onStart();
+
+		// Note this is not in onResume(), otherwise we might get infinite loop.
+		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account.
 
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(googleApiClient);
 

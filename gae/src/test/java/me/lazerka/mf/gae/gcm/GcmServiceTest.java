@@ -61,7 +61,6 @@ public class GcmServiceTest extends GaeTest {
 		unit.now = may1;
 		unit.objectMapper = new JsonMapper();
 		unit.urlFetchService = urlFetchService;
-		unit.currentUser = user;
 	}
 
 	@BeforeMethod

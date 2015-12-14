@@ -24,10 +24,8 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 		intent.setComponent(new ComponentName(context, GcmRegisterIntentService.class));
 		startWakefulService(context, intent);
 
-
 		Intent locationRequestHandler = new Intent(context, LocationRequestHandler.class);
 		context.startService(locationRequestHandler);
-
 
 		setResultCode(Activity.RESULT_OK);
 	}

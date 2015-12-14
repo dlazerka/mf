@@ -7,7 +7,7 @@
     <option name="ACTIVITY_EXTRA_FLAGS" value="" />
     <option name="MODE" value="default_activity" />
     <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
-    <option name="PREFERRED_AVD" value="" />
+    <option name="PREFERRED_AVD" value="Nexus_6_API_23" />
     <option name="CLEAR_LOGCAT" value="true" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
     <option name="SKIP_NOOP_APK_INSTALLATIONS" value="true" />

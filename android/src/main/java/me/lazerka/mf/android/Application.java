@@ -45,13 +45,7 @@ public class Application extends MultiDexApplication {
 	public static final boolean IS_SERVER_LOCAL = true;
 	//public static final boolean IS_SERVER_LOCAL = false;
 
-	private static final String SERVER_ADDRESS = IS_SERVER_LOCAL
-			? "http://192.168.1.70:8380"
-			: "https://lazerka-mf.appspot.com";
-
-	public static final URI SERVER_ROOT = isInsideEmulator() // emulator
-			? URI.create("http://10.0.2.2:8380")
-			: URI.create(SERVER_ADDRESS);
+	public static final URI SERVER_ROOT = URI.create(BuildConfig.BACKEND_ROOT);
 
 	// Static holders of singletons.
 	// Some people think that extending Application is discouraged,

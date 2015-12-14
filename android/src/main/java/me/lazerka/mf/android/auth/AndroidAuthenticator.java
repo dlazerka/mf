@@ -36,6 +36,7 @@ public class AndroidAuthenticator {
 		// If there's only one account on device, we're sure user would want to use it.
 		AccountManager accountManager = AccountManager.get(context);
 		Account[] accounts = accountManager.getAccountsByType("com.google");
+		logger.info("Found {} accounts of type 'com.google'", accounts.length);
 		if (accounts.length == 1) {
 			String accountName = accounts[0].name;
 			gso = new GoogleSignInOptions.Builder(gso)

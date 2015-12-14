@@ -107,7 +107,7 @@ public class MainActivity extends GoogleApiActivity {
 		GoogleSignInAccount account = getAccount();
 		if (account == null) {
 			String message = "Account is null";
-			ACRA.getErrorReporter().handleException(new IllegalStateException(message));
+			ACRA.getErrorReporter().handleSilentException(new IllegalStateException(message));
 			Toast.makeText(this, R.string.sign_in_account_null, Toast.LENGTH_LONG)
 					.show();
 			return;
@@ -159,7 +159,7 @@ public class MainActivity extends GoogleApiActivity {
 			} else {
 				String msg = getString(R.string.gcm_error, error);
 				logger.warn(msg);
-				ACRA.getErrorReporter().handleException(new Exception(msg));
+				ACRA.getErrorReporter().handleSilentException(new Exception(msg));
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -181,8 +181,8 @@ public class MainActivity extends GoogleApiActivity {
 					response.code(),
 					response.message());
 			logger.error(msg);
+			ACRA.getErrorReporter().handleSilentException(new Exception(logger.getName() + ": " + msg));
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-			ACRA.getErrorReporter().handleException(new Exception(logger.getName() + ": " + msg));
 		}
 
 		@UiThread
@@ -190,7 +190,7 @@ public class MainActivity extends GoogleApiActivity {
 		public void onNetworkException(Request request, IOException e) {
 			final String msg = getString(R.string.error_sending_request, e.getMessage());
 			logger.warn(msg, e);
-			ACRA.getErrorReporter().handleException(e);
+			ACRA.getErrorReporter().handleSilentException(e);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}
 	}

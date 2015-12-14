@@ -1,5 +1,6 @@
 buildscript {
 	repositories {
+		mavenCentral()
 		jcenter()
 	}
 
@@ -13,12 +14,26 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 repositories {
-	jcenter()
+	mavenCentral()
 }
+
+def gitSha = 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
+def buildTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"))
+
+def isCi = "true".equals(System.getenv("CI"))
+def preDexEnabled = "true".equals(System.getProperty("pre-dex", "true"))
 
 android {
 	compileSdkVersion 23
 	buildToolsVersion '23.0.2'
+
+	dexOptions {
+		// not supported with --multi-dex
+		// incremental true
+		// Skip pre-dexing when running on Travis CI or when disabled via -Dpre-dex=false.
+		preDexLibraries = preDexEnabled && !isCi
+	}
+
 	defaultConfig {
 		applicationId 'me.lazerka.mf.android'
 		minSdkVersion 21
@@ -26,6 +41,11 @@ android {
 		versionCode 1
 		versionName 'first'
 		multiDexEnabled true
+
+		buildConfigField "String", "GIT_SHA", "\"${gitSha}\""
+		buildConfigField "String", "BUILD_TIME", "\"${buildTime}\""
+
+		// testInstrumentationRunner "me.lazerka.mf.android.TestRunner"
 	}
 	packagingOptions {
 		exclude 'META-INF/LICENSE'
@@ -55,6 +75,8 @@ android {
 					'proguard-square-okio.pro'
 		}
 		debug {
+			// Then we'd need to get additional OAuth keys, AndroidManifest etc.
+			// applicationIdSuffix '.debug'
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'),
 					'proguard-project.pro',
@@ -72,10 +94,21 @@ android {
 		targetCompatibility JavaVersion.VERSION_1_7
 	}
 	productFlavors {
+		remote {
+			buildConfigField 'String', 'BACKEND_ROOT', '"https://lazerka-mf.appspot.com"'
+		}
+		local {
+			buildConfigField 'String', 'BACKEND_ROOT', '"http://192.168.1.70:8380"'
+		}
+		emulator {
+			buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
+		}
 	}
-	dexOptions {
-		// not supported with --multi-dex
-		//incremental true
+	lintOptions {
+		textReport true
+		textOutput 'stdout'
+		fatal 'UnusedResources'
+		warning 'ResourceType'
 	}
 }
 

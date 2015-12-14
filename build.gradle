@@ -1,7 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.9'
-    jarFile = 'gradle-wrapper.jar'
-    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
+	gradleVersion = '2.9'
+
+	// Android Studio wants to download -all
+	distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
+
+	// Anyway Android Studio will make it ./gradle/wrapper/gradle-wrapper.jar
+	// jarFile = 'gradle-wrapper.jar'
 }
