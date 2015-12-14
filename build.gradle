@@ -2,5 +2,6 @@
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.9'
+    jarFile = 'gradle-wrapper.jar'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
-
