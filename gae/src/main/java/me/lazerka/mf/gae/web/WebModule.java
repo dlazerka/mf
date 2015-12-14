@@ -10,6 +10,7 @@ import com.sun.jersey.api.core.ClassNamesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.gae.gcm.GcmModule;
@@ -65,16 +66,18 @@ public class WebModule extends JerseyServletModule {
 	}
 
 	private Map<String, String> getJerseyParams() {
-		Map<String,String> params = Maps.newHashMap();
+		Map<String, String> params = Maps.newHashMap();
+
+		params.put(ServletContainer.RESOURCE_CONFIG_CLASS, ClassNamesResourceConfig.class.getName());
 
 		// Handy, but slower to start.
 		// params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.gae.web");
 		String classNames = Joiner.on(',').join(ImmutableList.of(
-				UserResource.class,
-				GcmRegistrationResource.class,
-				LocationRequest.class,
-				LocationUpdateResource.class,
-				AcraExceptionResource.class
+				UserResource.class.getName(),
+				GcmRegistrationResource.class.getName(),
+				LocationRequest.class.getName(),
+				LocationUpdateResource.class.getName(),
+				AcraExceptionResource.class.getName()
 		));
 		params.put(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames);
 
