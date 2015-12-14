@@ -92,7 +92,7 @@ public class GcmRegisterIntentService extends IntentService {
 		Call call = apiPost.newCall(signInAccount);
 		Response response = call.execute();
 
-		if (response.code() == HttpURLConnection.HTTP_OK) {
+		if (response.code() != HttpURLConnection.HTTP_OK) {
 			String msg = "Didn't sent GCM token" + response.message();
 			throw new IOException(msg);
 		}
