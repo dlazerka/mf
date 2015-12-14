@@ -1,12 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="android" type="AndroidRunConfigurationType" factoryName="Android Application">
+  <configuration default="false" name="device" type="AndroidRunConfigurationType" factoryName="Android Application">
     <module name="android" />
     <option name="DEPLOY" value="true" />
     <option name="ARTIFACT_NAME" value="" />
     <option name="PM_INSTALL_OPTIONS" value="" />
     <option name="ACTIVITY_EXTRA_FLAGS" value="" />
     <option name="MODE" value="default_activity" />
-    <option name="TARGET_SELECTION_MODE" value="SHOW_DIALOG" />
+    <option name="TARGET_SELECTION_MODE" value="USB_DEVICE" />
     <option name="PREFERRED_AVD" value="" />
     <option name="CLEAR_LOGCAT" value="false" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />

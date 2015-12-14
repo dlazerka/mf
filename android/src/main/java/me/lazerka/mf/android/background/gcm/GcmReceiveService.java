@@ -1,6 +1,7 @@
 package me.lazerka.mf.android.background.gcm;
 
 import android.os.Bundle;
+import android.support.annotation.WorkerThread;
 import com.google.android.gms.gcm.GcmListenerService;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.gcm.GcmPayload;
@@ -19,6 +20,10 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
+ * Handler for incoming messages from GCM.
+ *
+ * GcmListenerService will completeWakefulIntent as soon as onMessageReceived method exits.
+ *
  * @author Dzmitry Lazerka
  */
 public class GcmReceiveService extends GcmListenerService {
@@ -43,6 +48,7 @@ public class GcmReceiveService extends GcmListenerService {
 		return locationRequestSubject;
 	}
 
+	@WorkerThread
 	@Override
 	public void onMessageReceived(String from, Bundle data) {
 		logger.info("Received message from " + from);
@@ -75,7 +81,7 @@ public class GcmReceiveService extends GcmListenerService {
 		} catch (IOException e) {
 			logger.warn("Cannot parse {}: {}", clazz.getSimpleName(), json, e);
 			ACRA.getErrorReporter().handleSilentException(e);
-			// Don't call onError(), because then well-behaved observables can issue onError only once.
+			// Don't call onError(), because well-behaved observables can issue onError only once.
 			// Observers probably cannot even do much with it anyway.
 			// observer.onError(e);
 		}

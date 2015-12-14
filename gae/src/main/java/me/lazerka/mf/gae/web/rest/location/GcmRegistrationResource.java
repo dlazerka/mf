@@ -48,7 +48,7 @@ public class GcmRegistrationResource {
 	@Consumes("application/json")
 	public GcmRegistrationResponse save(GcmRegistration bean) {
 		MfUser user = userService.getCurrentUser();
-		logger.info("Saving GcmRegistrationEntity by {}", user.getEmail());
+		logger.info("Saving GcmRegistrationEntity for {}", user.getEmail());
 
 		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getId(), now, bean.getAppVersion());
 		ofy().save().entity(entity).now();

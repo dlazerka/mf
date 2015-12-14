@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.annotation.UiThread;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -121,47 +122,19 @@ public class MainActivity extends GoogleApiActivity {
 				.show();
 	}
 
-	private class LocationRequestCallback implements Callback {
+	private class LocationRequestCallback extends JsonParsingCallback<LocationRequestResult> {
 		private final Context context = MainActivity.this;
 		private final FriendInfo friendInfo;
 
 		public LocationRequestCallback(FriendInfo friendInfo) {
+			super(MainActivity.this, LocationRequestResult.class);
 			this.friendInfo = friendInfo;
 		}
 
+		@UiThread
 		@Override
-		public void onResponse(Response response) throws IOException {
-			if (response.code() == 200) {
-				onOk(response.body());
-			}
-			else if (response.code() == 404) {
-				// TODO: show dialog suggesting to send a message to friend.
-
-				String msg = getString(R.string.contact_havent_installed_app, friendInfo.displayName);
-				logger.warn(msg);
-				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-			}
-			else {
-				String msg = getString(R.string.error_relaying_request, response.code(), response.message());
-				logger.error(msg);
-				Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-				ACRA.getErrorReporter().handleException(new Exception(logger.getName() + ": " + msg));
-			}
-		}
-
-
-		private void onOk(ResponseBody body) throws IOException {
-			if (body == null || body.contentLength() == 0) {
-				logger.warn("Empty body");
-				ACRA.getErrorReporter().handleException(new Exception("Empty body"));
-				return;
-			}
-
-			LocationRequestResult result = Application.jsonMapper.readValue(
-					body.string(),
-					LocationRequestResult.class);
-
-			List<GcmResult> gcmResults = result.getResults();
+		protected void onResult(LocationRequestResult result) {
+			final List<GcmResult> gcmResults = result.getResults();
 			if (gcmResults == null || gcmResults.isEmpty()) {
 				logger.warn("Empty gcmResults list in LocationRequestResult " + gcmResults);
 				return;
@@ -175,26 +148,49 @@ public class MainActivity extends GoogleApiActivity {
 					break;
 				}
 			}
-
 			String error = oneResult.getError();
 			if (error == null) {
-				String msg = getString(R.string.sent_location_request, result.getEmail());
+				String msg = getString(
+						me.lazerka.mf.android.R.string.sent_location_request,
+						result.getEmail());
 				logger.info(msg);
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			} else {
-				String msg = getString(R.string.gcm_error, error);
+				String msg = getString(me.lazerka.mf.android.R.string.gcm_error, error);
 				logger.warn(msg);
-				Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
 				ACRA.getErrorReporter().handleException(new Exception(msg));
+				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			}
 		}
 
+		@UiThread
 		@Override
-		public void onFailure(Request request, IOException e) {
-			String msg = getString(R.string.error_sending_request, e.getMessage());
-			logger.warn(msg, e);
+		protected void onNotFound() {
+			// TODO: show dialog suggesting to send a message to friend.
+			String msg = getString(me.lazerka.mf.android.R.string.contact_havent_installed_app, friendInfo.displayName);
+			logger.warn(msg);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+		}
+
+		@UiThread
+		@Override
+		protected void onUnknownErrorResponse(Response response) {
+			String msg = getString(
+					me.lazerka.mf.android.R.string.error_relaying_request,
+					response.code(),
+					response.message());
+			logger.error(msg);
+			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+			ACRA.getErrorReporter().handleException(new Exception(logger.getName() + ": " + msg));
+		}
+
+		@UiThread
+		@Override
+		public void onNetworkException(Request request, IOException e) {
+			final String msg = getString(R.string.error_sending_request, e.getMessage());
+			logger.warn(msg, e);
 			ACRA.getErrorReporter().handleException(e);
+			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}
 	}
 }

@@ -56,9 +56,6 @@ public class GcmService {
 	@Named("now")
 	DateTime now;
 
-	@Inject
-	MfUser currentUser;
-
 	/**
 	 * Sends given payload to given user through GCM.
 	 *

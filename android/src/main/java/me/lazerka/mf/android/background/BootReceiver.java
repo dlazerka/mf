@@ -25,9 +25,8 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 		startWakefulService(context, intent);
 
 
-		Intent shiftIntent = new Intent(context, LocationRequestHandler.class);
-		shiftIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		context.startActivity(shiftIntent);
+		Intent locationRequestHandler = new Intent(context, LocationRequestHandler.class);
+		context.startService(locationRequestHandler);
 
 
 		setResultCode(Activity.RESULT_OK);

@@ -66,7 +66,6 @@ public class AndroidAuthenticator {
 	public GoogleSignInAccount blockingGetAccount(GoogleApiClient client) throws GoogleApiException {
 
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
-
 		if (!opr.isDone()) {
 			logger.info("SignIn not done, blocking with await()...");
 			opr.await();// Blocks
