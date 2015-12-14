@@ -1,13 +1,15 @@
 package me.lazerka.mf.android.background.gcm;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.IBinder;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat.BigTextStyle;
+import android.support.v4.app.NotificationCompat.Builder;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -33,8 +35,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observer;
-import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,36 +45,24 @@ import static org.joda.time.DateTimeZone.UTC;
 /**
  * Ever-running background service that handles requests for our location.
  *
- * TODO: make not a service, or an IntentService to keep wake lock.
+ * This handler can run in background, heed the wake lock.
  *
  * Keeps GoogleApiClient connected for the duration of the whole tracking session.
  *
  * @author Dzmitry Lazerka
  */
-public class LocationRequestHandler extends Service implements Observer<LocationRequest> {
+public class LocationRequestHandler {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
 	private static final int NOTIFICATION_ID = 4321;
 	private static final Duration TRACKING_INTERVAL = Duration.standardSeconds(3);
 
-	@Nullable
-	@Override
-	public IBinder onBind(Intent intent) {
-		// We don't bind.
-		return null;
+	private final Context context;
+
+	public LocationRequestHandler(Context context) {
+		this.context = context;
 	}
 
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		GcmReceiveService.getLocationRequestObservable()
-				.observeOn(Schedulers.newThread())
-				.subscribe(this);
-
-		// Keep in Started state.
-		return START_STICKY;
-	}
-
-	@Override
-	public void onNext(LocationRequest gcmRequest) {
+	public void handle(LocationRequest gcmRequest) {
 		String requesterEmail = gcmRequest.getRequesterEmail();
 
 		// Authorize request.
@@ -94,7 +82,7 @@ public class LocationRequestHandler extends Service implements Observer<Location
 		sendNotification(requesterEmail + " requested your location");
 
 		AndroidAuthenticator authenticator = new AndroidAuthenticator();
-		GoogleApiClient apiClient = authenticator.getGoogleApiClient(this).build();
+		GoogleApiClient apiClient = authenticator.getGoogleApiClient(context).build();
 
 		ConnectionResult connectionResult = apiClient.blockingConnect();
 		if (!connectionResult.isSuccess()) {
@@ -158,26 +146,31 @@ public class LocationRequestHandler extends Service implements Observer<Location
 
 	private void sendNotification(String message) {
 		NotificationManager notificationManager =
-				(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-		Intent intent = new Intent(this, MainActivity.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+		Intent intent = new Intent(context, MainActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
 
-		NotificationCompat.Builder builder =
-				new NotificationCompat.Builder(this)
+		Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		Notification notification =
+				new Builder(context)
 						.setSmallIcon(R.mipmap.ic_launcher)
-						.setContentTitle(getString(R.string.app_name))
-						.setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-						.setContentText(message);
+						.setContentTitle(context.getString(R.string.app_name))
+						.setStyle(new BigTextStyle().bigText(message))
+						.setAutoCancel(true)
+						.setSound(defaultSoundUri)
+						.setContentText(message)
+						.setContentIntent(pendingIntent)
+						.build();
 
-		builder.setContentIntent(pendingIntent);
-		notificationManager.notify(NOTIFICATION_ID, builder.build());
+		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
 	/** @return friendInfo if authorized, or null otherwise. */
 	@Nullable
 	private FriendInfo authorizeRequestFrom(@Nullable String requesterEmail) {
-		FriendsLoader friendsLoader = new FriendsLoader(this);
+		FriendsLoader friendsLoader = new FriendsLoader(context);
 		List<FriendInfo> friendInfos = friendsLoader.loadInBackground();
 
 		FriendInfo friend = null;
@@ -189,16 +182,6 @@ public class LocationRequestHandler extends Service implements Observer<Location
 			}
 		}
 		return friend;
-	}
-
-	@Override
-	public void onCompleted() {
-		logger.error("Should never be called");
-	}
-
-	@Override
-	public void onError(Throwable e) {
-		logger.error("onError: ", e);
 	}
 
 	private static class LocationSender extends LocationCallback {
