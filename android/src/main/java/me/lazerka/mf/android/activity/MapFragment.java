@@ -13,8 +13,8 @@ import com.google.common.collect.Maps;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.background.gcm.GcmReceiveService;
-import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.api.object.LocationUpdate;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -240,9 +240,9 @@ public class MapFragment extends Fragment {
 
 	}
 
-	private class FriendLocationObserver extends Subscriber<MyLocationGcmPayload> {
+	private class FriendLocationObserver extends Subscriber<LocationUpdate> {
 		@Override
-		public void onNext(MyLocationGcmPayload payload) {
+		public void onNext(LocationUpdate payload) {
 			showLocation(payload.getLocation());
 		}
 

@@ -2,7 +2,7 @@ package me.lazerka.mf.gae.web.rest.location;
 
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
-import me.lazerka.mf.api.object.GcmRegistration;
+import me.lazerka.mf.api.object.GcmToken;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.user.MfUser;
 import me.lazerka.mf.gae.oauth.Role;
@@ -23,7 +23,7 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
  *
  * @author Dzmitry Lazerka
  */
-@Path(GcmRegistration.PATH)
+@Path(GcmToken.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
 @RolesAllowed(Role.USER)
 public class GcmRegistrationResource {
@@ -46,22 +46,22 @@ public class GcmRegistrationResource {
 	 */
 	@POST
 	@Consumes("application/json")
-	public GcmRegistrationResponse save(GcmRegistration bean) {
+	public GcmRegistrationResponse save(GcmToken bean) {
 		MfUser user = userService.getCurrentUser();
 		logger.info("Saving GcmRegistrationEntity for {}", user.getEmail());
 
-		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getId(), now, bean.getAppVersion());
+		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getToken(), now, bean.getAppVersion());
 		ofy().save().entity(entity).now();
 		return new GcmRegistrationResponse();
 	}
 
 	/** Doesn't throw 404 in case of not existent. */
 	@DELETE
-	public void delete(GcmRegistration bean) {
+	public void delete(GcmToken bean) {
 		MfUser user = userService.getCurrentUser();
 		logger.info("Deleting GcmRegistrationEntity for {}", user.getEmail());
 
-		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getId(), now);
+		GcmRegistrationEntity entity = new GcmRegistrationEntity(user, bean.getToken(), now);
 		ofy().delete().entity(entity).now();
 	}
 }

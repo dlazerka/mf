@@ -1,11 +1,8 @@
 package me.lazerka.mf.gae.web.rest.location;
 
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
-import me.lazerka.mf.api.object.Location;
-import me.lazerka.mf.api.object.LocationRequest;
-import me.lazerka.mf.api.object.MyLocation;
-import me.lazerka.mf.api.object.MyLocationResponse;
+import me.lazerka.mf.api.object.*;
+import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.gae.gcm.GcmService;
 import me.lazerka.mf.gae.oauth.Role;
 import me.lazerka.mf.gae.user.MfUser;
@@ -20,16 +17,18 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+import java.util.List;
+
 import static me.lazerka.mf.gae.web.rest.JerseyUtil.throwIfNull;
 
 /**
  * @author Dzmitry Lazerka
  */
-@Path(MyLocation.PATH)
+@Path(LocationUpdate.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
 @RolesAllowed(Role.USER)
-public class MyLocationResource {
-	private static final Logger logger = LoggerFactory.getLogger(MyLocationResource.class);
+public class LocationUpdateResource {
+	private static final Logger logger = LoggerFactory.getLogger(LocationUpdateResource.class);
 
 	@Inject
 	UserService userService;
@@ -42,12 +41,12 @@ public class MyLocationResource {
 
 	@POST
 	@Consumes("application/json")
-	public MyLocationResponse post(MyLocation myLocation) {
-		logger.trace(myLocation.toString());
-		LocationRequest sourceRequest = throwIfNull(myLocation.getLocationRequest(), MyLocation.LOCATION_REQUEST);
-		String requesterEmail = throwIfNull(sourceRequest.getRequesterEmail(), LocationRequest.REQUESTER_EMAIL);
-		String requestId = throwIfNull(sourceRequest.getRequestId(), LocationRequest.REQUEST_ID);
-		Location location = throwIfNull(myLocation.getLocation(), MyLocation.LOCATION);
+	public LocationUpdateResponse post(LocationUpdate locationUpdate) {
+		logger.trace(locationUpdate.toString());
+		LocationRequest sourceRequest = throwIfNull(locationUpdate.getLocationRequest(), LocationUpdate.LOCATION_REQUEST);
+		String requesterEmail = throwIfNull(sourceRequest.getRequesterEmail(), "requesterEmail");
+		String requestId = throwIfNull(sourceRequest.getRequestId(), "requestId");
+		Location location = throwIfNull(locationUpdate.getLocation(), LocationUpdate.LOCATION);
 
 		logger.info("post {} for {}", requestId, requesterEmail);
 
@@ -72,10 +71,20 @@ public class MyLocationResource {
 			throw new WebApplicationException(Response.status(404).entity("User not found").build());
 		}
 
-		MyLocationGcmPayload payload = new MyLocationGcmPayload(requestId, location);
+		LocationUpdate payload = new LocationUpdate(location, locationUpdate.getLocationRequest());
 
-		gcmService.send(requester, payload);
+		List<GcmResult> gcmResults = gcmService.send(requester, payload);
 
-		return new MyLocationResponse(requestId);
+		for(GcmResult gcmResult : gcmResults) {
+			if (gcmResult.getError() != null) {
+				logger.warn(
+						"GCM error while sending to {} for {}: {}",
+						requester.getEmail(),
+						location.getEmail(),
+						gcmResult.getError());
+			}
+		}
+
+		return new LocationUpdateResponse(locationUpdate, gcmResults);
 	}
 }

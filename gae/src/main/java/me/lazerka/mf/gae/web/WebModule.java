@@ -1,17 +1,24 @@
 package me.lazerka.mf.gae.web;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.api.client.util.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.googlecode.objectify.ObjectifyFilter;
 import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
-import com.sun.jersey.api.core.PackagesResourceConfig;
+import com.sun.jersey.api.core.ClassNamesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import me.lazerka.mf.api.JsonMapper;
+import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.gae.gcm.GcmModule;
 import me.lazerka.mf.gae.oauth.AuthFilterFactory;
 import me.lazerka.mf.gae.oauth.OauthModule;
+import me.lazerka.mf.gae.web.rest.AcraExceptionResource;
+import me.lazerka.mf.gae.web.rest.location.GcmRegistrationResource;
+import me.lazerka.mf.gae.web.rest.location.LocationUpdateResource;
+import me.lazerka.mf.gae.web.rest.user.UserResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,9 +67,19 @@ public class WebModule extends JerseyServletModule {
 	private Map<String, String> getJerseyParams() {
 		Map<String,String> params = Maps.newHashMap();
 
-		params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.gae.web");
+		// Handy, but slower to start.
+		// params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.gae.web");
+		String classNames = Joiner.on(',').join(ImmutableList.of(
+				UserResource.class,
+				GcmRegistrationResource.class,
+				LocationRequest.class,
+				LocationUpdateResource.class,
+				AcraExceptionResource.class
+		));
+		params.put(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames);
+
 		// Read somewhere that it's needed for GAE.
-		params.put(PackagesResourceConfig.FEATURE_DISABLE_WADL, "true");
+		params.put(ResourceConfig.FEATURE_DISABLE_WADL, "true");
 
 		// This makes use of custom Auth+filters using OAuth2.
 		params.put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, AuthFilterFactory.class.getName());

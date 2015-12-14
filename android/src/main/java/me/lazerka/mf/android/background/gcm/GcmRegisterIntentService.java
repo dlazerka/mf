@@ -14,7 +14,7 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.auth.AndroidAuthenticator;
 import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.api.object.GcmRegistration;
+import me.lazerka.mf.api.object.GcmToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +87,7 @@ public class GcmRegisterIntentService extends IntentService {
 		GoogleSignInAccount signInAccount = new AndroidAuthenticator()
 				.blockingGetAccount(this);
 
-		GcmRegistration content = new GcmRegistration(gcmToken, Application.getVersion());
+		GcmToken content = new GcmToken(gcmToken, Application.getVersion());
 		ApiPost apiPost = new ApiPost(content);
 		Call call = apiPost.newCall(signInAccount);
 		Response response = call.execute();

@@ -1,4 +1,4 @@
-package me.lazerka.mf.api.gcm;
+package me.lazerka.mf.gae.gcm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,7 +1,9 @@
 package me.lazerka.mf.api.object;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
+import me.lazerka.mf.api.gcm.GcmPayload;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,8 +18,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class MyLocation implements ApiObject {
-	public static final String PATH = "/rest/myLocation";
+public class LocationUpdate implements ApiObject, GcmPayload {
+	public static final String PATH = "/rest/locationUpdate";
+	public static final String TYPE = "LocationUpdate";
+
 	public static final String LOCATION = "location";
 	public static final String LOCATION_REQUEST = "locationRequest";
 
@@ -28,11 +32,17 @@ public class MyLocation implements ApiObject {
 	private LocationRequest locationRequest;
 
 	// For Jackson.
-	private MyLocation() {}
+	private LocationUpdate() {}
 
-	public MyLocation(@Nonnull Location location, @Nonnull LocationRequest locationRequest) {
+	public LocationUpdate(@Nonnull Location location, @Nonnull LocationRequest locationRequest) {
 		this.location = checkNotNull(location);
 		this.locationRequest = checkNotNull(locationRequest);
+	}
+
+	@Override
+	@JsonIgnore
+	public String getType() {
+		return TYPE;
 	}
 
 	@Override

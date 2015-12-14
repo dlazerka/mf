@@ -15,9 +15,9 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
+import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
-import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
 import org.acra.ACRA;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -134,13 +134,14 @@ public class MainActivity extends GoogleApiActivity {
 		@UiThread
 		@Override
 		protected void onResult(LocationRequestResult result) {
-			final List<GcmResult> gcmResults = result.getResults();
+			final List<GcmResult> gcmResults = result.getGcmResults();
 			if (gcmResults == null || gcmResults.isEmpty()) {
 				logger.warn("Empty gcmResults list in LocationRequestResult " + gcmResults);
 				return;
 			}
 
 			// If at least one result is successful -- show it, otherwise show the first error.
+			// TODO we can handle some of GCM error responses, like GcmConstants.ERROR_UNAVAILABLE
 			GcmResult oneResult = gcmResults.get(0);
 			for(GcmResult gcmResult : gcmResults) {
 				if (gcmResult.getError() == null) {
@@ -151,12 +152,12 @@ public class MainActivity extends GoogleApiActivity {
 			String error = oneResult.getError();
 			if (error == null) {
 				String msg = getString(
-						me.lazerka.mf.android.R.string.sent_location_request,
+						R.string.sent_location_request,
 						result.getEmail());
 				logger.info(msg);
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			} else {
-				String msg = getString(me.lazerka.mf.android.R.string.gcm_error, error);
+				String msg = getString(R.string.gcm_error, error);
 				logger.warn(msg);
 				ACRA.getErrorReporter().handleException(new Exception(msg));
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
@@ -167,7 +168,7 @@ public class MainActivity extends GoogleApiActivity {
 		@Override
 		protected void onNotFound() {
 			// TODO: show dialog suggesting to send a message to friend.
-			String msg = getString(me.lazerka.mf.android.R.string.contact_havent_installed_app, friendInfo.displayName);
+			String msg = getString(R.string.contact_havent_installed_app, friendInfo.displayName);
 			logger.warn(msg);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}
@@ -176,7 +177,7 @@ public class MainActivity extends GoogleApiActivity {
 		@Override
 		protected void onUnknownErrorResponse(Response response) {
 			String msg = getString(
-					me.lazerka.mf.android.R.string.error_relaying_request,
+					R.string.error_relaying_request,
 					response.code(),
 					response.message());
 			logger.error(msg);

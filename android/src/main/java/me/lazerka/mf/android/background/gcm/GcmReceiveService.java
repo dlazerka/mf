@@ -5,8 +5,8 @@ import android.support.annotation.WorkerThread;
 import com.google.android.gms.gcm.GcmListenerService;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.gcm.GcmPayload;
-import me.lazerka.mf.api.gcm.MyLocationGcmPayload;
 import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationUpdate;
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +26,13 @@ import java.io.IOException;
 public class GcmReceiveService extends GcmListenerService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmReceiveService.class);
 
-	private static final BehaviorSubject<MyLocationGcmPayload> locationReceivedSubject = BehaviorSubject.create();
+	private static final BehaviorSubject<LocationUpdate> locationReceivedSubject = BehaviorSubject.create();
 
 	/**
-	 * @return Interface to get {@link MyLocationGcmPayload} GCM messages by other services.
+	 * @return Interface to get {@link LocationUpdate} GCM messages by other services.
 	 */
 	@Nonnull
-	public static Observable<MyLocationGcmPayload> getLocationReceivedObservable() {
+	public static Observable<LocationUpdate> getLocationReceivedObservable() {
 		return locationReceivedSubject;
 	}
 
@@ -55,8 +55,8 @@ public class GcmReceiveService extends GcmListenerService {
 
 		try {
 			switch (type) {
-				case MyLocationGcmPayload.TYPE:
-					MyLocationGcmPayload payload = Application.jsonMapper.readValue(json, MyLocationGcmPayload.class);
+				case LocationUpdate.TYPE:
+					LocationUpdate payload = Application.jsonMapper.readValue(json, LocationUpdate.class);
 					locationReceivedSubject.onNext(payload);
 					break;
 				case LocationRequest.TYPE:

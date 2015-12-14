@@ -17,17 +17,11 @@ import java.util.Set;
  *
  * @author Dzmitry Lazerka
  */
-public class LocationRequest extends GcmPayload implements ApiObject {
+public class LocationRequest implements ApiObject, GcmPayload {
 	public static final String PATH = "/rest/locationRequest";
 	public static final String TYPE = "LocationRequest";
 
-	public static final String REQUEST_ID = "requestId";
-	public static final String REQUESTER_EMAIL = "requesterEmail";
-	public static final String EMAILS = "EMAILS";
-	public static final String SENT_AT = "sentAt";
-	public static final String DURATION = "duration";
-
-	@JsonProperty(REQUEST_ID)
+	@JsonProperty
 	private String requestId;
 
 	/**
@@ -36,20 +30,20 @@ public class LocationRequest extends GcmPayload implements ApiObject {
 	 * Server must verify this matches user real OAuth identity.
 	 * Receiver user must approve/reject authorize this request.
 	 */
-	@JsonProperty(REQUESTER_EMAIL)
+	@JsonProperty
 	private String requesterEmail;
 
-	@JsonProperty(EMAILS)
+	@JsonProperty
 	private Set<String> emails;
 
 	/**
 	 * When the message was received by server from the requester.
 	 */
-	@JsonProperty(SENT_AT)
+	@JsonProperty
 	private DateTime sentAt;
 
 	/** For how long user wants to receive location updates from their friend. */
-	@JsonProperty(DURATION)
+	@JsonProperty
 	private Duration duration;
 
 	// For Jackson.

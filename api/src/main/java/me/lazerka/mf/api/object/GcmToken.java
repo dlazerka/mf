@@ -7,14 +7,14 @@ import javax.annotation.Nonnull;
 /**
  * @author Dzmitry Lazerka
  */
-public class GcmRegistration implements ApiObject {
-	public static final String PATH = "/rest/gcm/registration";
+public class GcmToken implements ApiObject {
+	public static final String PATH = "/rest/gcm/token";
 
 	/**
 	 * Max length: 4k (max length of a cookie).
 	 */
 	@JsonProperty
-	private String id;
+	private String token;
 
 	/** As specified in AndroidManifest.xml */
 	@JsonProperty
@@ -26,28 +26,28 @@ public class GcmRegistration implements ApiObject {
 	}
 
 	// For Jackson.
-	private GcmRegistration() {
+	private GcmToken() {
 	}
 
-	public GcmRegistration(@Nonnull String id, int appVersion) {
-		this.id = id;
+	public GcmToken(@Nonnull String token, int appVersion) {
+		this.token = token;
 		this.appVersion = appVersion;
 	}
 
-	public String getId() {
-		return id;
-	}
-
-	@Override
-	public String toString() {
-		return "GcmRegistration{" +
-				"id=<removed>" +
-				", appVersion='" + appVersion + '\'' +
-				'}';
-
+	public String getToken() {
+		return token;
 	}
 
 	public int getAppVersion() {
 		return appVersion;
+	}
+
+	@Override
+	public String toString() {
+		return "GcmToken{" +
+				"id=<removed>" +
+				", appVersion='" + appVersion + '\'' +
+				'}';
+
 	}
 }

@@ -3,7 +3,7 @@ package me.lazerka.mf.gae.web.rest.location;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
-import me.lazerka.mf.api.object.LocationRequestResult.GcmResult;
+import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.gae.gcm.GcmService;
 import me.lazerka.mf.gae.oauth.Role;
 import me.lazerka.mf.gae.user.MfUser;
@@ -49,13 +49,13 @@ public class LocationRequestResource {
 	 *
 	 * All given emails must belong to a single user, registered in the app.
 	 *
-	 * @return The GcmResponse received from GCM, but with removed registration IDs. User should not know
+	 * @return The GcmResult received from GCM, but with removed registration IDs. User should not know
 	 *         his friend's registration ids.
 	 */
 	@POST
 	@Consumes("application/json")
 	public LocationRequestResult byEmail(me.lazerka.mf.api.object.LocationRequest locationRequest) {
-		Set<String> forEmails = throwIfNull(locationRequest.getEmails(), LocationRequest.EMAILS);
+		Set<String> forEmails = throwIfNull(locationRequest.getEmails(), "emails");
 		logger.trace("byEmail for {}", forEmails);
 
 		MfUser sender = userService.getCurrentUser();

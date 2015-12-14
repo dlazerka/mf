@@ -21,6 +21,7 @@ import com.google.android.gms.location.LocationResult;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.FriendInfo;
@@ -28,9 +29,7 @@ import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.auth.AndroidAuthenticator;
 import me.lazerka.mf.android.auth.GoogleApiException;
 import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.api.object.Location;
-import me.lazerka.mf.api.object.LocationRequest;
-import me.lazerka.mf.api.object.MyLocation;
+import me.lazerka.mf.api.object.*;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -208,9 +207,9 @@ public class LocationRequestHandler {
 					location.getAccuracy()
 			);
 
-			MyLocation myLocation = new MyLocation(locationBean, gcmRequest);
+			LocationUpdate locationUpdate = new LocationUpdate(locationBean, gcmRequest);
 
-			ApiPost post = new ApiPost(myLocation);
+			ApiPost post = new ApiPost(locationUpdate);
 
 			post.newCall(account).enqueue(new MyCallback());
 		}
@@ -228,7 +227,17 @@ public class LocationRequestHandler {
 
 			@Override
 			public void onResponse(Response response) throws IOException {
-				if (response.code() != 200) {
+				if (response.code() == 200) {
+					String json = response.body().string();
+					LocationUpdateResponse bean =
+							Application.jsonMapper.readValue(json, LocationUpdateResponse.class);
+					List<GcmResult> gcmResults = bean.getGcmResults();
+					for(GcmResult gcmResult : gcmResults) {
+						if (gcmResult.getError() != null) {
+							logger.warn("Unsuccessful sending");
+						}
+					}
+				} else {
 					logger.warn("Failed: {}, {}", response.code(), response.message());
 				}
 			}
