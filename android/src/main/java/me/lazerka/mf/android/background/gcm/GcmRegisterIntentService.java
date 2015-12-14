@@ -93,7 +93,7 @@ public class GcmRegisterIntentService extends IntentService {
 		Response response = call.execute();
 
 		if (response.code() != HttpURLConnection.HTTP_OK) {
-			String msg = "Didn't sent GCM token" + response.message();
+			String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
 			throw new IOException(msg);
 		}
 	}

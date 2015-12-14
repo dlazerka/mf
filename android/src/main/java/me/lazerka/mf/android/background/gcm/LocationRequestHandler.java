@@ -45,6 +45,8 @@ import static org.joda.time.DateTimeZone.UTC;
 /**
  * Ever-running background service that handles requests for our location.
  *
+ * TODO: make not a service, or an IntentService to keep wake lock.
+ *
  * Keeps GoogleApiClient connected for the duration of the whole tracking session.
  *
  * @author Dzmitry Lazerka

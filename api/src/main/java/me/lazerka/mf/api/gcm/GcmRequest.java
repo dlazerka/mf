@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,7 +26,7 @@ public class GcmRequest {
 	private String collapseKey;
 
 	@JsonProperty("data")
-	private Map<String, GcmPayload> data = new HashMap<>();
+	private Data data;
 
 	@JsonProperty("time_to_live")
 	private int timeToLiveSeconds;
@@ -37,17 +37,18 @@ public class GcmRequest {
 	@JsonProperty("dry_run")
 	private boolean dryRun;
 
-	public void setRegistrationIds(List<String> registrationIds) {
-		this.registrationIds = registrationIds;
-	}
+	// For Jackson
+	private GcmRequest() {}
 
-	public void setCollapseKey(String collapseKey) {
+	public GcmRequest(
+			@Nonnull List<String> registrationIds,
+			@Nullable String collapseKey,
+			@Nonnull GcmPayload payload,
+			int timeToLiveSeconds) {
+		this.registrationIds = checkNotNull(registrationIds);
 		this.collapseKey = collapseKey;
-	}
-
-	public void putPayload(GcmPayload payload) {
-		String type = checkNotNull(payload.getType());
-		data.put(type, payload);
+		this.data = new Data(payload);
+		this.timeToLiveSeconds = timeToLiveSeconds;
 	}
 
 	public void setTimeToLiveSeconds(int timeToLiveSeconds) {
@@ -66,4 +67,16 @@ public class GcmRequest {
 				'}';
 	}
 
+	public static class Data {
+		@JsonProperty(GcmPayload.TYPE_FIELD)
+		String type;
+
+		@JsonProperty(GcmPayload.PAYLOAD_FIELD)
+		GcmPayload payload;
+
+		public Data(@Nonnull GcmPayload payload) {
+			this.type = checkNotNull(payload.getType());
+			this.payload = checkNotNull(payload);
+		}
+	}
 }

@@ -64,7 +64,13 @@ public class GcmService {
 	public List<GcmResult> send(MfUser recipient, GcmPayload payload) {
 		List<String> registrationIds = getRegistrationIds(recipient);
 
-		GcmRequest gcmRequest = createGcmRequest(registrationIds, payload);
+		// If collapseKey is set, then GCM will delay subsequent messages and deliver them later.
+		// We don't want that, we want to deliver ASAP.
+		GcmRequest gcmRequest = new GcmRequest(
+				registrationIds,
+				null,
+				payload,
+				TIME_TO_LIVE_SECONDS);
 		GcmResponse gcmResponse = sendGcmRequest(gcmRequest);
 
 		List<GcmRegistrationEntity> registrations = fetchGcmRegistrationEntities(recipient);
@@ -153,20 +159,6 @@ public class GcmService {
 					.build();
 			throw new WebApplicationException(response);
 		}
-	}
-
-	private GcmRequest createGcmRequest(List<String> registrationIds, GcmPayload payload) {
-		// Compose request to GCM.
-		GcmRequest gcmRequest = new GcmRequest();
-		gcmRequest.setRegistrationIds(registrationIds);
-		gcmRequest.setTimeToLiveSeconds(TIME_TO_LIVE_SECONDS);
-		gcmRequest.putPayload(payload);
-
-		// If collapseKey is set, then GCM will delay subsequent messages and deliver them later.
-		// We don't want that, we want to deliver ASAP.
-		//gcmRequest.setCollapseKey(currentUser.getEmail());
-
-		return gcmRequest;
 	}
 
 	/**

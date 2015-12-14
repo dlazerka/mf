@@ -53,24 +53,27 @@ public class GcmReceiveService extends GcmListenerService {
 	public void onMessageReceived(String from, Bundle data) {
 		logger.info("Received message from " + from);
 
-		String type = data.getString(GcmPayload.CLASS);
-		String json = data.getString(GcmPayload.DATA);
+		String type = data.getString(GcmPayload.TYPE_FIELD);
+		String json = data.getString(GcmPayload.PAYLOAD_FIELD);
 
 		if (type == null) {
 			logger.warn("Unknown message class " + data);
 			return;
 		}
 		if (json == null) {
-			logger.warn("No {} field", GcmPayload.DATA);
+			logger.warn("No {} field", GcmPayload.PAYLOAD_FIELD);
 			return;
 		}
 
-		if (type.equals(MyLocationGcmPayload.class.getName())) {
-			parseAndEmit(json, locationReceivedSubject, MyLocationGcmPayload.class);
-		} else if (type.equals(LocationRequest.class.getName())) {
-			parseAndEmit(json, locationRequestSubject, LocationRequest.class);
-		} else {
-			logger.warn("Unknown message type: " + type);
+		switch (type) {
+			case MyLocationGcmPayload.TYPE:
+				parseAndEmit(json, locationReceivedSubject, MyLocationGcmPayload.class);
+				break;
+			case LocationRequest.TYPE:
+				parseAndEmit(json, locationRequestSubject, LocationRequest.class);
+				break;
+			default:
+				logger.warn("Unknown message type: " + type);
 		}
 	}
 
@@ -97,7 +100,7 @@ public class GcmReceiveService extends GcmListenerService {
 		@Override
 		public T call(Bundle bundle) {
 			@Nullable
-			String json = bundle.getString(GcmPayload.DATA);
+			String json = bundle.getString(GcmPayload.PAYLOAD_FIELD);
 
 			try {
 				return Application.jsonMapper.readValue(json, type);

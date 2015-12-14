@@ -1,5 +1,6 @@
 package me.lazerka.mf.api.gcm;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import me.lazerka.mf.api.object.Location;
 
@@ -29,6 +30,7 @@ public class MyLocationGcmPayload extends GcmPayload {
 	}
 
 	@Override
+	@JsonIgnore
 	public String getType() {
 		return TYPE;
 	}
