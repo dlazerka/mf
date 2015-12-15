@@ -49,7 +49,7 @@ public class GcmRegisterIntentService extends IntentService {
 			String senderId = getString(R.string.gcm_defaultSenderId);
 			String token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
-			logger.info("GCM Registration Token received");
+			logger.info("GCM Token refreshed: {}, sending...");
 
 			sendRegistrationToServer(token);
 
@@ -85,7 +85,7 @@ public class GcmRegisterIntentService extends IntentService {
 	 */
 	private void sendRegistrationToServer(String gcmToken) throws IOException {
 		GoogleSignInAccount signInAccount = new AndroidAuthenticator()
-				.blockingGetAccount(this);
+				.getAccountBlocking(this);
 
 		GcmToken content = new GcmToken(gcmToken, Application.getVersion());
 		ApiPost apiPost = new ApiPost(content);

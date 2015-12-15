@@ -4,8 +4,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
-import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.BuildConfig;
 import me.lazerka.mf.api.object.ApiObject;
+
+import java.net.URI;
 
 /**
  * @author Dzmitry Lazerka
@@ -34,7 +36,7 @@ abstract class ApiRequest {
 	}
 
 	protected HttpUrl url(ApiObject object) {
-		return HttpUrl.get(Application.SERVER_ROOT).resolve(object.getPath());
+		return HttpUrl.get(URI.create(BuildConfig.BACKEND_ROOT)).resolve(object.getPath());
 	}
 
 	public abstract Call newCall(GoogleSignInAccount account);

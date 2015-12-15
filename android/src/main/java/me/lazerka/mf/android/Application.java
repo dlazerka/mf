@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
 
 /**b
  * Extension of {@link android.app.Application}.
@@ -40,18 +39,6 @@ import java.net.URI;
 public class Application extends MultiDexApplication {
 	private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
-	public static String USER_AGENT;
-
-	public static final boolean IS_SERVER_LOCAL = true;
-	//public static final boolean IS_SERVER_LOCAL = false;
-
-	public static final URI SERVER_ROOT = URI.create(BuildConfig.BACKEND_ROOT);
-
-	// Static holders of singletons.
-	// Some people think that extending Application is discouraged,
-	// but I think other way -- I really do want to keep all the singletons
-	// in one place to keep track of them.
-
 	/**
 	 * Shared static instance, as it's a little expensive to create a new one each time.
 	 */
@@ -63,12 +50,10 @@ public class Application extends MultiDexApplication {
 	public void onCreate() {
 		super.onCreate();
 
-		USER_AGENT = getApplicationContext().getPackageName();
-
 		ACRA.init(this);
 		ACRAConfiguration config = ACRA.getConfig();
 		// Unable to set that in annotation, because not constant.
-		config.setFormUri(SERVER_ROOT.resolve(AcraException.PATH).toString());
+		config.setFormUri(BuildConfig.BACKEND_ROOT + AcraException.PATH);
 
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();

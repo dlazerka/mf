@@ -11,6 +11,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.OptionalPendingResult;
+import com.google.android.gms.common.api.ResultCallback;
 import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ public class AndroidAuthenticator {
 	public Builder getGoogleApiClient(Context context) {
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
 				.requestId()
-						//.requestProfile() // We don't need profile.
+				//.requestProfile() // We don't need profile.
 				.requestEmail()
 				.requestIdToken(context.getString(R.string.server_oauth_key))
 				.build();
@@ -48,8 +49,36 @@ public class AndroidAuthenticator {
 				.addApi(Auth.GOOGLE_SIGN_IN_API, gso);
 	}
 
-	/** Creates a new GoogleApiClient and synchronously requests account. */
-	public GoogleSignInAccount blockingGetAccount(Context context) throws GoogleApiException {
+	/**
+	 * Creates a new GoogleApiClient and retrieves SignIn account.
+	 *
+	 * If signInResult is ready, calls callback immediately, otherwise enqueues it.
+	 *
+	 * @param client must be connected/disconnected externally.
+	 */
+	public void getAccountAsync(GoogleApiClient client, ResultCallback<GoogleSignInResult> callback) {
+		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
+
+		if (opr.isDone()) {
+			logger.info("silentSignIn.isDone");
+			// If the user's cached credentials are valid, the OptionalPendingResult will be "done"
+			// and the GoogleSignInResult will be available instantly.
+			GoogleSignInResult signInResult = opr.get();
+
+			callback.onResult(signInResult);
+		} else {
+			// If the user has not previously signed in on this device or the sign-in has expired,
+			// this asynchronous branch will attempt to sign in the user silently.  Cross-device
+			// single sign-on will occur in this branch.
+			logger.info("silentSignIn.is not Done, setting resultCallback to {}", opr);
+			opr.setResultCallback(callback);
+		}
+	}
+
+	/**
+	 * Creates a new GoogleApiClient and synchronously requests account.
+	 */
+	public GoogleSignInAccount getAccountBlocking(Context context) throws GoogleApiException {
 		GoogleApiClient client = getGoogleApiClient(context).build();
 
 		ConnectionResult connectionResult = client.blockingConnect();
@@ -57,24 +86,25 @@ public class AndroidAuthenticator {
 		if (!connectionResult.isSuccess()) {
 			throw new GoogleApiConnectionException(connectionResult);
 		}
-		return blockingGetAccount(client);
+		return getAccountBlocking(client);
 	}
 
 	/**
 	 * Synchronously requests account.
 	 * @param client must be already connected.
      */
-	public GoogleSignInAccount blockingGetAccount(GoogleApiClient client) throws GoogleApiException {
+	public GoogleSignInAccount getAccountBlocking(GoogleApiClient client) throws GoogleApiException {
 
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
 
 		// TODO debug, remove
-		logger.info("requesting signin from", new Exception());
+		logger.info("requesting signin from {}", opr, new Exception());
 
 		if (!opr.isDone()) {
 			logger.info("SignIn not done, blocking with await()...");
 			opr.await();// Blocks
 		}
+
 		GoogleSignInResult signInResult = opr.get();
 		if (!signInResult.isSuccess()) {
 			throw new GoogleSignInException(signInResult.getStatus());

@@ -12,6 +12,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.*;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,16 +27,19 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	private static final Logger logger = LoggerFactory.getLogger(GoogleApiActivity.class);
 
 	private static final int RC_SIGN_IN = 9001;
-	private static final int RC_PLAY_ERROR_DIALOG = 9123;
+	private static final int RC_RESOLUTION = 9002;
+	private static final int RC_PLAY_ERROR_DIALOG = 9003;
+
+	AndroidAuthenticator authenticator = new AndroidAuthenticator();
 
 	private GoogleApiClient googleApiClient;
 	private GoogleSignInAccount account;
+	private final SignInCallbacks signInCallbacks = new SignInCallbacks();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		AndroidAuthenticator authenticator = new AndroidAuthenticator();
 		googleApiClient = authenticator.getGoogleApiClient(this)
 				.enableAutoManage(this, this)
 				.build();
@@ -53,59 +57,10 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 		super.onStart();
 
 		// Note this is not in onResume(), otherwise we might get infinite loop.
-		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account.
+		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and again.
 
-		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(googleApiClient);
 
-		if (opr.isDone()) {
-			logger.info("Silent SignIn is done");
-			// If the user's cached credentials are valid, the OptionalPendingResult will be "done"
-			// and the GoogleSignInResult will be available instantly.
-			GoogleSignInResult signInResult = opr.get();
-
-			handleSignInResult(signInResult);
-		} else {
-			// If the user has not previously signed in on this device or the sign-in has expired,
-			// this asynchronous branch will attempt to sign in the user silently.  Cross-device
-			// single sign-on will occur in this branch.
-			logger.info("Silent SignIn is not done, setting resultCallback");
-			opr.setResultCallback(
-					new ResultCallback<GoogleSignInResult>() {
-						@Override
-						public void onResult(GoogleSignInResult signInResult) {
-							handleSignInResult(signInResult);
-						}
-					});
-		}
-	}
-
-	private void handleSignInResult(GoogleSignInResult result) {
-		if (result.isSuccess()) {
-			logger.info("SignIn successful");
-			handleSignInSuccess(result.getSignInAccount());
-		} else {
-			Status status = result.getStatus();
-			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
-
-			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
-				launchSignInActivityForResult();
-				return;
-			}
-
-			// User pressed "Deny"
-			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
-				handleSignInFailed();
-				return;
-			}
-
-			// To reproduce, change GoogleSignInOptions on the fly. // There's nothing user can do about it.
-			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_FAILED) {
-				GoogleSignInApi.revokeAccess(googleApiClient);
-				GoogleSignInApi.signOut(googleApiClient);
-				Toast.makeText(this, "Sign-In failed", Toast.LENGTH_LONG).show();
-			}
-			handleSignInFailed();
-		}
+		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
 	}
 
 	protected void handleSignInSuccess(GoogleSignInAccount account) {
@@ -137,15 +92,66 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 			case RC_SIGN_IN:
 				logger.info("Got result from SignIn Activity: " + resultCode);
 
-				GoogleSignInResult resultFromIntent = GoogleSignInApi.getSignInResultFromIntent(data);
+				GoogleSignInResult resultFromSignIn = GoogleSignInApi.getSignInResultFromIntent(data);
 				// Will handle non-OK results.
-				handleSignInResult(resultFromIntent);
+				signInCallbacks.onResult(resultFromSignIn);
+				break;
+			case RC_RESOLUTION: // This path will be never called, but just do it anyway.
+				GoogleSignInResult resultFromResolution = GoogleSignInApi.getSignInResultFromIntent(data);
+				if (resultFromResolution != null) {
+					signInCallbacks.onResult(resultFromResolution);
+				} else if (resultCode == RESULT_OK) {
+					// Start over.
+					authenticator.getAccountAsync(googleApiClient, signInCallbacks);
+				} else {
+					String msg = "Resolution " + RC_RESOLUTION + " resultCode: " + resultCode;
+					logger.warn(msg);
+					ACRA.getErrorReporter().handleSilentException(new Exception(msg));
+					handleSignInFailed();
+				}
 				break;
 			case RC_PLAY_ERROR_DIALOG:
 				handleSignInFailed();
 				break;
 			default:
 				logger.warn("Not ours: " + requestCode);
+		}
+	}
+
+	private class SignInCallbacks extends ResolvingResultCallbacks<GoogleSignInResult> {
+		public SignInCallbacks() {
+			super(GoogleApiActivity.this, RC_RESOLUTION);
+		}
+
+		@Override
+		public void onSuccess(GoogleSignInResult result) {
+			logger.info("SignIn successful");
+			handleSignInSuccess(result.getSignInAccount());
+		}
+
+		@Override
+		public void onUnresolvableFailure(Status status) {
+			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
+
+			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
+				launchSignInActivityForResult();
+				return;
+			}
+
+			// User pressed "Deny"
+
+			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+				handleSignInFailed();
+				return;
+			}
+
+			// To reproduce, change GoogleSignInOptions on the fly. // There's nothing user can do about it.
+			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_FAILED) {
+				GoogleSignInApi.revokeAccess(googleApiClient);
+				GoogleSignInApi.signOut(googleApiClient);
+				Toast.makeText(GoogleApiActivity.this, "Sign-In failed", Toast.LENGTH_LONG).show();
+			}
+			handleSignInFailed();
 		}
 	}
 }

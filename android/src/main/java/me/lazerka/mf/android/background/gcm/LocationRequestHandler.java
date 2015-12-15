@@ -96,7 +96,7 @@ public class LocationRequestHandler {
 		try {
 			GoogleSignInAccount account;
 			try {
-				account = authenticator.blockingGetAccount(apiClient);
+				account = authenticator.getAccountBlocking(apiClient);
 			} catch (GoogleApiException e) {
 				logger.warn("Unable to contact GoogleApi: {} {}", e.getCode(), e.getMessage());
 				// TODO implement reconnection logic
