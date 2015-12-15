@@ -58,8 +58,6 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 
 		// Note this is not in onResume(), otherwise we might get infinite loop.
 		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and again.
-
-
 		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
 	}
 
@@ -67,6 +65,7 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 		logger.info("SignIn successful");
 		this.account = account;
 	}
+
 
 	protected abstract void handleSignInFailed();
 
