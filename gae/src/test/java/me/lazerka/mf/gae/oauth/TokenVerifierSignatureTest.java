@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import org.joda.time.DateTime;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.annotations.BeforeMethod;
@@ -18,6 +19,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 import static org.powermock.api.mockito.PowerMockito.*;
 import static org.testng.Assert.fail;
 
@@ -40,6 +43,7 @@ public class TokenVerifierSignatureTest extends PowerMockTestCase {
 	public void setUp() throws URISyntaxException, IOException {
 		unit = new TokenVerifierSignature();
 		unit.tokenVerifier = mock(GoogleIdTokenVerifier.class);
+		unit.now = DateTime.parse("2015-12-15T20:43:28Z");
 		when(unit.tokenVerifier.getJsonFactory())
 				.thenReturn(JacksonFactory.getDefaultInstance());
 
@@ -65,6 +69,8 @@ public class TokenVerifierSignatureTest extends PowerMockTestCase {
 	public void testVerify() throws Exception {
 		when(unit.tokenVerifier.verify(token))
 				.thenReturn(null);
+		when(idToken.verifyTime(eq(unit.now.getMillis()), anyLong()))
+				.thenReturn(false);
 
 		try {
 			unit.verify(token);
