@@ -40,5 +40,7 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="sending_location_request">Contacting %1$s…</string>
 	<string name="sent_location_request">Sent location request to %1$s</string>
 	<string name="gcm_error">GCM error: %1$s</string>
+	<string name="requester_not_in_friends">%1$s requested your location, but not in friends list, rejected</string>
+	<string name="asked_your_location">%1$s requested your location</string>
 
 </resources>

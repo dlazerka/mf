@@ -18,7 +18,7 @@ public class GcmBroadcastReceiver extends GcmReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		logger.info("onReceive");
+		logger.trace("onReceive");
 		super.onReceive(context, intent);
 	}
 }

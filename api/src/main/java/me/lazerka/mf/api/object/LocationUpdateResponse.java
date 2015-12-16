@@ -34,6 +34,23 @@ public class LocationUpdateResponse {
 		return gcmResults;
 	}
 
+	/**
+	 * @return whethere there's at least one successful result.
+	 */
+	public boolean hasSuccess() {
+		if (gcmResults == null) {
+			return false;
+		}
+
+		for(GcmResult gcmResult : gcmResults) {
+			if (gcmResult.isSuccessful()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)

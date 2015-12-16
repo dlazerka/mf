@@ -49,7 +49,7 @@ public class GcmRegisterIntentService extends IntentService {
 			String senderId = getString(R.string.gcm_defaultSenderId);
 			String token = instanceID.getToken(senderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
-			logger.info("GCM Token refreshed: {}, sending...");
+			logger.info("GCM Token refreshed, sending...");
 
 			sendRegistrationToServer(token);
 

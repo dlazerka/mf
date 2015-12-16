@@ -110,7 +110,9 @@ public class GcmService {
 			gcmResults.add(gcmResult);
 		}
 
-		fixRegistrationIds(recipient, toRemove, toAdd);
+		if (!toRemove.isEmpty() || !toAdd.isEmpty()) {
+			fixRegistrationIds(recipient, toRemove, toAdd);
+		}
 
 		return gcmResults;
 	}

@@ -3,6 +3,7 @@ package me.lazerka.mf.android.auth;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
+import android.support.annotation.WorkerThread;
 import android.support.v4.app.FragmentActivity;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -82,7 +83,7 @@ public class SignInManager {
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
 
 		if (opr.isDone()) {
-			logger.info("silentSignIn.isDone");
+			logger.trace("silentSignIn.isDone");
 			// If the user's cached credentials are valid, the OptionalPendingResult will be "done"
 			// and the GoogleSignInResult will be available instantly.
 			GoogleSignInResult signInResult = opr.get();
@@ -92,7 +93,7 @@ public class SignInManager {
 			// If the user has not previously signed in on this device or the sign-in has expired,
 			// this asynchronous branch will attempt to sign in the user silently.  Cross-device
 			// single sign-on will occur in this branch.
-			logger.info("silentSignIn.is not Done, setting resultCallback to {}", opr);
+			logger.trace("silentSignIn.is not Done, setting resultCallback to {}", opr);
 			opr.setResultCallback(callback);
 		}
 	}
@@ -100,6 +101,7 @@ public class SignInManager {
 	/**
 	 * Creates a new GoogleApiClient and synchronously requests account.
 	 */
+	@WorkerThread
 	public GoogleSignInAccount getAccountBlocking(Context context) throws GoogleApiException {
 		GoogleApiClient client = getGoogleApiClient(context).build();
 
@@ -115,6 +117,7 @@ public class SignInManager {
 	 * Synchronously requests account.
 	 * @param client must be already connected.
      */
+	@WorkerThread
 	public GoogleSignInAccount getAccountBlocking(GoogleApiClient client) throws GoogleApiException {
 
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);

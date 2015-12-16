@@ -41,4 +41,8 @@ public class GcmResult {
 	public String getError() {
 		return error;
 	}
+
+	public boolean isSuccessful() {
+		return error != null;
+	}
 }

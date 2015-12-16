@@ -1,5 +1,7 @@
 package me.lazerka.mf.api.object;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import me.lazerka.mf.api.gcm.GcmPayload;
@@ -17,6 +19,7 @@ import java.util.Set;
  *
  * @author Dzmitry Lazerka
  */
+@JsonInclude(Include.NON_NULL)
 public class LocationRequest implements ApiObject, GcmPayload {
 	public static final String PATH = "/rest/locationRequest";
 	public static final String TYPE = "LocationRequest";

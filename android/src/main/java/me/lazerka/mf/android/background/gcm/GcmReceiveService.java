@@ -39,10 +39,10 @@ public class GcmReceiveService extends GcmListenerService {
 	@WorkerThread
 	@Override
 	public void onMessageReceived(String from, Bundle data) {
-		logger.info("Received message from " + from);
-
 		String type = data.getString(GcmPayload.TYPE_FIELD);
 		String json = data.getString(GcmPayload.PAYLOAD_FIELD);
+
+		logger.info("Received message from {}: {} ", from, type);
 
 		if (type == null) {
 			logger.warn("Unknown message class " + data);

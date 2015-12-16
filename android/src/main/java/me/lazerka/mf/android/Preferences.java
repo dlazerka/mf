@@ -46,7 +46,7 @@ public class Preferences {
 			Uri parsed = Uri.parse(uriString);
 			result.add(parsed);
 		}
-		logger.info("getFriends " + result.size());
+		logger.trace("getFriends " + result.size());
 		return result;
 	}
 

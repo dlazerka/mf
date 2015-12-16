@@ -137,7 +137,9 @@ public class MainActivity extends GoogleApiActivity {
 		protected void onResult(LocationRequestResult result) {
 			final List<GcmResult> gcmResults = result.getGcmResults();
 			if (gcmResults == null || gcmResults.isEmpty()) {
-				logger.warn("Empty gcmResults list in LocationRequestResult " + gcmResults);
+				String msg = "Empty gcmResults list in LocationRequestResult " + gcmResults;
+				logger.warn(msg);
+				ACRA.getErrorReporter().handleSilentException(new Exception(msg));
 				return;
 			}
 

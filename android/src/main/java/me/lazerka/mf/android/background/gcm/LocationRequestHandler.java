@@ -7,39 +7,32 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationAvailability;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationResult;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.auth.GoogleApiException;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.api.object.*;
-import org.joda.time.DateTime;
+import me.lazerka.mf.api.object.LocationRequest;
+import org.acra.ACRA;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 
+import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
 import static com.google.android.gms.location.LocationServices.FusedLocationApi;
-import static org.joda.time.DateTimeZone.UTC;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Ever-running background service that handles requests for our location.
@@ -48,12 +41,15 @@ import static org.joda.time.DateTimeZone.UTC;
  *
  * Keeps GoogleApiClient connected for the duration of the whole tracking session.
  *
+ * TODO: show persistent notification for as long as we're tracking.
+ *
  * @author Dzmitry Lazerka
  */
 public class LocationRequestHandler {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
 	private static final int NOTIFICATION_ID = 4321;
 	private static final Duration TRACKING_INTERVAL = Duration.standardSeconds(3);
+	private static final Duration TRACKING_INTERVAL_FASTEST = Duration.standardSeconds(1);
 
 	private final Context context;
 
@@ -63,22 +59,22 @@ public class LocationRequestHandler {
 
 	public void handle(LocationRequest gcmRequest) {
 		String requesterEmail = gcmRequest.getRequesterEmail();
+		logger.info("Received location request from " + requesterEmail);
 
 		// Authorize request.
 		FriendInfo authorizedFriend = authorizeRequestFrom(requesterEmail);
-		if (authorizedFriend == null) {
-			logger.warn("Requester not in friends list, rejecting " + requesterEmail);
-
-			// TODO add setting "Ignore unknown to prevent spamming".
-			sendNotification(requesterEmail + " requested your location, but not in friends list, rejected");
-
-			return;
-		} else {
-			assert requesterEmail != null;
+		if (authorizedFriend != null) {
+			processAuthorizedRequest(gcmRequest, authorizedFriend);
 		}
 
+	}
+
+	private void processAuthorizedRequest(LocationRequest gcmRequest, FriendInfo authorizedFriend) {
+		checkNotNull(authorizedFriend);
+
 		// TODO show confirmation dialog
-		sendNotification(requesterEmail + " requested your location");
+		String requesterEmail = checkNotNull(gcmRequest.getRequesterEmail());
+		showNotification(R.string.asked_your_location, authorizedFriend.displayName);
 
 		SignInManager authenticator = new SignInManager();
 		GoogleApiClient apiClient = authenticator.newClient(context);
@@ -89,63 +85,80 @@ public class LocationRequestHandler {
 					"GoogleApiClient not connected: {}, {}",
 					connectionResult.getErrorCode(),
 					connectionResult.getErrorMessage());
-			// TODO
+			// TODO retry
 			return;
 		}
 
 		try {
-			GoogleSignInAccount account;
-			try {
-				account = authenticator.getAccountBlocking(apiClient);
-			} catch (GoogleApiException e) {
-				logger.warn("Unable to contact GoogleApi: {} {}", e.getCode(), e.getMessage());
-				// TODO implement reconnection logic
-				return;
-			}
-
 			// Last location may be to coarse, and users get disappointed.
-			// sendLastKnownLocation(gcmRequest, apiClient, account);
+			// sendLastKnownLocation(gcmRequest, apiClient);
 
 			Duration duration = gcmRequest.getDuration() != null
-					? gcmRequest.getDuration()
-					: Duration.standardMinutes(5);
+			                    ? gcmRequest.getDuration()
+			                    : Duration.standardMinutes(5);
 
 			com.google.android.gms.location.LocationRequest locationRequest =
 					new com.google.android.gms.location.LocationRequest()
-					.setInterval(TRACKING_INTERVAL.getMillis())
-					.setExpirationDuration(duration.getMillis());
+							.setPriority(PRIORITY_HIGH_ACCURACY)
+							.setInterval(TRACKING_INTERVAL.getMillis())
+							.setMaxWaitTime(3000)
+							.setSmallestDisplacement(0.1f)
+							.setFastestInterval(TRACKING_INTERVAL_FASTEST.getMillis())
+							.setExpirationDuration(duration.getMillis());
 
 			// TODO check new Android 6.0 permissions
-			LocationSender callback = new LocationSender(gcmRequest, account);
-			// TODO use another method with PengingIntent, so it would work even if system killed the app.
+			Intent intent = getLocationListenerIntent(gcmRequest);
+			PendingIntent pendingIntent = PendingIntent.getService(context, requesterEmail.hashCode(), intent, 0);
 			PendingResult<Status> pendingResult = FusedLocationApi.requestLocationUpdates(
 					apiClient,
 					locationRequest,
-					callback,
-					null);
+					pendingIntent);
 
-			// To keep apiClient connected.
-			pendingResult.await();
+			Status status = pendingResult.await();
+			if (status.isSuccess()) {
+				logger.info("Successfully requested location updates.");
+			} else {
+				String msg = "requestLocationUpdates unsuccessful: "
+						+ status.getStatusCode() + " " + status.getStatusMessage();
+				logger.warn(msg);
+				ACRA.getErrorReporter().handleSilentException(new Exception(msg));
+
+				// We could also send response back to server and requester.
+			}
+		} catch (Exception e){
+			logger.error("Unable to schedule location updates", e);
+			ACRA.getErrorReporter().handleException(e);
 		} finally {
 			apiClient.disconnect();
 		}
 	}
 
+	@NonNull
+	private Intent getLocationListenerIntent(LocationRequest gcmRequest) throws JsonProcessingException {
+		// We already received and parsed it so
+		byte[] bytes = Application.jsonMapper.writeValueAsBytes(gcmRequest);
+		Intent intent = new Intent(context, LocationUpdateListener.class);
+		intent.putExtra(LocationUpdateListener.EXTRA_GCM_REQUEST, bytes);
+		return intent;
+	}
+
 	private void sendLastKnownLocation(
 			LocationRequest gcmRequest,
-			GoogleApiClient apiClient,
-			GoogleSignInAccount account
-	) {
+			GoogleApiClient apiClient
+	) throws JsonProcessingException {
 		android.location.Location lastLocation = FusedLocationApi.getLastLocation(apiClient);
 		if (lastLocation != null) {
-			new LocationSender(gcmRequest, account)
-					.sendLocation(lastLocation);
+			Intent intent = getLocationListenerIntent(gcmRequest);
+			intent.putExtra("com.google.android.gms.location.EXTRA_LOCATION_RESULT", lastLocation);
+			context.startService(intent);
 		} else {
 			logger.info("No lastLocation");
 		}
 	}
 
-	private void sendNotification(String message) {
+	private void showNotification(int resId, String... params) {
+		String message = context.getString(resId, params);
+
 		NotificationManager notificationManager =
 				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -182,67 +195,14 @@ public class LocationRequestHandler {
 				break;
 			}
 		}
+
+		if (friend == null) {
+			logger.warn("Requester not in friends list, rejecting " + requesterEmail);
+
+			// TODO add setting "Ignore unknown to prevent spamming".
+			showNotification(R.string.requester_not_in_friends, requesterEmail);
+		}
+
 		return friend;
-	}
-
-	private static class LocationSender extends LocationCallback {
-		private final LocationRequest gcmRequest;
-		private final GoogleSignInAccount account;
-
-		private LocationSender(LocationRequest gcmRequest, GoogleSignInAccount account) {
-			this.gcmRequest = gcmRequest;
-			this.account = account;
-		}
-
-		@Override
-		public void onLocationResult(LocationResult result) {
-			android.location.Location location = result.getLastLocation();
-			sendLocation(location);
-		}
-
-		void sendLocation(android.location.Location location) {
-			Location locationBean = new Location(
-					DateTime.now(UTC),
-					account.getEmail(),
-					location.getLatitude(),
-					location.getLongitude(),
-					location.getAccuracy()
-			);
-
-			LocationUpdate locationUpdate = new LocationUpdate(locationBean, gcmRequest);
-
-			ApiPost post = new ApiPost(locationUpdate);
-
-			post.newCall(account).enqueue(new MyCallback());
-		}
-
-		@Override
-		public void onLocationAvailability(LocationAvailability locationAvailability) {
-			logger.info(locationAvailability.toString());
-		}
-
-		private static class MyCallback implements Callback {
-			@Override
-			public void onFailure(Request request, IOException e) {
-				logger.warn("IOException: {}", e.getMessage());
-			}
-
-			@Override
-			public void onResponse(Response response) throws IOException {
-				if (response.code() == 200) {
-					String json = response.body().string();
-					LocationUpdateResponse bean =
-							Application.jsonMapper.readValue(json, LocationUpdateResponse.class);
-					List<GcmResult> gcmResults = bean.getGcmResults();
-					for(GcmResult gcmResult : gcmResults) {
-						if (gcmResult.getError() != null) {
-							logger.warn("Unsuccessful sending");
-						}
-					}
-				} else {
-					logger.warn("Failed: {}, {}", response.code(), response.message());
-				}
-			}
-		}
 	}
 }
