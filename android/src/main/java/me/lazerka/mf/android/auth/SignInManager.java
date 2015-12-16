@@ -3,6 +3,7 @@ package me.lazerka.mf.android.auth;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
+import android.support.v4.app.FragmentActivity;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -10,6 +11,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.Builder;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import me.lazerka.mf.android.R;
@@ -23,10 +25,28 @@ import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
  *
  * @author Dzmitry Lazerka
  */
-public class AndroidAuthenticator {
-	private static final Logger logger = LoggerFactory.getLogger(AndroidAuthenticator.class);
+public class SignInManager {
+	private static final Logger logger = LoggerFactory.getLogger(SignInManager.class);
 
-	public Builder getGoogleApiClient(Context context) {
+	/**
+	 * @return new instance of GoogleApiClient, with `enableAutoManage()`.
+	 */
+	public GoogleApiClient newAutoManagedClient(
+			FragmentActivity fragmentActivity,
+			OnConnectionFailedListener listener) {
+		return getGoogleApiClient(fragmentActivity)
+				.enableAutoManage(fragmentActivity, listener)
+				.build();
+	}
+
+	/**
+	 * @return new instance of GoogleApiClient. You have to connect()/disconnect() it yourself.
+	 */
+	public GoogleApiClient newClient(Context context) {
+		return getGoogleApiClient(context).build();
+	}
+
+	private Builder getGoogleApiClient(Context context) {
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
 				.requestId()
 				//.requestProfile() // We don't need profile.

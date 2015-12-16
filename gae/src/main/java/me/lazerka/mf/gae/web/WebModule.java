@@ -1,23 +1,19 @@
 package me.lazerka.mf.gae.web;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.api.client.util.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 import com.googlecode.objectify.ObjectifyFilter;
 import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
-import com.sun.jersey.api.core.ClassNamesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
 import me.lazerka.mf.api.JsonMapper;
-import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.gae.gcm.GcmModule;
 import me.lazerka.mf.gae.oauth.AuthFilterFactory;
 import me.lazerka.mf.gae.oauth.OauthModule;
 import me.lazerka.mf.gae.web.rest.AcraExceptionResource;
 import me.lazerka.mf.gae.web.rest.location.GcmRegistrationResource;
+import me.lazerka.mf.gae.web.rest.location.LocationRequestResource;
 import me.lazerka.mf.gae.web.rest.location.LocationUpdateResource;
 import me.lazerka.mf.gae.web.rest.user.UserResource;
 import org.slf4j.Logger;
@@ -38,6 +34,9 @@ public class WebModule extends JerseyServletModule {
 	protected void configureServlets() {
 		logger.trace("configureServlets");
 
+		// Map exceptions to fancy pages.
+		bind(UnhandledExceptionMapper.class);
+
 		install(new OauthModule());
 		install(new GcmModule());
 
@@ -52,6 +51,12 @@ public class WebModule extends JerseyServletModule {
 		//serve("/image/blobstore-callback-dev").with(BlobstoreCallbackServlet.class);
 
 		setUpJackson();
+
+		bind(UserResource.class);
+		bind(GcmRegistrationResource.class);
+		bind(LocationRequestResource.class);
+		bind(LocationUpdateResource.class);
+		bind(AcraExceptionResource.class);
 	}
 
 	private void setUpJackson() {
@@ -65,32 +70,32 @@ public class WebModule extends JerseyServletModule {
 		bind(JacksonJsonProvider.class).toInstance(provider);
 	}
 
+	/**
+	 * Servlet parameters that usually go in web.xml servlet definition.
+	 */
 	private Map<String, String> getJerseyParams() {
-		Map<String, String> params = Maps.newHashMap();
+		return ImmutableMap.of(
+				// Speed up start up time. We don't use WADL anyway, we use annotations.
+				ResourceConfig.FEATURE_DISABLE_WADL, "true",
 
-		params.put(ServletContainer.RESOURCE_CONFIG_CLASS, ClassNamesResourceConfig.class.getName());
+				// Handy, but slower to start.
+				// params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.gae.web");
 
-		// Handy, but slower to start.
-		// params.put(PackagesResourceConfig.PROPERTY_PACKAGES, "me.lazerka.mf.gae.web");
-		String classNames = Joiner.on(',').join(ImmutableList.of(
-				UserResource.class.getName(),
-				GcmRegistrationResource.class.getName(),
-				LocationRequest.class.getName(),
-				LocationUpdateResource.class.getName(),
-				AcraExceptionResource.class.getName()
-		));
-		params.put(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames);
+				// Another way to specify
+				//params.put(ServletContainer.RESOURCE_CONFIG_CLASS, ClassNamesResourceConfig.class.getName());
+				//String classNames = Joiner.on(',').join(ImmutableList.of(
+				//		UserResource.class.getName(),
+				//		...
+				//));
+				//params.put(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames);
 
-		// Read somewhere that it's needed for GAE.
-		params.put(ResourceConfig.FEATURE_DISABLE_WADL, "true");
+						// This makes use of custom Auth+filters using OAuth2.
+				ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, AuthFilterFactory.class.getName()
 
-		// This makes use of custom Auth+filters using OAuth2.
-		params.put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, AuthFilterFactory.class.getName());
-
-		//params.put("com.sun.jersey.spi.container.ContainerRequestFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
-		//params.put("com.sun.jersey.spi.container.ContainerResponseFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
-		//params.put("com.sun.jersey.config.feature.logging.DisableEntitylogging", "true");
-		//params.put("com.sun.jersey.config.feature.Trace", "true");
-		return params;
+				//params.put("com.sun.jersey.spi.container.ContainerRequestFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
+				//params.put("com.sun.jersey.spi.container.ContainerResponseFilters", "com.sun.jersey.api.container.filter.LoggingFilter");
+				//params.put("com.sun.jersey.config.feature.logging.DisableEntitylogging", "true");
+				//params.put("com.sun.jersey.config.feature.Trace", "true");
+		);
 	}
 }

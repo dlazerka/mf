@@ -26,7 +26,7 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendsLoader;
-import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.android.auth.GoogleApiException;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.api.object.*;
@@ -80,8 +80,8 @@ public class LocationRequestHandler {
 		// TODO show confirmation dialog
 		sendNotification(requesterEmail + " requested your location");
 
-		AndroidAuthenticator authenticator = new AndroidAuthenticator();
-		GoogleApiClient apiClient = authenticator.getGoogleApiClient(context).build();
+		SignInManager authenticator = new SignInManager();
+		GoogleApiClient apiClient = authenticator.newClient(context);
 
 		ConnectionResult connectionResult = apiClient.blockingConnect();
 		if (!connectionResult.isSuccess()) {
@@ -123,6 +123,8 @@ public class LocationRequestHandler {
 					locationRequest,
 					callback,
 					null);
+
+			// To keep apiClient connected.
 			pendingResult.await();
 		} finally {
 			apiClient.disconnect();

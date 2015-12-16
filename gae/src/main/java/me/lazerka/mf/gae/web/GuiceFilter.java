@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
  *
  * @author Dzmitry Lazerka
  */
-public class BypassGuiceFilter extends com.google.inject.servlet.GuiceFilter {
-	private final static Logger logger = LoggerFactory.getLogger(BypassGuiceFilter.class);
+public class GuiceFilter extends com.google.inject.servlet.GuiceFilter {
+	private final static Logger logger = LoggerFactory.getLogger(GuiceFilter.class);
 
 	private final Pattern NOT_BYPASS = Pattern.compile(
 			"^(/_ah/warmup)" +
@@ -30,30 +30,29 @@ public class BypassGuiceFilter extends com.google.inject.servlet.GuiceFilter {
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		if (request instanceof HttpServletRequest) {
 			HttpServletRequest req = (HttpServletRequest) request;
-			logger.trace("Got request: {} {}", req.getMethod(), req.getRequestURI());
+
+			// Break the chain for dev server except warmup (must be handled by app).
+			String requestUri = req.getRequestURI();
+			boolean isAhRequest = requestUri.startsWith("/_ah/");
+
+			if (!isAhRequest) {
+				logger.trace("Handle with Guice: {}", requestUri);
+				super.doFilter(request, response, chain);
+				return;
+			}
+
+			if (shouldNotBypass(requestUri)) {
+				logger.info("Not bypassing Guice: {} {}", req.getMethod(), requestUri);
+				super.doFilter(request, response, chain);
+				return;
+			}
+
+			logger.trace("Bypassing Guice: {} {}", req.getMethod(), requestUri);
+			chain.doFilter(request, response);
 		} else {
 			logger.warn("Got non-HTTP request (length={})", request.getContentLength());
+			chain.doFilter(request, response);
 		}
-		HttpServletRequest req = (HttpServletRequest) request;
-
-		// Break the chain for dev server except warmup (must be handled by app).
-		String requestUri = req.getRequestURI();
-		boolean isAhRequest = requestUri.startsWith("/_ah/");
-
-		if (!isAhRequest) {
-			logger.trace("Handle with Guice: {}", requestUri);
-			super.doFilter(request, response, chain);
-			return;
-		}
-
-		if (shouldNotBypass(requestUri)) {
-			logger.info("Not bypassing Guice: {}", requestUri);
-			super.doFilter(request, response, chain);
-			return;
-		}
-
-		logger.trace("Bypassing Guice: {}", requestUri);
-		chain.doFilter(request, response);
 	}
 
 	private boolean shouldNotBypass(String requestUri) {

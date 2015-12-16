@@ -11,7 +11,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.*;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import me.lazerka.mf.android.auth.SignInManager;
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	private static final int RC_RESOLUTION = 9002;
 	private static final int RC_PLAY_ERROR_DIALOG = 9003;
 
-	AndroidAuthenticator authenticator = new AndroidAuthenticator();
+	SignInManager authenticator = new SignInManager();
 
 	private GoogleApiClient googleApiClient;
 	private GoogleSignInAccount account;
@@ -40,9 +40,7 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		googleApiClient = authenticator.getGoogleApiClient(this)
-				.enableAutoManage(this, this)
-				.build();
+		googleApiClient = authenticator.newAutoManagedClient(this, this);
 	}
 
 	@Override

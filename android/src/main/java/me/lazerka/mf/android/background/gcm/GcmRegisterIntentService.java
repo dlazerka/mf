@@ -12,7 +12,7 @@ import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.auth.AndroidAuthenticator;
+import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.api.object.GcmToken;
 import org.slf4j.Logger;
@@ -84,7 +84,7 @@ public class GcmRegisterIntentService extends IntentService {
 	 * Make backend aware of the token.
 	 */
 	private void sendRegistrationToServer(String gcmToken) throws IOException {
-		GoogleSignInAccount signInAccount = new AndroidAuthenticator()
+		GoogleSignInAccount signInAccount = new SignInManager()
 				.getAccountBlocking(this);
 
 		GcmToken content = new GcmToken(gcmToken, Application.getVersion());

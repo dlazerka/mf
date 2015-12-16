@@ -15,7 +15,7 @@
 
 	<filter>
 		<filter-name>GuiceFilter</filter-name>
-		<filter-class>me.lazerka.mf.gae.web.BypassGuiceFilter</filter-class>
+		<filter-class>me.lazerka.mf.gae.web.GuiceFilter</filter-class>
 	</filter>
 	<filter-mapping>
 		<filter-name>GuiceFilter</filter-name>

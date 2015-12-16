@@ -26,7 +26,7 @@ import static me.lazerka.mf.gae.web.rest.JerseyUtil.throwIfNull;
 /**
  * @author Dzmitry Lazerka
  */
-@Path(me.lazerka.mf.api.object.LocationRequest.PATH)
+@Path(LocationRequest.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
 @RolesAllowed(Role.USER)
 public class LocationRequestResource {
@@ -54,7 +54,7 @@ public class LocationRequestResource {
 	 */
 	@POST
 	@Consumes("application/json")
-	public LocationRequestResult byEmail(me.lazerka.mf.api.object.LocationRequest locationRequest) {
+	public LocationRequestResult byEmail(LocationRequest locationRequest) {
 		Set<String> forEmails = throwIfNull(locationRequest.getEmails(), "emails");
 		logger.trace("byEmail for {}", forEmails);
 
@@ -69,14 +69,14 @@ public class LocationRequestResource {
 		Duration duration = locationRequest.getDuration() == null
 				? Duration.standardMinutes(15)
 				: locationRequest.getDuration();
-		LocationRequest payload = new LocationRequest(
+		LocationRequest cleanCopy = new LocationRequest(
 				locationRequest.getRequestId(),
 				sender.getEmail().getEmail(), // requesterEmail
 				now,
-				duration // TODO make configurable
+				duration
 		);
 
-		List<GcmResult> gcmResults = gcmService.send(recipient, locationRequest);
+		List<GcmResult> gcmResults = gcmService.send(recipient, cleanCopy);
 
 		LocationRequestResult result = new LocationRequestResult(
 				recipient.getEmail().getEmail(),
