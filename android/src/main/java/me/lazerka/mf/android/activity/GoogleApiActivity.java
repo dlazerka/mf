@@ -9,14 +9,15 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.*;
+import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.ResolvingResultCallbacks;
+import com.google.android.gms.common.api.Status;
 import me.lazerka.mf.android.auth.SignInManager;
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 
@@ -30,10 +31,9 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	private static final int RC_RESOLUTION = 9002;
 	private static final int RC_PLAY_ERROR_DIALOG = 9003;
 
-	SignInManager authenticator = new SignInManager();
+	private SignInManager authenticator = new SignInManager();
 
 	private GoogleApiClient googleApiClient;
-	private GoogleSignInAccount account;
 	private final SignInCallbacks signInCallbacks = new SignInCallbacks();
 
 	@Override
@@ -59,17 +59,18 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
 	}
 
+	/** Does nothing. We shouldn't save the result and use it later -- it may expire. */
 	protected void handleSignInSuccess(GoogleSignInAccount account) {
 		logger.info("SignIn successful");
-		this.account = account;
 	}
-
 
 	protected abstract void handleSignInFailed();
 
-	@Nullable
-	public GoogleSignInAccount getAccount() {
-		return account;
+	/**
+	 * @param callbacks to run after signing in, on main thread.
+	 */
+	public void runWithAccount(SignInCallbacks callbacks) {
+		authenticator.getAccountAsync(googleApiClient, callbacks);
 	}
 
 	protected void launchSignInActivityForResult() {
@@ -115,7 +116,7 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 		}
 	}
 
-	private class SignInCallbacks extends ResolvingResultCallbacks<GoogleSignInResult> {
+	protected class SignInCallbacks extends ResolvingResultCallbacks<GoogleSignInResult> {
 		public SignInCallbacks() {
 			super(GoogleApiActivity.this, RC_RESOLUTION);
 		}
@@ -136,7 +137,6 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 			}
 
 			// User pressed "Deny"
-
 			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
 				handleSignInFailed();
 				return;

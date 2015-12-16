@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.squareup.okhttp.*;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
@@ -31,6 +32,7 @@ import java.net.SocketTimeoutException;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.joda.time.DateTimeZone.UTC;
 
 /**
@@ -98,30 +100,27 @@ public class MainActivity extends GoogleApiActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void requestLocationUpdates(@Nonnull FriendInfo friendInfo) {
+	public void requestLocationUpdates(@Nonnull final FriendInfo friendInfo) {
 		checkArgument(!friendInfo.emails.isEmpty());
 
-		String requestId = String.valueOf(SystemClock.uptimeMillis());
-		DateTime sentAt = DateTime.now(UTC);
-		Duration duration = Duration.standardMinutes(15);
-		LocationRequest locationRequest = new LocationRequest(requestId, friendInfo.emails, sentAt, duration);
+		runWithAccount(new SignInCallbacks() {
+			@Override
+			public void onSuccess(GoogleSignInResult result) {
+				GoogleSignInAccount account = checkNotNull(result.getSignInAccount());
 
-		GoogleSignInAccount account = getAccount();
-		if (account == null) {
-			String message = "Account is null";
-			ACRA.getErrorReporter().handleSilentException(new IllegalStateException(message));
-			Toast.makeText(this, R.string.sign_in_account_null, Toast.LENGTH_LONG)
-					.show();
-			return;
-		}
+				String requestId = String.valueOf(SystemClock.uptimeMillis());
+				DateTime sentAt = DateTime.now(UTC);
+				Duration duration = Duration.standardMinutes(15);
+				LocationRequest locationRequest = new LocationRequest(requestId, friendInfo.emails, sentAt, duration);
 
-		Call call = new ApiPost(locationRequest).newCall(account);
-		call.enqueue(new LocationRequestCallback(friendInfo));
+				Call call = new ApiPost(locationRequest).newCall(account);
+				call.enqueue(new LocationRequestCallback(friendInfo));
 
-		// Todo change to UI text instead of a Toast.
-		String text = getString(R.string.sending_location_request, friendInfo.displayName);
-		Toast.makeText(this, text, Toast.LENGTH_LONG)
-				.show();
+				// Todo change to UI text instead of a Toast.
+				String text = getString(R.string.sending_location_request, friendInfo.displayName);
+				Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
+			}
+		});
 	}
 
 	private class LocationRequestCallback extends JsonParsingCallback<LocationRequestResult> {
