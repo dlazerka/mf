@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -188,7 +190,17 @@ public class MainActivity extends GoogleApiActivity {
 		@UiThread
 		@Override
 		public void onNetworkException(Request request, IOException e) {
-			final String msg = getString(R.string.error_sending_request, e.getMessage());
+			String msg;
+			if (e instanceof SocketTimeoutException) {
+				msg = getString(R.string.error_socket_timeout);
+			} else if (e instanceof ConnectException) {
+				msg = getString(R.string.error_connection_exception);
+			} else if (e.getMessage() != null) {
+				msg = getString(R.string.error_sending_request, e.getMessage());
+			} else {
+				msg = getString(R.string.error_sending_request, e.getClass().getSimpleName());
+			}
+
 			logger.warn(msg, e);
 			ACRA.getErrorReporter().handleSilentException(e);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
