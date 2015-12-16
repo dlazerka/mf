@@ -14,6 +14,7 @@ import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.LocationServices;
 import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,8 @@ public class SignInManager {
 		}
 
 		return new Builder(context)
-				.addApi(Auth.GOOGLE_SIGN_IN_API, gso);
+				.addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+				.addApi(LocationServices.API);
 	}
 
 	/**
