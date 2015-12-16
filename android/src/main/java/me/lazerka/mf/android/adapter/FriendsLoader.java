@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Looper;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import com.google.common.base.Joiner;
@@ -32,6 +33,11 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 
 	public FriendsLoader(Context context) {
 		super(context);
+
+		// Can be called from background.
+		if (Looper.myLooper() != Looper.getMainLooper()) {
+			Looper.prepare();
+		}
 
 		List<String> lookupUris = getFriendsLookupUris();
 
