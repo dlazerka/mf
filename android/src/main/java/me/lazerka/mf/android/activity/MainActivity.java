@@ -10,12 +10,15 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.squareup.okhttp.*;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
+import me.lazerka.mf.android.background.gcm.LocationUpdateListener;
 import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
@@ -60,6 +63,7 @@ public class MainActivity extends GoogleApiActivity {
 	protected void onStart() {
 		super.onStart();
 
+		startService(new Intent(this, LocationUpdateListener.class));
 		// Make sure server knows our GCM token.
 		startService(new Intent(this, GcmRegisterIntentService.class));
 	}
