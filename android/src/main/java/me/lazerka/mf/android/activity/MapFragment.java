@@ -95,6 +95,7 @@ public class MapFragment extends Fragment {
 
 		if (subscription != null) {
 			subscription.unsubscribe();
+			subscription = null;
 		}
 
 		mapView.onPause();
