@@ -43,6 +43,6 @@ public class GcmResult {
 	}
 
 	public boolean isSuccessful() {
-		return error != null;
+		return error == null;
 	}
 }
