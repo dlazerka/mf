@@ -5,17 +5,30 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
+import com.google.common.collect.ImmutableSet;
+
+import org.acra.ACRA;
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
@@ -23,24 +36,19 @@ import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.LocationRequest;
-import org.acra.ACRA;
-import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+import static android.location.LocationManager.GPS_PROVIDER;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
 import static com.google.android.gms.location.LocationServices.FusedLocationApi;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Ever-running background service that handles requests for our location.
- *
+ * <p/>
  * This handler can run in background, heed the wake lock.
- *
+ * <p/>
  * Keeps GoogleApiClient connected for the duration of the whole tracking session.
- *
+ * <p/>
  * TODO: show persistent notification for as long as we're tracking.
  *
  * @author Dzmitry Lazerka
@@ -61,21 +69,80 @@ public class LocationRequestHandler {
 		String requesterEmail = gcmRequest.getRequesterEmail();
 		logger.info("Received location request from " + requesterEmail);
 
+
+		FriendInfo authorizedFriend = new FriendInfo(1234l, "", "Bob", "", ImmutableSet.of(""), null);
 		// Authorize request.
-		FriendInfo authorizedFriend = authorizeRequestFrom(requesterEmail);
+		//FriendInfo authorizedFriend = authorizeRequestFrom(requesterEmail);
+
+
 		if (authorizedFriend != null) {
 			processAuthorizedRequest(gcmRequest, authorizedFriend);
 		}
-
 	}
 
 	private void processAuthorizedRequest(LocationRequest gcmRequest, FriendInfo authorizedFriend) {
-		checkNotNull(authorizedFriend);
 
 		// TODO show confirmation dialog
-		String requesterEmail = checkNotNull(gcmRequest.getRequesterEmail());
 		showNotification(R.string.asked_your_location, authorizedFriend.displayName);
 
+		Intent intent = getLocationListenerIntent(gcmRequest);
+
+		PendingIntent listener =
+				PendingIntent.getService(context, 9333, intent, FLAG_UPDATE_CURRENT);
+
+		// Last location may be to coarse, and users get disappointed.
+		// sendLastKnownLocation(gcmRequest, apiClient);
+
+		Duration duration = gcmRequest.getDuration() != null
+		                    ? gcmRequest.getDuration()
+		                    : Duration.standardMinutes(5);
+
+		com.google.android.gms.location.LocationRequest locationRequest =
+				new com.google.android.gms.location.LocationRequest()
+						.setPriority(PRIORITY_HIGH_ACCURACY)
+						.setInterval(TRACKING_INTERVAL.getMillis())
+								//.setMaxWaitTime(3000)
+						.setSmallestDisplacement(0)
+						.setFastestInterval(TRACKING_INTERVAL_FASTEST.getMillis())
+						.setExpirationDuration(duration.getMillis());
+
+		// Couldn't make it work, listener just doesn't receive intents.
+		scheduleFusedLocationApi(listener, locationRequest);
+
+		//scheduleLocationManager(listener, locationRequest);
+	}
+
+	private void scheduleLocationManager(
+			final PendingIntent listener,
+			com.google.android.gms.location.LocationRequest location) {
+		final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		try {
+			logger.info("Scheduling LocationManager");
+			locationManager.requestLocationUpdates(
+					GPS_PROVIDER,
+					location.getInterval(),
+					location.getSmallestDisplacement(),
+					listener);
+			logger.info("Scheduled LocationManager");
+
+			new Timer().schedule(new TimerTask() {
+				@Override
+				public void run() {
+					logger.info("Removing LocationManager");
+					locationManager.removeUpdates(listener);
+					logger.info("Remoevd LocationManager");
+				}
+			}, 3000);
+		} catch (SecurityException e) {
+			logger.error("No location permissions", e);
+			ACRA.getErrorReporter().handleSilentException(e);
+		}
+	}
+
+	private void scheduleFusedLocationApi(
+			PendingIntent listener,
+			com.google.android.gms.location.LocationRequest locationRequest
+	) {
 		SignInManager authenticator = new SignInManager();
 		GoogleApiClient apiClient = authenticator.newClient(context);
 
@@ -90,29 +157,12 @@ public class LocationRequestHandler {
 		}
 
 		try {
-			// Last location may be to coarse, and users get disappointed.
-			// sendLastKnownLocation(gcmRequest, apiClient);
-
-			Duration duration = gcmRequest.getDuration() != null
-			                    ? gcmRequest.getDuration()
-			                    : Duration.standardMinutes(5);
-
-			com.google.android.gms.location.LocationRequest locationRequest =
-					new com.google.android.gms.location.LocationRequest()
-							.setPriority(PRIORITY_HIGH_ACCURACY)
-							.setInterval(TRACKING_INTERVAL.getMillis())
-							.setMaxWaitTime(3000)
-							.setSmallestDisplacement(0.1f)
-							.setFastestInterval(TRACKING_INTERVAL_FASTEST.getMillis())
-							.setExpirationDuration(duration.getMillis());
 
 			// TODO check new Android 6.0 permissions
-			Intent intent = getLocationListenerIntent(gcmRequest);
-			PendingIntent pendingIntent = PendingIntent.getService(context, requesterEmail.hashCode(), intent, 0);
 			PendingResult<Status> pendingResult = FusedLocationApi.requestLocationUpdates(
 					apiClient,
 					locationRequest,
-					pendingIntent);
+					listener);
 
 			Status status = pendingResult.await();
 			if (status.isSuccess()) {
@@ -125,7 +175,7 @@ public class LocationRequestHandler {
 
 				// We could also send response back to server and requester.
 			}
-		} catch (Exception e){
+		} catch (Exception e) {
 			logger.error("Unable to schedule location updates", e);
 			ACRA.getErrorReporter().handleException(e);
 		} finally {
@@ -134,12 +184,17 @@ public class LocationRequestHandler {
 	}
 
 	@NonNull
-	private Intent getLocationListenerIntent(LocationRequest gcmRequest) throws JsonProcessingException {
+	private Intent getLocationListenerIntent(LocationRequest gcmRequest) {
 		// We already received and parsed it so
-		byte[] bytes = Application.jsonMapper.writeValueAsBytes(gcmRequest);
-		Intent intent = new Intent(context, LocationUpdateListener.class);
-		intent.putExtra(LocationUpdateListener.EXTRA_GCM_REQUEST, bytes);
-		return intent;
+		try {
+			byte[] bytes = Application.jsonMapper.writeValueAsBytes(gcmRequest);
+			Intent intent = new Intent(context, LocationUpdateListener.class);
+			intent.putExtra(LocationUpdateListener.EXTRA_GCM_REQUEST, bytes);
+			return intent;
+		} catch (JsonProcessingException e) {
+			// Highly unlikely, we already parsed it.
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void sendLastKnownLocation(
@@ -181,7 +236,9 @@ public class LocationRequestHandler {
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	/** @return friendInfo if authorized, or null otherwise. */
+	/**
+	 * @return friendInfo if authorized, or null otherwise.
+	 */
 	@Nullable
 	private FriendInfo authorizeRequestFrom(@Nullable String requesterEmail) {
 		FriendsLoader friendsLoader = new FriendsLoader(context);
