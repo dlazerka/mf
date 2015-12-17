@@ -1,3 +1,23 @@
+/*
+ *     Find Us: privacy oriented location tracker for your friends and family.
+ *     Copyright (C) 2015 Dzmitry Lazerka dlazerka@gmail.com
+ *
+ *     This program is free software; you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation; either version 2 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License along
+ *     with this program; if not, write to the Free Software Foundation, Inc.,
+ *     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
+
 package me.lazerka.mf.android.background.gcm;
 
 import android.app.Notification;
@@ -12,18 +32,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.activity.MainActivity;
-import me.lazerka.mf.android.adapter.FriendInfo;
-import me.lazerka.mf.android.adapter.FriendsLoader;
-import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.api.object.LocationRequest;
+
 import org.acra.ACRA;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -32,6 +47,14 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.activity.MainActivity;
+import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.adapter.FriendsLoader;
+import me.lazerka.mf.android.auth.SignInManager;
+import me.lazerka.mf.api.object.LocationRequest;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static android.location.LocationManager.GPS_PROVIDER;
