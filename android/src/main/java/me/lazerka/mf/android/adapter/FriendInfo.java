@@ -20,20 +20,22 @@
 
 package me.lazerka.mf.android.adapter;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.api.object.UserInfo;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.api.object.UserInfo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -72,15 +74,6 @@ public class FriendInfo {
 	 */
 	@Nullable
 	public Map<String, UserInfo> serverInfos;
-
-	static {
-		AsyncTask.execute(
-				new Runnable() {
-					@Override
-					public void run() {
-					}
-				});
-	}
 
 	/**
 	 * Deserializes an instance from a Bundle, created previously by {@link #toBundle()}.

@@ -24,27 +24,42 @@ import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.*;
-import com.google.android.gms.maps.*;
+import android.view.Display;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
-import com.google.android.gms.maps.model.*;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.DateFormat;
+import java.util.Locale;
+import java.util.Map;
+
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.background.gcm.GcmReceiveService;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationUpdate;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-
-import java.text.DateFormat;
-import java.util.Locale;
-import java.util.Map;
 
 public class MapFragment extends Fragment {
 	private static final Logger logger = LoggerFactory.getLogger(MapFragment.class);
@@ -106,6 +121,7 @@ public class MapFragment extends Fragment {
 		subscription =
 				GcmReceiveService.getLocationReceivedObservable()
 				.observeOn(AndroidSchedulers.mainThread())
+				.subscribeOn(AndroidSchedulers.mainThread())
 				.subscribe(observer);
 	}
 

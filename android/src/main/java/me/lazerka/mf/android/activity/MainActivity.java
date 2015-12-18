@@ -38,7 +38,7 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
-import me.lazerka.mf.android.background.gcm.LocationUpdateListener;
+import me.lazerka.mf.android.background.location.LocationUpdateListener;
 import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;

@@ -116,9 +116,10 @@
 			</intent-filter>
 		</service>
 		<service
-			android:name=".background.gcm.LocationUpdateListener"
+			android:name=".background.location.LocationUpdateListener"
 			android:exported="false">
 		</service>
+		<receiver android:name=".background.location.LocationStopListener"/>
 
 		<!-- Called by Android on device boot. -->
 		<receiver android:name=".background.BootReceiver">

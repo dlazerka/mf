@@ -18,35 +18,37 @@
  *
  */
 
-package me.lazerka.mf.android.background;
+package me.lazerka.mf.android.background.location;
 
-import android.app.Activity;
-import android.content.ComponentName;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.WakefulBroadcastReceiver;
-import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
-import me.lazerka.mf.android.background.location.LocationRequestHandler;
+import android.location.LocationManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Dzmitry Lazerka
+ * Calls {@link LocationManager#removeUpdates(PendingIntent)}.
  */
-public class BootReceiver extends WakefulBroadcastReceiver {
-	private static final Logger logger = LoggerFactory.getLogger(BootReceiver.class);
+public class LocationStopListener extends BroadcastReceiver {
+	private static final Logger logger = LoggerFactory.getLogger(LocationStopListener.class);
+
+	private static final String LISTENER_TO_STOP = "LISTENER_TO_STOP";
+
+	public static Intent makeIntent(Context context, PendingIntent listenerToStop) {
+		Intent intent = new Intent(context, LocationStopListener.class);
+		intent.putExtra(LISTENER_TO_STOP, listenerToStop);
+		return intent;
+	}
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		logger.info("onReceive");
+		PendingIntent listenerToStop = intent.getParcelableExtra(LISTENER_TO_STOP);
+		logger.info("Stopping location listener");
 
-		// Renew GCM token.
-		intent.setComponent(new ComponentName(context, GcmRegisterIntentService.class));
-		startWakefulService(context, intent);
-
-		Intent locationRequestHandler = new Intent(context, LocationRequestHandler.class);
-		context.startService(locationRequestHandler);
-
-		setResultCode(Activity.RESULT_OK);
+		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.removeUpdates(listenerToStop);
 	}
 }

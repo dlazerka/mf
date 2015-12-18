@@ -18,31 +18,34 @@
  *
  */
 
-package me.lazerka.mf.android.background.gcm;
+package me.lazerka.mf.android.background.location;
 
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
 import android.location.LocationManager;
-import android.os.IBinder;
+
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationResult;
 import com.squareup.okhttp.Response;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.auth.GoogleApiException;
-import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.api.object.*;
+
 import org.acra.ACRA;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.auth.GoogleApiException;
+import me.lazerka.mf.android.auth.SignInManager;
+import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.api.object.GcmResult;
+import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationUpdate;
+import me.lazerka.mf.api.object.LocationUpdateResponse;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.joda.time.DateTimeZone.UTC;
@@ -51,36 +54,18 @@ import static org.joda.time.DateTimeZone.UTC;
  * Receives location updates that were scheduled in {@link LocationRequestHandler},
  * and sends them to server.
  *
- * It would be nice to extend IntentService here, but FusedLocationApi doc says it wants a `started service`.
- *
  * Is invoked on each location update.
  */
-public class LocationUpdateListener extends Service {
-	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
+public class LocationUpdateListener extends IntentService {
+	private static final Logger logger = LoggerFactory.getLogger(LocationUpdateListener.class);
 
 	static final String EXTRA_GCM_REQUEST = "gcmRequest";
 
-	//public LocationUpdateListener() {
-	//	super(LocationUpdateListener.class.getSimpleName());
-	//}
-
-	@Nullable
-	@Override
-	public IBinder onBind(Intent intent) {
-		// Noone binds to me.
-		return null;
+	public LocationUpdateListener() {
+		super(LocationUpdateListener.class.getSimpleName());
 	}
 
 	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		Set<String> keyset = intent.getExtras() != null ?  new LinkedHashSet<>(intent.getExtras().keySet()) : null;
-		logger.info("onStartCommand: {}", keyset); // todo remove
-		onHandleIntent(intent);
-		return START_STICKY;
-	}
-
-
-	//@Override
 	protected void onHandleIntent(Intent intent) {
 		// May be sent by FusedLocationApi
 		if (LocationAvailability.hasLocationAvailability(intent)) {

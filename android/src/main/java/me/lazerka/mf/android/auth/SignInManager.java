@@ -25,6 +25,7 @@ import android.accounts.AccountManager;
 import android.content.Context;
 import android.support.annotation.WorkerThread;
 import android.support.v4.app.FragmentActivity;
+
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -36,9 +37,11 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.LocationServices;
-import me.lazerka.mf.android.R;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import me.lazerka.mf.android.R;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 
@@ -79,7 +82,7 @@ public class SignInManager {
 		// If there's only one account on device, we're sure user would want to use it.
 		AccountManager accountManager = AccountManager.get(context);
 		Account[] accounts = accountManager.getAccountsByType("com.google");
-		logger.info("Found {} accounts of type 'com.google'", accounts.length);
+		logger.trace("Found {} accounts of type 'com.google'", accounts.length);
 		if (accounts.length == 1) {
 			String accountName = accounts[0].name;
 			gso = new GoogleSignInOptions.Builder(gso)

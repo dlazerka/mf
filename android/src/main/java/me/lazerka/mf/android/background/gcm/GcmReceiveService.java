@@ -22,19 +22,24 @@ package me.lazerka.mf.android.background.gcm;
 
 import android.os.Bundle;
 import android.support.annotation.WorkerThread;
+
 import com.google.android.gms.gcm.GcmListenerService;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.api.gcm.GcmPayload;
-import me.lazerka.mf.api.object.LocationRequest;
-import me.lazerka.mf.api.object.LocationUpdate;
+
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.subjects.BehaviorSubject;
+
+import java.io.IOException;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
+
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.background.location.LocationRequestHandler;
+import me.lazerka.mf.api.gcm.GcmPayload;
+import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationUpdate;
+import rx.Observable;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Handler for incoming messages from GCM.

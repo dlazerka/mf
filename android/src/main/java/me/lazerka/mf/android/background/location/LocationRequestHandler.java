@@ -18,8 +18,9 @@
  *
  */
 
-package me.lazerka.mf.android.background.gcm;
+package me.lazerka.mf.android.background.location;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -45,8 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
@@ -57,7 +56,6 @@ import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.LocationRequest;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
-import static android.location.LocationManager.GPS_PROVIDER;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
 import static com.google.android.gms.location.LocationServices.FusedLocationApi;
 
@@ -102,8 +100,9 @@ public class LocationRequestHandler {
 
 		Intent intent = getLocationListenerIntent(gcmRequest);
 
-		PendingIntent listener =
-				PendingIntent.getService(context, 9333, intent, FLAG_UPDATE_CURRENT);
+		// Unique per requester user. So FLAG_UPDATE_CURRENT updates only requests by this user.
+		int requestCode = (int) authorizedFriend.id;
+		PendingIntent listener = PendingIntent.getService(context, requestCode, intent, FLAG_UPDATE_CURRENT);
 
 		// Last location may be to coarse, and users get disappointed.
 		// sendLastKnownLocation(gcmRequest, apiClient);
@@ -121,39 +120,50 @@ public class LocationRequestHandler {
 						.setFastestInterval(TRACKING_INTERVAL_FASTEST.getMillis())
 						.setExpirationDuration(duration.getMillis());
 
-		// Couldn't make it work, listener just doesn't receive intents.
-		scheduleFusedLocationApi(listener, locationRequest);
-
-		//scheduleLocationManager(listener, locationRequest);
+		// Buggy for now: https://code.google.com/p/android/issues/detail?id=197296
+		//scheduleFusedLocationApi(listener, locationRequest);
+		scheduleLocationManager(locationRequest, listener, requestCode);
 	}
 
+	/**
+	 * Schedules location updates using old LocationManager.
+	 * Doesn't require GoogleApiClient, so doesn't depend on Play Services.
+	 * Cannot specify duration, so have to manually call removeUpdates().
+	 */
 	private void scheduleLocationManager(
-			final PendingIntent listener,
-			com.google.android.gms.location.LocationRequest location) {
-		final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+			com.google.android.gms.location.LocationRequest locationRequest,
+			PendingIntent updateListener,
+			int requestCode) {
+		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		try {
-			logger.info("Scheduling LocationManager");
-			locationManager.requestLocationUpdates(
-					GPS_PROVIDER,
-					location.getInterval(),
-					location.getSmallestDisplacement(),
-					listener);
-			logger.info("Scheduled LocationManager");
 
-			new Timer().schedule(new TimerTask() {
-				@Override
-				public void run() {
-					logger.info("Removing LocationManager");
-					locationManager.removeUpdates(listener);
-					logger.info("Remoevd LocationManager");
-				}
-			}, 3000);
+			// Schedule removeUpdates() even before we request them.
+			AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+			Intent stopIntent = LocationStopListener.makeIntent(context, updateListener);
+			PendingIntent pendingStopIntent =
+					PendingIntent.getBroadcast(context, requestCode, stopIntent, FLAG_UPDATE_CURRENT);
+			long stopAt = System.currentTimeMillis() + locationRequest.getExpirationTime();
+			alarmManager.set(AlarmManager.RTC, stopAt, pendingStopIntent);
+			logger.info("Scheduled updates to stop at " + stopAt);
+
+			// Too bad it's @SystemApi.
+			// locationManager.requestLocationUpdates(locationRequest, updateListener);
+
+			locationManager.requestLocationUpdates(
+					LocationManager.GPS_PROVIDER,
+					locationRequest.getInterval(),
+					locationRequest.getSmallestDisplacement(),
+					updateListener);
+			logger.info("Scheduled updates using LocationManager");
 		} catch (SecurityException e) {
 			logger.error("No location permissions", e);
 			ACRA.getErrorReporter().handleSilentException(e);
 		}
 	}
 
+	/**
+	 * Schedules location updates using recommended FusedLocationApi.
+	 */
 	private void scheduleFusedLocationApi(
 			PendingIntent listener,
 			com.google.android.gms.location.LocationRequest locationRequest

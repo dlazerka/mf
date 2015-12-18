@@ -28,13 +28,20 @@ import android.net.Uri;
 import android.os.Looper;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
+
 import com.google.common.base.Joiner;
-import me.lazerka.mf.android.Application;
+
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import me.lazerka.mf.android.Application;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -130,6 +137,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 			);
 			data.put(friendInfo.lookupKey, friendInfo);
 		}
+		contactsCursor.close();
 
 		// Handle emails.
 		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
@@ -143,6 +151,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 			}
 		}
+		emailsCursor.close();
 
 		return new ArrayList<>(data.values());
 	}
