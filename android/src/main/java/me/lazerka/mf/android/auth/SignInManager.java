@@ -24,7 +24,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.support.annotation.WorkerThread;
-import android.support.v4.app.FragmentActivity;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -33,7 +32,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.Builder;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.LocationServices;
@@ -54,24 +52,14 @@ public class SignInManager {
 	private static final Logger logger = LoggerFactory.getLogger(SignInManager.class);
 
 	/**
-	 * @return new instance of GoogleApiClient, with `enableAutoManage()`.
+	 * @return new instance of GoogleApiClient. You have to connect()/disconnect() it yourself.
 	 */
-	public GoogleApiClient newAutoManagedClient(
-			FragmentActivity fragmentActivity,
-			OnConnectionFailedListener listener) {
-		return getGoogleApiClient(fragmentActivity)
-				.enableAutoManage(fragmentActivity, listener)
+	public GoogleApiClient buildClient(Context context) {
+		return getGoogleApiClientBuilder(context)
 				.build();
 	}
 
-	/**
-	 * @return new instance of GoogleApiClient. You have to connect()/disconnect() it yourself.
-	 */
-	public GoogleApiClient newClient(Context context) {
-		return getGoogleApiClient(context).build();
-	}
-
-	private Builder getGoogleApiClient(Context context) {
+	public Builder getGoogleApiClientBuilder(Context context) {
 		GoogleSignInOptions gso = new GoogleSignInOptions.Builder()
 				.requestId()
 				//.requestProfile() // We don't need profile.
@@ -126,7 +114,7 @@ public class SignInManager {
 	 */
 	@WorkerThread
 	public GoogleSignInAccount getAccountBlocking(Context context) throws GoogleApiException {
-		GoogleApiClient client = getGoogleApiClient(context).build();
+		GoogleApiClient client = buildClient(context);
 
 		ConnectionResult connectionResult = client.blockingConnect();
 

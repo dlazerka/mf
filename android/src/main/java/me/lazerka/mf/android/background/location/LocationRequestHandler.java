@@ -169,7 +169,7 @@ public class LocationRequestHandler {
 			com.google.android.gms.location.LocationRequest locationRequest
 	) {
 		SignInManager authenticator = new SignInManager();
-		GoogleApiClient apiClient = authenticator.newClient(context);
+		GoogleApiClient apiClient = authenticator.buildClient(context);
 
 		ConnectionResult connectionResult = apiClient.blockingConnect();
 		if (!connectionResult.isSuccess()) {

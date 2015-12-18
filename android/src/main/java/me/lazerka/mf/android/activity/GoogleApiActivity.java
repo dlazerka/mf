@@ -20,10 +20,11 @@
 
 package me.lazerka.mf.android.activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
+
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
@@ -34,17 +35,19 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.Status;
-import me.lazerka.mf.android.auth.SignInManager;
+
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import me.lazerka.mf.android.auth.SignInManager;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 
 /**
  * @author Dzmitry Lazerka
  */
-public abstract class GoogleApiActivity extends FragmentActivity implements OnConnectionFailedListener {
+public abstract class GoogleApiActivity extends Activity implements OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 	private static final Logger logger = LoggerFactory.getLogger(GoogleApiActivity.class);
 
 	private static final int RC_SIGN_IN = 9001;
@@ -60,29 +63,53 @@ public abstract class GoogleApiActivity extends FragmentActivity implements OnCo
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		googleApiClient = authenticator.newAutoManagedClient(this, this);
+		googleApiClient = authenticator.getGoogleApiClientBuilder(this)
+				.addOnConnectionFailedListener(this)
+				.addConnectionCallbacks(this)
+				.build();
 	}
 
 	@Override
 	public void onConnectionFailed(ConnectionResult connectionResult) {
 		int errorCode = connectionResult.getErrorCode();
+		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
 		GooglePlayServicesUtil.getErrorDialog(errorCode, this, RC_PLAY_ERROR_DIALOG)
 				.show();
 	}
 
 	@Override
+	public void onConnected(Bundle bundle) {
+		logger.info("onConnected");
+	}
+
+	@Override
+	public void onConnectionSuspended(int i) {
+		logger.info("onConnectionSuspended: {}", i);
+	}
+
+
+	@Override
 	protected void onStart() {
 		super.onStart();
 
+		googleApiClient.connect();
+
+		logger.info("1");
 		// Note this is not in onResume(), otherwise we might get infinite loop.
 		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and again.
 		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
+		logger.info("2");
+	}
+
+	@Override
+	protected void onStop() {
+		logger.info("onStop");
+		super.onStop();
+		googleApiClient.disconnect();
 	}
 
 	/** Does nothing. We shouldn't save the result and use it later -- it may expire. */
-	protected void handleSignInSuccess(GoogleSignInAccount account) {
-		logger.info("SignIn successful");
-	}
+	protected void handleSignInSuccess(GoogleSignInAccount account) {}
 
 	protected abstract void handleSignInFailed();
 

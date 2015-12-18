@@ -28,31 +28,34 @@ import android.support.annotation.UiThread;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.FriendInfo;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
-import me.lazerka.mf.android.background.location.LocationUpdateListener;
-import me.lazerka.mf.api.object.GcmResult;
-import me.lazerka.mf.api.object.LocationRequest;
-import me.lazerka.mf.api.object.LocationRequestResult;
+
 import org.acra.ACRA;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
+import me.lazerka.mf.api.object.GcmResult;
+import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationRequestResult;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -83,7 +86,6 @@ public class MainActivity extends GoogleApiActivity {
 	protected void onStart() {
 		super.onStart();
 
-		startService(new Intent(this, LocationUpdateListener.class));
 		// Make sure server knows our GCM token.
 		startService(new Intent(this, GcmRegisterIntentService.class));
 	}
