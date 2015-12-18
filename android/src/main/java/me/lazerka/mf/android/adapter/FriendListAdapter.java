@@ -26,15 +26,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import me.lazerka.mf.android.R;
+
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.annotation.Nonnull;
+
+import me.lazerka.mf.android.R;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -123,27 +126,6 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 		data.clear();
 		notifyDataSetChanged();
 	}
-
-/*
-	public void setServerInfos(List<UserInfo> serverInfos) {
-		Map<String, UserInfo> byEmail = new HashMap<>();
-		for(UserInfo serverInfo : serverInfos) {
-			for(String email : serverInfo.getEmails()) {
-				byEmail.put(email, serverInfo);
-			}
-		}
-
-		for(FriendInfo friendInfo : data) {
-			friendInfo.serverInfos = new HashMap<>();
-			for(String email : friendInfo.emails) {
-				UserInfo userInfo = byEmail.get(email);
-				if (userInfo != null) {
-					friendInfo.serverInfos.put(email, userInfo);
-				}
-			}
-		}
-	}
-*/
 
 	public interface OnFriendClickListener {
 		void onClick(FriendInfo friendInfo);

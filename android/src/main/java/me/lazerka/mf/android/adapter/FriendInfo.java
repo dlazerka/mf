@@ -29,13 +29,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
 
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.api.object.UserInfo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -64,18 +62,6 @@ public class FriendInfo {
 	public final Set<String> emails = new HashSet<>();
 
 	/**
-	 * Server-side data about the user.
-	 * Key is email (client's version, i.e. not canonicalized).
-	 *
-	 * Null means not yet received response from server.
-	 *
-	 * It's totally possible that a contact has multiple emails that correspond to different users on server.
-	 * We handle them all.
-	 */
-	@Nullable
-	public Map<String, UserInfo> serverInfos;
-
-	/**
 	 * Deserializes an instance from a Bundle, created previously by {@link #toBundle()}.
 	 * Uses Jackson for simplicity and easier maintenance.
 	 */
@@ -96,15 +82,13 @@ public class FriendInfo {
 			@Nonnull String lookupKey,
 			@Nonnull String displayName,
 			@Nullable String photoUri,
-			@Nonnull Collection<String> emails,
-			@Nullable Map<String, UserInfo> serverInfos
+			@Nonnull Collection<String> emails
 	) {
 		this.id = id;
 		this.lookupKey = checkNotNull(lookupKey);
 		this.displayName = checkNotNull(displayName);
 		this.photoUri = photoUri;
 		this.emails.addAll(checkNotNull(emails));
-		this.serverInfos = serverInfos;
 	}
 
 	/**

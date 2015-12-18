@@ -34,16 +34,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -161,22 +164,6 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public void onLoadFinished(Loader<List<FriendInfo>> loader, List<FriendInfo> data) {
 			friendListAdapter.setData(data);
-
-/*
-			Set<String> emails = new HashSet<>(data.size());
-			for(FriendInfo friendInfo : data) {
-				emails.addAll(friendInfo.emails);
-			}
-
-			if (!emails.isEmpty()) {
-				UsersInfoRequest usersInfoRequest = new UsersInfoRequest(emails);
-				MainActivity activity = (MainActivity) getActivity();
-				new ApiPost(usersInfoRequest).newCall().execute();
-
-				List<UserInfo> userInfos = response.getUserInfos();
-				friendListAdapter.setServerInfos(userInfos);
-			}
-*/
 		}
 
 		@Override

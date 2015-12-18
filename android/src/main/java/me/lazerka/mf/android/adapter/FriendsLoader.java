@@ -132,8 +132,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 					lookupKey,
 					displayName,
 					photoUri,
-					Collections.<String>emptyList(),
-					null
+					Collections.<String>emptyList()
 			);
 			data.put(friendInfo.lookupKey, friendInfo);
 		}
