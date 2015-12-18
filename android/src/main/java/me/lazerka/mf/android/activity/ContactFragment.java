@@ -27,7 +27,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 import android.widget.Toast;
+
+import org.joda.time.Duration;
 
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
@@ -43,6 +47,8 @@ public class ContactFragment extends Fragment {
 	private static final String FRIEND_INFO = "FRIEND_INFO";
 
 	private FriendInfo friendInfo;
+
+	private final DurationKeeper durationKeeper = new DurationKeeper();
 
 	public static Bundle makeArguments(FriendInfo friendInfo) {
 		Bundle arguments = new Bundle(1);
@@ -63,6 +69,18 @@ public class ContactFragment extends Fragment {
 		FriendViewHolder friendViewHolder = new FriendViewHolder(view);
 		friendViewHolder.bindFriend(friendInfo);
 
+		Spinner spinner = (Spinner) view.findViewById(R.id.duration);
+
+		// Same thing as through XML.
+		//ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+		//		getActivity(),
+		//		R.array.durations_text,
+		//		android.R.layout.simple_spinner_item
+		//);
+		//spinner.setAdapter(adapter);
+
+		spinner.setOnItemSelectedListener(durationKeeper);
+
 		View locate = view.findViewById(R.id.fab_locate);
 		locate.setOnClickListener(
 				new OnClickListener() {
@@ -70,16 +88,37 @@ public class ContactFragment extends Fragment {
 					public void onClick(View v) {
 						MainActivity activity = (MainActivity) getActivity();
 						if (!friendInfo.emails.isEmpty()) {
-							activity.requestLocationUpdates(friendInfo);
+
+							Duration duration = durationKeeper.getSelectedDuration();
+							activity.requestLocationUpdates(friendInfo, duration);
 						} else {
-							String msg = getString(R.string.contact_no_emails);
+							// TODO disable FAB at all and show red warning instead
+							String msg = getString(R.string.contact_no_emails, friendInfo.displayName);
 							Toast.makeText(activity, msg, Toast.LENGTH_LONG)
 									.show();
 						}
-
 					}
 				});
 
 		return view;
+	}
+
+	private class DurationKeeper implements AdapterView.OnItemSelectedListener {
+		private int selected;
+
+		@Override
+		public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+			selected = position;
+		}
+
+		@Override
+		public void onNothingSelected(AdapterView<?> parent) {
+			selected = 0;
+		}
+
+		public Duration getSelectedDuration() {
+			int[] seconds = getResources().getIntArray(R.array.durations_seconds);
+			return Duration.standardSeconds(seconds[selected]);
+		}
 	}
 }

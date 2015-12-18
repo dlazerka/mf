@@ -126,8 +126,9 @@ public class MainActivity extends GoogleApiActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void requestLocationUpdates(@Nonnull final FriendInfo friendInfo) {
+	public void requestLocationUpdates(@Nonnull final FriendInfo friendInfo, @Nonnull final Duration duration) {
 		checkArgument(!friendInfo.emails.isEmpty());
+		checkNotNull(duration);
 
 		runWithAccount(new SignInCallbacks() {
 			@Override
@@ -136,8 +137,11 @@ public class MainActivity extends GoogleApiActivity {
 
 				String requestId = String.valueOf(SystemClock.uptimeMillis());
 				DateTime sentAt = DateTime.now(UTC);
-				Duration duration = Duration.standardMinutes(15);
-				LocationRequest locationRequest = new LocationRequest(requestId, friendInfo.emails, sentAt, duration);
+				LocationRequest locationRequest = new LocationRequest(
+						requestId,
+						friendInfo.emails,
+						sentAt,
+						duration);
 
 				Call call = new ApiPost(locationRequest).newCall(account);
 				call.enqueue(new LocationRequestCallback(friendInfo));

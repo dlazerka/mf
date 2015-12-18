@@ -9,13 +9,13 @@
 		<item>1 hour</item>
 	</string-array>
 
-	<string-array name="durations_seconds">
+	<integer-array name="durations_seconds">
 		<item>60</item>
 		<item>300</item>
 		<item>600</item>
 		<item>900</item>
 		<item>1800</item>
 		<item>3600</item>
-	</string-array>
+	</integer-array>
 
 </resources>

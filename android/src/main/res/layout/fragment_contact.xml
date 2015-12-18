@@ -22,28 +22,16 @@
 		>
 		<include layout="@layout/view_contact"/>
 	</FrameLayout>
-<!--
-
-	<TextView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:textSize="16sp"
-		android:fontFamily="Roboto Regular"
-		android:textColor="@android:color/primary_text_light"
-		android:gravity="end"
-		android:singleLine="true"
-		android:text="@string/duration_for"
-		/>
 
 	<Spinner
-		android:id="@+id/duration_value"
+		android:id="@+id/duration"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:entries="@array/durations_text"
+		android:layout_centerInParent="true"
 		>
 	</Spinner>
 
--->
 	<FrameLayout
 		android:id="@+id/locate"
 		android:layout_width="wrap_content"
