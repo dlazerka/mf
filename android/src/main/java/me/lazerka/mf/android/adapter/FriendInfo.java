@@ -20,20 +20,16 @@
 
 package me.lazerka.mf.android.adapter;
 
-import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-
-import me.lazerka.mf.android.Application;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,34 +40,23 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class FriendInfo {
-	@JsonProperty
+public class FriendInfo implements Parcelable {
 	public long id;
 
-	@JsonProperty
 	public String lookupKey;
 
-	@JsonProperty
 	public String displayName;
 
-	@JsonProperty
 	@Nullable
 	public String photoUri;
 
-	@JsonProperty
 	public final Set<String> emails = new HashSet<>();
 
-	/**
-	 * Deserializes an instance from a Bundle, created previously by {@link #toBundle()}.
-	 * Uses Jackson for simplicity and easier maintenance.
-	 */
-	public static FriendInfo fromBundle(Bundle bundle) {
-		String json = checkNotNull(bundle.getString("json"));
-		try {
-			return Application.jsonMapper.readValue(json, FriendInfo.class);
-		} catch (IOException e) {
-			throw new RuntimeException("Error deserializing", e);
-		}
+	protected FriendInfo(Parcel in) {
+		id = in.readLong();
+		lookupKey = in.readString();
+		displayName = in.readString();
+		photoUri = in.readString();
 	}
 
 	// For Jackson
@@ -91,20 +76,29 @@ public class FriendInfo {
 		this.emails.addAll(checkNotNull(emails));
 	}
 
-	/**
-	 * Serializes this to a Bundle, to be read later by {@link #fromBundle(Bundle)}.
-	 * Uses Jackson for simplicity and easier maintenance.
-	 */
-	public Bundle toBundle() {
-		try {
-			String json = Application.jsonMapper.writeValueAsString(this);
-
-			Bundle result = new Bundle();
-			result.putString("json", json);
-			return result;
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException("Error serializing", e);
-		}
+	@Override
+	public int describeContents() {
+		return 0;
 	}
 
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeLong(id);
+		dest.writeString(lookupKey);
+		dest.writeString(displayName);
+		dest.writeString(photoUri);
+		dest.writeStringList(new ArrayList<>(emails));
+	}
+
+	public static final Creator<FriendInfo> CREATOR = new Creator<FriendInfo>() {
+		@Override
+		public FriendInfo createFromParcel(Parcel in) {
+			return new FriendInfo(in);
+		}
+
+		@Override
+		public FriendInfo[] newArray(int size) {
+			return new FriendInfo[size];
+		}
+	};
 }

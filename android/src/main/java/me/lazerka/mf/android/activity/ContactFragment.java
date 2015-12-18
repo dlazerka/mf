@@ -28,16 +28,27 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka
  * TODO: add null activity handling
  */
 public class ContactFragment extends Fragment {
+	private static final String FRIEND_INFO = "FRIEND_INFO";
+
 	private FriendInfo friendInfo;
+
+	public static Bundle makeArguments(FriendInfo friendInfo) {
+		Bundle arguments = new Bundle(1);
+		arguments.putParcelable(FRIEND_INFO, checkNotNull(friendInfo));
+		return arguments;
+	}
 
 	@Nullable
 	@Override
@@ -47,7 +58,7 @@ public class ContactFragment extends Fragment {
 		View view = inflater.inflate(R.layout.fragment_contact, container, false);
 
 		Bundle arguments = getArguments();
-		friendInfo = FriendInfo.fromBundle(arguments);
+		friendInfo = arguments.getParcelable(FRIEND_INFO);
 
 		FriendViewHolder friendViewHolder = new FriendViewHolder(view);
 		friendViewHolder.bindFriend(friendInfo);

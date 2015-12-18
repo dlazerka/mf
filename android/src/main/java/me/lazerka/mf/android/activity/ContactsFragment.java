@@ -73,6 +73,7 @@ public class ContactsFragment extends Fragment {
 
 		initList(view);
 
+		// TODO: display message "Add some friends ->"
 //		if (Application.preferences.getFriends().isEmpty()) {
 //			openContactPicker();
 //		}
@@ -103,14 +104,16 @@ public class ContactsFragment extends Fragment {
 		@Override
 		public void onClick(FriendInfo friendInfo) {
 			ContactFragment fragment = new ContactFragment();
-			fragment.setArguments(friendInfo.toBundle());
+			Bundle arguments = ContactFragment.makeArguments(friendInfo);
+			fragment.setArguments(arguments);
+
 			getFragmentManager().beginTransaction()
 					.setCustomAnimations(
 							R.animator.slide_from_below, R.animator.slide_to_above,
 							R.animator.slide_from_above, R.animator.slide_to_below
 					)
 					.replace(R.id.bottom_fragment_container, fragment)
-					.addToBackStack(null)
+					.addToBackStack("ContactsFragment")
 					.commit();
 		}
 	}
