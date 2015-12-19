@@ -21,6 +21,7 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -38,6 +40,7 @@ import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author Dzmitry Lazerka
@@ -48,12 +51,17 @@ public class ContactFragment extends Fragment {
 
 	private FriendInfo friendInfo;
 
-	private final DurationKeeper durationKeeper = new DurationKeeper();
-
 	public static Bundle makeArguments(FriendInfo friendInfo) {
 		Bundle arguments = new Bundle(1);
 		arguments.putParcelable(FRIEND_INFO, checkNotNull(friendInfo));
 		return arguments;
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		Bundle arguments = getArguments();
+		friendInfo = checkNotNull(arguments.<FriendInfo>getParcelable(FRIEND_INFO));
 	}
 
 	@Nullable
@@ -63,23 +71,16 @@ public class ContactFragment extends Fragment {
 	) {
 		View view = inflater.inflate(R.layout.fragment_contact, container, false);
 
-		Bundle arguments = getArguments();
-		friendInfo = arguments.getParcelable(FRIEND_INFO);
-
 		FriendViewHolder friendViewHolder = new FriendViewHolder(view);
 		friendViewHolder.bindFriend(friendInfo);
 
 		Spinner spinner = (Spinner) view.findViewById(R.id.duration);
 
-		// Same thing as through XML.
-		//ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-		//		getActivity(),
-		//		R.array.durations_text,
-		//		android.R.layout.simple_spinner_item
-		//);
-		//spinner.setAdapter(adapter);
-
-		spinner.setOnItemSelectedListener(durationKeeper);
+		CharSequence[] durationTexts = getResources().getTextArray(R.array.durations_text);
+		int[] durationValues = getResources().getIntArray(R.array.durations_seconds);
+		final DurationsAdapter durationsAdapter = new DurationsAdapter(getActivity(), durationTexts, durationValues);
+		spinner.setAdapter(durationsAdapter);
+		spinner.setOnItemSelectedListener(durationsAdapter);
 
 		View locate = view.findViewById(R.id.fab_locate);
 		locate.setOnClickListener(
@@ -89,7 +90,7 @@ public class ContactFragment extends Fragment {
 						MainActivity activity = (MainActivity) getActivity();
 						if (!friendInfo.emails.isEmpty()) {
 
-							Duration duration = durationKeeper.getSelectedDuration();
+							Duration duration = durationsAdapter.getSelectedDuration();
 							activity.requestLocationUpdates(friendInfo, duration);
 						} else {
 							// TODO disable FAB at all and show red warning instead
@@ -103,22 +104,32 @@ public class ContactFragment extends Fragment {
 		return view;
 	}
 
-	private class DurationKeeper implements AdapterView.OnItemSelectedListener {
-		private int selected;
+	private static class DurationsAdapter
+			extends ArrayAdapter<CharSequence>
+			implements AdapterView.OnItemSelectedListener {
+		private final int[] itemValues;
+		private int selectedPosition;
+
+		public DurationsAdapter(Context context, CharSequence[] itemLabels, int[] itemValues) {
+			super(context, android.R.layout.simple_spinner_item, itemLabels);
+			this.itemValues = itemValues;
+			checkState(itemValues.length == itemLabels.length);
+			selectedPosition = 0;
+		}
 
 		@Override
 		public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-			selected = position;
+			selectedPosition = position;
 		}
 
 		@Override
 		public void onNothingSelected(AdapterView<?> parent) {
-			selected = 0;
+			selectedPosition = 0;
 		}
 
 		public Duration getSelectedDuration() {
-			int[] seconds = getResources().getIntArray(R.array.durations_seconds);
-			return Duration.standardSeconds(seconds[selected]);
+			int selectedValue = itemValues[selectedPosition];
+			return Duration.standardSeconds(selectedValue);
 		}
 	}
 }

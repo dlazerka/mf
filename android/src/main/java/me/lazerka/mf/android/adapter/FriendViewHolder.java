@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewOutlineProvider;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.view.LetterDrawable;
 
@@ -45,11 +46,11 @@ public class FriendViewHolder extends ViewHolder {
 
 	public void bindFriend(FriendInfo friendInfo) {
 		// Set name.
-		TextView nameView = (TextView) this.itemView.findViewById(R.id.name);
+		TextView nameView = (TextView) itemView.findViewById(R.id.name);
 		nameView.setText(friendInfo.displayName);
 
 		// Set image.
-		ImageView imageView = (ImageView) this.itemView.findViewById(R.id.userpic);
+		ImageView imageView = (ImageView) itemView.findViewById(R.id.userpic);
 		if (friendInfo.photoUri == null || friendInfo.photoUri.isEmpty()) {
 			String displayName = friendInfo.displayName;
 
