@@ -69,6 +69,11 @@ public class GcmReceiveService extends GcmListenerService {
 
 		logger.info("Received message from {}: {} ", from, type);
 
+		if (!from.equals("769083712074")) {
+			logger.warn("GCM message from unknown sender rejected: " + from);
+			return;
+		}
+
 		if (type == null) {
 			logger.warn("Unknown message class " + data);
 			return;
