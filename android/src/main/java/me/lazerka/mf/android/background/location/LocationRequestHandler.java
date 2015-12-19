@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
@@ -46,12 +47,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
-import me.lazerka.mf.android.adapter.FriendInfo;
 import me.lazerka.mf.android.adapter.FriendsLoader;
+import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.LocationRequest;
 
@@ -72,7 +75,18 @@ import static com.google.android.gms.location.LocationServices.FusedLocationApi;
  */
 public class LocationRequestHandler {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
-	private static final int NOTIFICATION_ID = 4321;
+
+	/**
+	 * We want to merge notifications/updates etc per requester.
+	 * For this, we need a unique integer. We probably could just use {@link PersonInfo#id}.intValue(),
+	 * but that's prone to collisions, so let's keep it safe.
+	 */
+	private static final ConcurrentHashMap<String, Integer> requesterCodes = new ConcurrentHashMap<>();
+	private static final AtomicInteger nextCode = new AtomicInteger(1);
+
+	public static final int TRACKING_NOTIFICATION_ID = 4321;
+	public static final int FORBIDDEN_NOTIFICATION_ID = 4322;
+
 	private static final Duration TRACKING_INTERVAL = Duration.standardSeconds(3);
 	private static final Duration TRACKING_INTERVAL_FASTEST = Duration.standardSeconds(1);
 
@@ -87,22 +101,32 @@ public class LocationRequestHandler {
 		logger.info("Received location request from " + requesterEmail);
 
 		// Authorize request.
-		FriendInfo authorizedFriend = authorizeRequestFrom(requesterEmail);
+		PersonInfo authorizedFriend = authorizeRequestFrom(requesterEmail);
+
 		if (authorizedFriend != null) {
 			processAuthorizedRequest(gcmRequest, authorizedFriend);
 		}
 	}
 
-	private void processAuthorizedRequest(LocationRequest gcmRequest, FriendInfo authorizedFriend) {
+	private void processAuthorizedRequest(LocationRequest gcmRequest, PersonInfo requester) {
+		requesterCodes.putIfAbsent(requester.lookupKey, nextCode.getAndIncrement());
+		int requesterCode = requesterCodes.get(requester.lookupKey);
+		int notificationId = TRACKING_NOTIFICATION_ID;
+		String notificationTag = requester.lookupKey;
 
-		// TODO show confirmation dialog
-		showNotification(R.string.asked_your_location, authorizedFriend.displayName);
-
+		// The main thing -- location updates.
 		Intent intent = getLocationListenerIntent(gcmRequest);
+		PendingIntent updateListener =
+				PendingIntent.getService(context, requesterCode, intent, FLAG_UPDATE_CURRENT);
 
-		// Unique per requester user. So FLAG_UPDATE_CURRENT updates only requests by this user.
-		int requestCode = (int) authorizedFriend.id;
-		PendingIntent listener = PendingIntent.getService(context, requestCode, intent, FLAG_UPDATE_CURRENT);
+		// To stop location updates.
+		Intent stopIntent = LocationStopListener.makeIntent(
+				context, intent, requesterCode, notificationId, notificationTag);
+		PendingIntent stopListener =
+				PendingIntent.getService(context, requesterCode, stopIntent, FLAG_UPDATE_CURRENT);
+
+		// To notify user they are being tracked.
+		showTrackingNotification(requester, stopListener, notificationId, notificationTag);
 
 		// Last location may be to coarse, and users get disappointed.
 		// sendLastKnownLocation(gcmRequest, apiClient);
@@ -121,8 +145,8 @@ public class LocationRequestHandler {
 						.setExpirationDuration(duration.getMillis());
 
 		// Buggy for now: https://code.google.com/p/android/issues/detail?id=197296
-		//scheduleFusedLocationApi(listener, locationRequest);
-		scheduleLocationManager(locationRequest, listener, requestCode);
+		//scheduleFusedLocationApi(updateListener, locationRequest);
+		scheduleLocationManager(locationRequest, updateListener, stopListener);
 	}
 
 	/**
@@ -133,18 +157,16 @@ public class LocationRequestHandler {
 	private void scheduleLocationManager(
 			com.google.android.gms.location.LocationRequest locationRequest,
 			PendingIntent updateListener,
-			int requestCode) {
+			PendingIntent stopListener) {
 		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		try {
 
 			// Schedule removeUpdates() even before we request them.
 			AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-			Intent stopIntent = LocationStopListener.makeIntent(context, updateListener);
-			PendingIntent pendingStopIntent =
-					PendingIntent.getBroadcast(context, requestCode, stopIntent, FLAG_UPDATE_CURRENT);
-			long stopAt = System.currentTimeMillis() + locationRequest.getExpirationTime();
-			alarmManager.set(AlarmManager.RTC, stopAt, pendingStopIntent);
-			logger.info("Scheduled updates to stop at " + stopAt);
+			long stopAtUptime = locationRequest.getExpirationTime();
+			alarmManager.set(AlarmManager.ELAPSED_REALTIME, stopAtUptime, stopListener);
+			logger.info("Scheduled updates to stop at {}ms uptime, now: {}",
+					stopAtUptime, SystemClock.elapsedRealtime());
 
 			// Too bad it's @SystemApi.
 			// locationManager.requestLocationUpdates(locationRequest, updateListener);
@@ -236,44 +258,19 @@ public class LocationRequestHandler {
 		}
 	}
 
-	private void showNotification(int resId, String... params) {
-		String message = context.getString(resId, params);
-
-		NotificationManager notificationManager =
-				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-		Intent intent = new Intent(context, MainActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-
-		Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-		Notification notification =
-				new Builder(context)
-						.setSmallIcon(R.mipmap.ic_launcher)
-						.setContentTitle(context.getString(R.string.app_name))
-						.setStyle(new BigTextStyle().bigText(message))
-						.setAutoCancel(true)
-						.setSound(defaultSoundUri)
-						.setContentText(message)
-						.setContentIntent(pendingIntent)
-						.build();
-
-		notificationManager.notify(NOTIFICATION_ID, notification);
-	}
-
 	/**
 	 * @return friendInfo if authorized, or null otherwise.
 	 */
 	@Nullable
-	private FriendInfo authorizeRequestFrom(@Nullable String requesterEmail) {
+	private PersonInfo authorizeRequestFrom(@Nullable String requesterEmail) {
 		FriendsLoader friendsLoader = new FriendsLoader(context);
-		List<FriendInfo> friendInfos = friendsLoader.loadInBackground();
+		List<PersonInfo> personInfos = friendsLoader.loadInBackground();
 
-		FriendInfo friend = null;
-		for(FriendInfo friendInfo : friendInfos) {
+		PersonInfo friend = null;
+		for(PersonInfo personInfo : personInfos) {
 			// TODO check normalized
-			if (friendInfo.emails.contains(requesterEmail)) {
-				friend = friendInfo;
+			if (personInfo.emails.contains(requesterEmail)) {
+				friend = personInfo;
 				break;
 			}
 		}
@@ -282,9 +279,50 @@ public class LocationRequestHandler {
 			logger.warn("Requester not in friends list, rejecting " + requesterEmail);
 
 			// TODO add setting "Ignore unknown to prevent spamming".
-			showNotification(R.string.requester_not_in_friends, requesterEmail);
+			showForbiddenNotification(requesterEmail);
 		}
 
 		return friend;
+	}
+
+	private void showTrackingNotification(
+			PersonInfo person, PendingIntent stopListener, int notificationId, String notificationTag) {
+		String message = context.getString(R.string.tracking_you, person.displayName);
+		Notification notification = getNotificationBuilder(message)
+				.addPerson(person.lookupKey)
+				.addAction(R.drawable.close, context.getString(R.string.stop), stopListener)
+				.setOngoing(true)
+				.build();
+
+		NotificationManager notificationManager =
+				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+		notificationManager.notify(notificationTag, notificationId, notification);
+	}
+
+	private void showForbiddenNotification(String requesterEmail) {
+		String message = context.getString(R.string.requester_not_in_friends, requesterEmail);
+		Notification notification = getNotificationBuilder(message)
+				.setAutoCancel(true)
+				.build();
+
+		NotificationManager notificationManager =
+				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.notify(requesterEmail, FORBIDDEN_NOTIFICATION_ID, notification);
+	}
+
+	private Builder getNotificationBuilder(String message) {
+		Intent intent = new Intent(context, MainActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+
+		Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		return new Builder(context)
+				.setSmallIcon(R.mipmap.ic_launcher)
+				.setContentTitle(context.getString(R.string.app_name))
+				.setStyle(new BigTextStyle().bigText(message))
+				.setSound(defaultSoundUri)
+				.setContentText(message)
+				.setContentIntent(pendingIntent);
 	}
 }

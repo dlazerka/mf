@@ -50,7 +50,7 @@ import javax.annotation.Nonnull;
 
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.background.gcm.GcmRegisterIntentService;
 import me.lazerka.mf.api.object.GcmResult;
@@ -126,8 +126,8 @@ public class MainActivity extends GoogleApiActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void requestLocationUpdates(@Nonnull final FriendInfo friendInfo, @Nonnull final Duration duration) {
-		checkArgument(!friendInfo.emails.isEmpty());
+	public void requestLocationUpdates(@Nonnull final PersonInfo personInfo, @Nonnull final Duration duration) {
+		checkArgument(!personInfo.emails.isEmpty());
 		checkNotNull(duration);
 
 		runWithAccount(new SignInCallbacks() {
@@ -139,15 +139,15 @@ public class MainActivity extends GoogleApiActivity {
 				DateTime sentAt = DateTime.now(UTC);
 				LocationRequest locationRequest = new LocationRequest(
 						requestId,
-						friendInfo.emails,
+						personInfo.emails,
 						sentAt,
 						duration);
 
 				Call call = new ApiPost(locationRequest).newCall(account);
-				call.enqueue(new LocationRequestCallback(friendInfo));
+				call.enqueue(new LocationRequestCallback(personInfo));
 
 				// Todo change to UI text instead of a Toast.
-				String text = getString(R.string.sending_location_request, friendInfo.displayName);
+				String text = getString(R.string.sending_location_request, personInfo.displayName);
 				Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
 			}
 		});
@@ -155,11 +155,11 @@ public class MainActivity extends GoogleApiActivity {
 
 	private class LocationRequestCallback extends JsonParsingCallback<LocationRequestResult> {
 		private final Context context = MainActivity.this;
-		private final FriendInfo friendInfo;
+		private final PersonInfo personInfo;
 
-		public LocationRequestCallback(FriendInfo friendInfo) {
+		public LocationRequestCallback(PersonInfo personInfo) {
 			super(MainActivity.this, LocationRequestResult.class);
-			this.friendInfo = friendInfo;
+			this.personInfo = personInfo;
 		}
 
 		@UiThread
@@ -201,7 +201,7 @@ public class MainActivity extends GoogleApiActivity {
 		@Override
 		protected void onNotFound() {
 			// TODO: show dialog suggesting to send a message to friend.
-			String msg = getString(R.string.contact_havent_installed_app, friendInfo.displayName);
+			String msg = getString(R.string.contact_havent_installed_app, personInfo.displayName);
 			logger.warn(msg);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}

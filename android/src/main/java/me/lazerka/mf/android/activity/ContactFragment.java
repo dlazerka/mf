@@ -36,7 +36,7 @@ import android.widget.Toast;
 import org.joda.time.Duration;
 
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -47,13 +47,13 @@ import static com.google.common.base.Preconditions.checkState;
  * TODO: add null activity handling
  */
 public class ContactFragment extends Fragment {
-	private static final String FRIEND_INFO = "FRIEND_INFO";
+	private static final String PERSON_INFO = "PERSON_INFO";
 
-	private FriendInfo friendInfo;
+	private PersonInfo personInfo;
 
-	public static Bundle makeArguments(FriendInfo friendInfo) {
+	public static Bundle makeArguments(PersonInfo personInfo) {
 		Bundle arguments = new Bundle(1);
-		arguments.putParcelable(FRIEND_INFO, checkNotNull(friendInfo));
+		arguments.putParcelable(PERSON_INFO, checkNotNull(personInfo));
 		return arguments;
 	}
 
@@ -61,7 +61,7 @@ public class ContactFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle arguments = getArguments();
-		friendInfo = checkNotNull(arguments.<FriendInfo>getParcelable(FRIEND_INFO));
+		personInfo = checkNotNull(arguments.<PersonInfo>getParcelable(PERSON_INFO));
 	}
 
 	@Nullable
@@ -72,7 +72,7 @@ public class ContactFragment extends Fragment {
 		View view = inflater.inflate(R.layout.fragment_contact, container, false);
 
 		FriendViewHolder friendViewHolder = new FriendViewHolder(view);
-		friendViewHolder.bindFriend(friendInfo);
+		friendViewHolder.bindFriend(personInfo);
 
 		Spinner spinner = (Spinner) view.findViewById(R.id.duration);
 
@@ -88,13 +88,13 @@ public class ContactFragment extends Fragment {
 					@Override
 					public void onClick(View v) {
 						MainActivity activity = (MainActivity) getActivity();
-						if (!friendInfo.emails.isEmpty()) {
+						if (!personInfo.emails.isEmpty()) {
 
 							Duration duration = durationsAdapter.getSelectedDuration();
-							activity.requestLocationUpdates(friendInfo, duration);
+							activity.requestLocationUpdates(personInfo, duration);
 						} else {
 							// TODO disable FAB at all and show red warning instead
-							String msg = getString(R.string.contact_no_emails, friendInfo.displayName);
+							String msg = getString(R.string.contact_no_emails, personInfo.displayName);
 							Toast.makeText(activity, msg, Toast.LENGTH_LONG)
 									.show();
 						}
@@ -112,6 +112,7 @@ public class ContactFragment extends Fragment {
 
 		public DurationsAdapter(Context context, CharSequence[] itemLabels, int[] itemValues) {
 			super(context, android.R.layout.simple_spinner_item, itemLabels);
+			setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 			this.itemValues = itemValues;
 			checkState(itemValues.length == itemLabels.length);
 			selectedPosition = 0;

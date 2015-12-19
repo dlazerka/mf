@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
+public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	private static final Logger logger = LoggerFactory.getLogger(FriendsLoader.class);
 
 	private final CursorLoader contactsLoader;
@@ -115,37 +115,37 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 	}
 
 	@Override
-	public ArrayList<FriendInfo> loadInBackground() {
+	public ArrayList<PersonInfo> loadInBackground() {
 		Cursor contactsCursor = contactsLoader.loadInBackground();
 		Cursor emailsCursor = emailsLoader.loadInBackground();
 
 		// Handle contacts.
-		Map<String, FriendInfo> data = new LinkedHashMap<>(contactsCursor.getCount());
+		Map<String, PersonInfo> data = new LinkedHashMap<>(contactsCursor.getCount());
 		for (contactsCursor.moveToFirst(); !contactsCursor.isAfterLast(); contactsCursor.moveToNext()) {
 			long id = checkNotNull(contactsCursor.getLong(0));
 			String lookupKey = checkNotNull(contactsCursor.getString(1));
 			String displayName = checkNotNull(contactsCursor.getString(2));
 			String photoUri = contactsCursor.getString(3);
 
-			FriendInfo friendInfo = new FriendInfo(
+			PersonInfo personInfo = new PersonInfo(
 					id,
 					lookupKey,
 					displayName,
 					photoUri,
 					Collections.<String>emptyList()
 			);
-			data.put(friendInfo.lookupKey, friendInfo);
+			data.put(personInfo.lookupKey, personInfo);
 		}
 		contactsCursor.close();
 
 		// Handle emails.
 		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
 			String lookupKey = emailsCursor.getString(0);
-			FriendInfo friendInfo = data.get(lookupKey);
-			if (friendInfo != null) {
-				friendInfo.emails.add(emailsCursor.getString(1));
+			PersonInfo personInfo = data.get(lookupKey);
+			if (personInfo != null) {
+				personInfo.emails.add(emailsCursor.getString(1));
 			} else {
-				String msg = "No friendInfo for setting email to, by lookupKey " + lookupKey;
+				String msg = "No personInfo for setting email to, by lookupKey " + lookupKey;
 				logger.error(msg);
 				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 			}
@@ -176,7 +176,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<FriendInfo>> {
 	}
 
 	@Override
-	public void onCanceled(List<FriendInfo> data) {
+	public void onCanceled(List<PersonInfo> data) {
 		super.onCanceled(data);
 	}
 

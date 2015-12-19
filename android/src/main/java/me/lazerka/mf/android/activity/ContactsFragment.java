@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
 
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.FriendInfo;
+import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
 
@@ -102,9 +102,9 @@ public class ContactsFragment extends Fragment {
 
 	private class OnItemClickListener implements FriendListAdapter.OnFriendClickListener {
 		@Override
-		public void onClick(FriendInfo friendInfo) {
+		public void onClick(PersonInfo personInfo) {
 			ContactFragment fragment = new ContactFragment();
-			Bundle arguments = ContactFragment.makeArguments(friendInfo);
+			Bundle arguments = ContactFragment.makeArguments(personInfo);
 			fragment.setArguments(arguments);
 
 			getFragmentManager().beginTransaction()
@@ -148,7 +148,7 @@ public class ContactsFragment extends Fragment {
 	 *
 	 * @author Dzmitry Lazerka
 	 */
-	public class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<FriendInfo>> {
+	public class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<PersonInfo>> {
 		private final FriendListAdapter friendListAdapter;
 
 		public FriendsLoaderCallbacks(FriendListAdapter friendListAdapter) {
@@ -156,7 +156,7 @@ public class ContactsFragment extends Fragment {
 		}
 
 		@Override
-		public Loader<List<FriendInfo>> onCreateLoader(int loaderId, Bundle args) {
+		public Loader<List<PersonInfo>> onCreateLoader(int loaderId, Bundle args) {
 			if (loaderId != FRIENDS_LOADER_ID) {
 				return null;
 			}
@@ -165,12 +165,12 @@ public class ContactsFragment extends Fragment {
 		}
 
 		@Override
-		public void onLoadFinished(Loader<List<FriendInfo>> loader, List<FriendInfo> data) {
+		public void onLoadFinished(Loader<List<PersonInfo>> loader, List<PersonInfo> data) {
 			friendListAdapter.setData(data);
 		}
 
 		@Override
-		public void onLoaderReset(Loader<List<FriendInfo>> loader) {
+		public void onLoaderReset(Loader<List<PersonInfo>> loader) {
 			friendListAdapter.resetData();
 		}
 	}

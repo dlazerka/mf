@@ -119,7 +119,9 @@
 			android:name=".background.location.LocationUpdateListener"
 			android:exported="false">
 		</service>
-		<receiver android:name=".background.location.LocationStopListener"/>
+		<service android:name=".background.location.LocationStopListener"
+			android:exported="false"
+		/>
 
 		<!-- Called by Android on device boot. -->
 		<receiver android:name=".background.BootReceiver">

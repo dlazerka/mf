@@ -44,15 +44,15 @@ public class FriendViewHolder extends ViewHolder {
 		super(itemView);
 	}
 
-	public void bindFriend(FriendInfo friendInfo) {
+	public void bindFriend(PersonInfo personInfo) {
 		// Set name.
 		TextView nameView = (TextView) itemView.findViewById(R.id.name);
-		nameView.setText(friendInfo.displayName);
+		nameView.setText(personInfo.displayName);
 
 		// Set image.
 		ImageView imageView = (ImageView) itemView.findViewById(R.id.userpic);
-		if (friendInfo.photoUri == null || friendInfo.photoUri.isEmpty()) {
-			String displayName = friendInfo.displayName;
+		if (personInfo.photoUri == null || personInfo.photoUri.isEmpty()) {
+			String displayName = personInfo.displayName;
 
 			char letter = displayName.charAt(0);
 			LetterDrawable drawable = new LetterDrawable(SHAPE, letter, displayName.hashCode());
@@ -62,7 +62,7 @@ public class FriendViewHolder extends ViewHolder {
 			// Even if you don't set anything, make sure to call with null, to clear image of a newly added item.
 			// v.setImageBitmap(null);
 		} else {
-			imageView.setImageURI(Uri.parse(friendInfo.photoUri));
+			imageView.setImageURI(Uri.parse(personInfo.photoUri));
 			imageView.setOutlineProvider(
 					new ViewOutlineProvider() {
 						@Override

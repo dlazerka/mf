@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class FriendInfo implements Parcelable {
+public class PersonInfo implements Parcelable {
 	public long id;
 
 	public String lookupKey;
@@ -52,7 +52,7 @@ public class FriendInfo implements Parcelable {
 
 	public final Set<String> emails = new HashSet<>();
 
-	protected FriendInfo(Parcel in) {
+	protected PersonInfo(Parcel in) {
 		id = in.readLong();
 		lookupKey = in.readString();
 		displayName = in.readString();
@@ -60,9 +60,9 @@ public class FriendInfo implements Parcelable {
 	}
 
 	// For Jackson
-	private FriendInfo() {}
+	private PersonInfo() {}
 
-	public FriendInfo(
+	public PersonInfo(
 			long id,
 			@Nonnull String lookupKey,
 			@Nonnull String displayName,
@@ -90,15 +90,15 @@ public class FriendInfo implements Parcelable {
 		dest.writeStringList(new ArrayList<>(emails));
 	}
 
-	public static final Creator<FriendInfo> CREATOR = new Creator<FriendInfo>() {
+	public static final Creator<PersonInfo> CREATOR = new Creator<PersonInfo>() {
 		@Override
-		public FriendInfo createFromParcel(Parcel in) {
-			return new FriendInfo(in);
+		public PersonInfo createFromParcel(Parcel in) {
+			return new PersonInfo(in);
 		}
 
 		@Override
-		public FriendInfo[] newArray(int size) {
-			return new FriendInfo[size];
+		public PersonInfo[] newArray(int size) {
+			return new PersonInfo[size];
 		}
 	};
 }

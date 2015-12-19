@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	private static final Logger logger = LoggerFactory.getLogger(FriendListAdapter.class);
 
-	private final List<FriendInfo> data = new ArrayList<>();
+	private final List<PersonInfo> data = new ArrayList<>();
 	private final OnFriendClickListener onFriendClickListener;
 	private final OnClickListener onAddFriendClickListener;
 
@@ -98,9 +98,9 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 				return;
 			}
 
-			FriendInfo friendInfo = data.get(position);
-			friendViewHolder.bindFriend(friendInfo);
-			friendViewHolder.itemView.setOnClickListener(new OnItemClickListener(friendInfo));
+			PersonInfo personInfo = data.get(position);
+			friendViewHolder.bindFriend(personInfo);
+			friendViewHolder.itemView.setOnClickListener(new OnItemClickListener(personInfo));
 		} else if (data.size() == position) {
 			// This is add button.
 			((AddFriendViewHolder) holder).bind(onAddFriendClickListener);
@@ -116,7 +116,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 		return data.size() + 1;
 	}
 
-	public void setData(@Nonnull Collection<FriendInfo> data) {
+	public void setData(@Nonnull Collection<PersonInfo> data) {
 		this.data.clear();
 		this.data.addAll(data);
 		notifyDataSetChanged();
@@ -128,20 +128,20 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 	}
 
 	public interface OnFriendClickListener {
-		void onClick(FriendInfo friendInfo);
+		void onClick(PersonInfo personInfo);
 	}
 
 	private class OnItemClickListener implements OnClickListener {
 
-		private final FriendInfo friendInfo;
+		private final PersonInfo personInfo;
 
-		private OnItemClickListener(FriendInfo friendInfo) {
-			this.friendInfo = friendInfo;
+		private OnItemClickListener(PersonInfo personInfo) {
+			this.personInfo = personInfo;
 		}
 
 		@Override
 		public void onClick(View v) {
-			onFriendClickListener.onClick(friendInfo);
+			onFriendClickListener.onClick(personInfo);
 		}
 	}
 }
