@@ -28,16 +28,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.joda.time.Duration;
 
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
+import me.lazerka.mf.android.adapter.PersonInfo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -50,6 +50,8 @@ public class ContactFragment extends Fragment {
 	private static final String PERSON_INFO = "PERSON_INFO";
 
 	private PersonInfo personInfo;
+	private int[] durationValues;
+	private Spinner spinner;
 
 	public static Bundle makeArguments(PersonInfo personInfo) {
 		Bundle arguments = new Bundle(1);
@@ -74,13 +76,19 @@ public class ContactFragment extends Fragment {
 		FriendViewHolder friendViewHolder = new FriendViewHolder(view);
 		friendViewHolder.bindFriend(personInfo);
 
-		Spinner spinner = (Spinner) view.findViewById(R.id.duration);
+		TextView findMsg = (TextView) view.findViewById(R.id.find_msg);
+		findMsg.setText(getString(R.string.find_person, personInfo.displayName));
+
+		spinner = (Spinner) view.findViewById(R.id.duration);
 
 		CharSequence[] durationTexts = getResources().getTextArray(R.array.durations_text);
-		int[] durationValues = getResources().getIntArray(R.array.durations_seconds);
-		final DurationsAdapter durationsAdapter = new DurationsAdapter(getActivity(), durationTexts, durationValues);
+		durationValues = getResources().getIntArray(R.array.durations_seconds);
+		checkState(durationTexts.length == durationValues.length);
+
+		final DurationsAdapter durationsAdapter = new DurationsAdapter(getActivity(), durationTexts);
 		spinner.setAdapter(durationsAdapter);
-		spinner.setOnItemSelectedListener(durationsAdapter);
+		// Remember user selection in preferences.
+		spinner.setSelection(2);
 
 		View locate = view.findViewById(R.id.fab_locate);
 		locate.setOnClickListener(
@@ -90,7 +98,7 @@ public class ContactFragment extends Fragment {
 						MainActivity activity = (MainActivity) getActivity();
 						if (!personInfo.emails.isEmpty()) {
 
-							Duration duration = durationsAdapter.getSelectedDuration();
+							Duration duration = getSelectedDuration();
 							activity.requestLocationUpdates(personInfo, duration);
 						} else {
 							// TODO disable FAB at all and show red warning instead
@@ -104,33 +112,19 @@ public class ContactFragment extends Fragment {
 		return view;
 	}
 
-	private static class DurationsAdapter
-			extends ArrayAdapter<CharSequence>
-			implements AdapterView.OnItemSelectedListener {
-		private final int[] itemValues;
-		private int selectedPosition;
+	public Duration getSelectedDuration() {
+		int position = spinner.getSelectedItemPosition();
+		int selectedValue = durationValues[position];
+		return Duration.standardSeconds(selectedValue);
+	}
 
-		public DurationsAdapter(Context context, CharSequence[] itemLabels, int[] itemValues) {
+	private static class DurationsAdapter extends ArrayAdapter<CharSequence> {
+		public DurationsAdapter(Context context, CharSequence[] itemLabels) {
+			//super(context, R.layout.view_dropdown_item, itemLabels);
 			super(context, android.R.layout.simple_spinner_item, itemLabels);
+
+			// Item in opened dropdown.
 			setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			this.itemValues = itemValues;
-			checkState(itemValues.length == itemLabels.length);
-			selectedPosition = 0;
-		}
-
-		@Override
-		public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-			selectedPosition = position;
-		}
-
-		@Override
-		public void onNothingSelected(AdapterView<?> parent) {
-			selectedPosition = 0;
-		}
-
-		public Duration getSelectedDuration() {
-			int selectedValue = itemValues[selectedPosition];
-			return Duration.standardSeconds(selectedValue);
 		}
 	}
 }

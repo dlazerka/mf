@@ -1,4 +1,12 @@
 <resources>
 	<style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
 	</style>
+
+	<style name="Spinner" parent="android:Widget.Material.Spinner.Underlined">
+	</style>
+
+	<style name="SpinnerItem" parent="android:Widget.TextView.SpinnerItem">
+		<item name="android:gravity">end</item>
+	</style>
+
 </resources>

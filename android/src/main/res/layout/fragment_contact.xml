@@ -21,16 +21,59 @@
 		android:layout_alignParentStart="true"
 		>
 		<include layout="@layout/view_contact"/>
+
+<!--
+		<ImageButton
+			android:id="@+id/remove"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="@dimen/badge_margin"
+			android:layout_marginTop="@dimen/badge_margin"
+			android:src="@drawable/close"
+			android:background="@color/contact_badge_action_bg"
+			android:contentDescription="@string/remove"
+			/>
+-->
 	</FrameLayout>
 
-	<Spinner
-		android:id="@+id/duration"
+	<LinearLayout
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_centerInParent="true"
+		android:layout_centerVertical="true"
+		android:orientation="vertical"
 		android:layout_toStartOf="@+id/locate"
+		android:gravity="end"
 		>
-	</Spinner>
+		<TextView
+			android:id="@+id/find_msg"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textAlignment="viewEnd"
+			android:textSize="@dimen/contact_text_size"
+			android:layout_marginEnd="@dimen/badge_margin"
+		/>
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			android:layout_marginTop="4dp"
+			>
+			<TextView
+				android:id="@+id/follow_msg"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/follow_for"
+				android:textSize="@dimen/contact_text_size"
+			/>
+			<Spinner
+				android:id="@+id/duration"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				style="@android:style/Widget.Material.Spinner.Underlined"
+				android:background="@drawable/spinner_background_material"
+			/>
+		</LinearLayout>
+	</LinearLayout>
 
 	<FrameLayout
 		android:id="@+id/locate"

@@ -18,7 +18,6 @@ I\'m here (via \"%2$s\" app)</string>
 via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="my_location_subject">I\'m here</string>
 	<string name="userpic_alt">Userpic</string>
-	<string name="delete_alt">Delete</string>
 	<string name="gmaps_url">https://www.google.com/maps/@%1$.7f,%2$.7f,%3$dz</string>
 	<string name="contact_no_emails">%1$s doesn\'t have any emails.</string>
 	<string name="drawer_indicator_desc">left drawer</string>
@@ -42,5 +41,8 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="requester_not_in_friends">%1$s is not in friend-list, rejected</string>
 	<string name="tracking_you">%1$s is tracking you</string>
 	<string name="stop">Stop</string>
+	<string name="remove">Remove</string>
+	<string name="find_person">Find %1$s</string>
+	<string name="follow_for">Follow for</string>
 
 </resources>

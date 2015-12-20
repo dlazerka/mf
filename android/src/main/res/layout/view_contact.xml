@@ -4,7 +4,7 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_height="@dimen/contact_cell_size"
 	android:layout_width="@dimen/contact_cell_size"
-	android:layout_margin="8dp"
+	android:layout_margin="@dimen/badge_margin"
 	android:orientation="horizontal"
 	tools:context=".activity.ContactsFragment"
 	>
@@ -15,7 +15,8 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:contentDescription="@string/userpic_alt"
-		android:layout_gravity="center_vertical"/>
+		android:layout_gravity="center_vertical"
+	/>
 
 	<LinearLayout
 		android:layout_width="match_parent"
@@ -34,17 +35,4 @@
 			/>
 	</LinearLayout>
 
-	<!-- Hidden by width -->
-<!--
-	<ImageButton
-		android:id="@+id/remove"
-		android:layout_width="0dp"
-		android:layout_height="0dp"
-		android:visibility="gone"
-		android:src="@android:drawable/ic_menu_close_clear_cancel"
-		android:layout_gravity="center_vertical"
-		android:background="@color/transparent"
-		android:contentDescription="@string/delete_alt"
-		/>
--->
 </LinearLayout>
