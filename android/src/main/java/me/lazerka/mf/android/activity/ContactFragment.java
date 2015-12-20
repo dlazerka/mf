@@ -20,8 +20,10 @@
 
 package me.lazerka.mf.android.activity;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -34,7 +36,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
@@ -47,6 +52,8 @@ import static com.google.common.base.Preconditions.checkState;
  * TODO: add null activity handling
  */
 public class ContactFragment extends Fragment {
+	private static final Logger logger = LoggerFactory.getLogger(ContactFragment.class);
+
 	private static final String PERSON_INFO = "PERSON_INFO";
 
 	private PersonInfo personInfo;
@@ -78,6 +85,26 @@ public class ContactFragment extends Fragment {
 
 		TextView findMsg = (TextView) view.findViewById(R.id.find_msg);
 		findMsg.setText(getString(R.string.find_person, personInfo.displayName));
+
+		View removeFriend = view.findViewById(R.id.remove_friend);
+		removeFriend.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String message = getString(R.string.confirm_remove, personInfo.displayName);
+				AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
+						.setMessage(message)
+						.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								Application.preferences.removeFriend(personInfo.lookupKey);
+								getFragmentManager().popBackStack();
+							}
+						})
+						.setNegativeButton(R.string.cancel, null)
+						.create();
+				alertDialog.show();
+			}
+		});
 
 		spinner = (Spinner) view.findViewById(R.id.duration);
 

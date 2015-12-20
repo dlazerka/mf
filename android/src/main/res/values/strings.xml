@@ -44,5 +44,7 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="remove">Remove</string>
 	<string name="find_person">Find %1$s</string>
 	<string name="follow_for">Follow for</string>
+	<string name="confirm_remove">Remove %1$s from friends list?</string>
+	<string name="cancel">Cancel</string>
 
 </resources>

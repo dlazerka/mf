@@ -20,6 +20,7 @@
 
 package me.lazerka.mf.android.adapter;
 
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -101,4 +102,8 @@ public class PersonInfo implements Parcelable {
 			return new PersonInfo[size];
 		}
 	};
+
+	public Uri getUri() {
+		return Uri.parse(lookupKey);
+	}
 }

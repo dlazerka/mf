@@ -25,11 +25,17 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.WorkerThread;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.annotation.Nonnull;
-import java.util.*;
 
 /**
  * Type-safe API for SharedPreferences, so that we have one place for them.
@@ -59,24 +65,26 @@ public class Preferences {
 	}
 
 	@Nonnull
-	public List<Uri> getFriends() {
-		Set<String> set = preferences.getStringSet(FRIENDS, Collections.<String>emptySet());
-		List<Uri> result = new ArrayList<>(set.size());
-		for(String uriString : set) {
-			Uri parsed = Uri.parse(uriString);
-			result.add(parsed);
-		}
-		logger.trace("getFriends " + result.size());
-		return result;
+	public Set<String> getFriends() {
+		return Collections.unmodifiableSet(preferences.getStringSet(FRIENDS, Collections.<String>emptySet()));
 	}
 
-	public boolean addFriend(Uri contactUri) {
-		logger.info("addFriend " + contactUri);
+	public String toLookupKey(Uri uri) {
+		// Uri is like content://com.android.contacts/contacts/lookup/822ig%3A105666563920567332652/2379
+		// Last segment is "_id" (unstable), and before that is "lookup" (stable).
+		List<String> pathSegments = uri.getPathSegments();
+		// Need to encode, because they're stored that way.
+		return Uri.encode(pathSegments.get(2));
+	}
+
+	public boolean addFriend(String lookupKey) {
+		logger.info("addFriend " + lookupKey);
 		synchronized (preferences) {
 			// Clone, otherwise value won't be set.
 			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(FRIENDS, new HashSet<String>(1)));
-			boolean changed = friends.add(contactUri.toString());
+			boolean changed = friends.add(lookupKey);
 			if (!changed) {
+				logger.warn("Trying to add already friended " + lookupKey);
 				return false;
 			}
 			preferences.edit()
@@ -86,13 +94,14 @@ public class Preferences {
 		}
 	}
 
-	public boolean removeFriend(Uri contactUri) {
-		logger.info("removeFriend " + contactUri);
+	public boolean removeFriend(String lookupKey) {
+		logger.info("removeFriend {}", lookupKey);
 		synchronized (preferences) {
 			// Clone, otherwise value won't be set.
 			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(FRIENDS, new HashSet<String>(0)));
-			boolean changed = friends.remove(contactUri.toString());
+			boolean changed = friends.remove(lookupKey);
 			if (!changed) {
+				logger.warn("Trying to remove nonexistent friend " + lookupKey);
 				return false;
 			}
 			preferences.edit()
@@ -105,7 +114,6 @@ public class Preferences {
 	/**
 	 * This should not be backed up when user uses Backup/Restore feature.
 	 * See MfBackupAgent for that.
-	 * @param token
 	 */
 	@SuppressLint("CommitPrefEdits")
 	@WorkerThread
@@ -114,7 +122,7 @@ public class Preferences {
 		preferences.edit()
 				.putLong(GCM_TOKEN_SENT_AT, System.currentTimeMillis())
 				.putInt(GCM_APP_VERSION, Application.getVersion())
-				.commit();
+				.apply();
 	}
 
 	/**
@@ -128,7 +136,7 @@ public class Preferences {
 		preferences.edit()
 				.remove(GCM_TOKEN_SENT_AT)
 				.remove(GCM_APP_VERSION)
-				.commit();
+				.apply();
 	}
 
 

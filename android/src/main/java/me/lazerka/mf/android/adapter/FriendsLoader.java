@@ -24,7 +24,6 @@ import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Looper;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
@@ -40,10 +39,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import me.lazerka.mf.android.Application;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Application.preferences;
 
 /**
  * Combination of two CursorLoaders -- for contacts, and for their emails.
@@ -66,7 +65,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 			Looper.prepare();
 		}
 
-		List<String> lookupUris = getFriendsLookupUris();
+		Set<String> lookupUris = preferences.getFriends();
 
 		// "?,?,?,?" as many as there are lookupUris
 		String placeholders = Joiner.on(',').useForNull("?").join(new String[lookupUris.size()]);
@@ -100,20 +99,6 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		);
 	}
 
-	private static List<String> getFriendsLookupUris() {
-		List<Uri> friends = Application.preferences.getFriends();
-		List<String> lookups = new ArrayList<>(friends.size());
-		for(Uri uri : friends) {
-			// Uri is like content://com.android.contacts/contacts/lookup/822ig%3A105666563920567332652/2379
-			// Last segment is "_id" (unstable), and before that is "lookup" (stable).
-			List<String> pathSegments = uri.getPathSegments();
-			// Need to encode, because they're stored that way.
-			String lookup = Uri.encode(pathSegments.get(2));
-			lookups.add(lookup);
-		}
-		return lookups;
-	}
-
 	@Override
 	public ArrayList<PersonInfo> loadInBackground() {
 		Cursor contactsCursor = contactsLoader.loadInBackground();
@@ -136,7 +121,6 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 			);
 			data.put(personInfo.lookupKey, personInfo);
 		}
-		contactsCursor.close();
 
 		// Handle emails.
 		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
@@ -150,9 +134,13 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
 			}
 		}
-		emailsCursor.close();
 
 		return new ArrayList<>(data.values());
+	}
+
+	@Override
+	public void deliverResult(List<PersonInfo> data) {
+		super.deliverResult(data);
 	}
 
 	@Override
@@ -173,16 +161,22 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	@Override
 	protected void onStopLoading() {
 		super.onStopLoading();
+		contactsLoader.stopLoading();
+		emailsLoader.stopLoading();
 	}
 
 	@Override
 	public void onCanceled(List<PersonInfo> data) {
 		super.onCanceled(data);
+		contactsLoader.cancelLoad();
+		emailsLoader.cancelLoad();
 	}
 
 	@Override
 	protected void onReset() {
 		super.onReset();
+		contactsLoader.reset();
+		emailsLoader.reset();
 	}
 
 }

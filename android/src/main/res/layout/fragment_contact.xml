@@ -22,9 +22,9 @@
 		>
 		<include layout="@layout/view_contact"/>
 
-<!--
+
 		<ImageButton
-			android:id="@+id/remove"
+			android:id="@+id/remove_friend"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="@dimen/badge_margin"
@@ -33,7 +33,6 @@
 			android:background="@color/contact_badge_action_bg"
 			android:contentDescription="@string/remove"
 			/>
--->
 	</FrameLayout>
 
 	<LinearLayout

@@ -42,13 +42,13 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
+import me.lazerka.mf.android.adapter.PersonInfo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Application.preferences;
 
 /**
  * @author Dzmitry Lazerka
@@ -63,6 +63,16 @@ public class ContactsFragment extends Fragment {
 	private final int CONTACT_PICKER_RESULT = 1;
 
 	private FriendsLoaderCallbacks friendsLoaderCallbacks;
+	private FriendListAdapter friendListAdapter;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		friendListAdapter = new FriendListAdapter(
+				new OnItemClickListener(),
+				new OnAddFriendClickListener());
+	}
 
 	@Nullable
 	@Override
@@ -81,6 +91,13 @@ public class ContactsFragment extends Fragment {
 		return view;
 	}
 
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		friendListAdapter.notifyDataSetChanged();
+	}
+
 	private void initList(View view) {
 		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.contacts_list);
 
@@ -90,10 +107,6 @@ public class ContactsFragment extends Fragment {
 
 		// Optimization
 		recyclerView.setHasFixedSize(true);
-
-		FriendListAdapter friendListAdapter = new FriendListAdapter(
-				new OnItemClickListener(),
-				new OnAddFriendClickListener());
 		recyclerView.setAdapter(friendListAdapter);
 
 		friendsLoaderCallbacks = new FriendsLoaderCallbacks(friendListAdapter);
@@ -129,7 +142,8 @@ public class ContactsFragment extends Fragment {
 			Uri contactUri = data.getData();
 			logger.info("Adding friend: " + contactUri);
 
-			Application.preferences.addFriend(contactUri);
+			String lookupKey = preferences.toLookupKey(contactUri);
+			preferences.addFriend(lookupKey);
 
 			getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 		}
