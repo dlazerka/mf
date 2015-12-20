@@ -56,6 +56,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 
 	private final CursorLoader contactsLoader;
 	private final CursorLoader emailsLoader;
+	private ArrayList<PersonInfo> data;
 
 	public FriendsLoader(Context context) {
 		super(context);
@@ -135,12 +136,12 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 			}
 		}
 
-		return new ArrayList<>(data.values());
-	}
+		// As we've read the whole data, we don't need to stream
+		contactsCursor.close();
+		emailsCursor.close();
 
-	@Override
-	public void deliverResult(List<PersonInfo> data) {
-		super.deliverResult(data);
+		this.data = new ArrayList<>(data.values());
+		return this.data;
 	}
 
 	@Override
@@ -151,9 +152,11 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 
 	@Override
 	protected void onStartLoading() {
-		super.onStartLoading();
+		if (data != null) {
+			deliverResult(data);
+		}
 
-		if (isStarted()) {
+		if (takeContentChanged() || data == null) {
 			forceLoad();
 		}
 	}
@@ -168,8 +171,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	@Override
 	public void onCanceled(List<PersonInfo> data) {
 		super.onCanceled(data);
-		contactsLoader.cancelLoad();
-		emailsLoader.cancelLoad();
+		// We cannot close `data`.
 	}
 
 	@Override
