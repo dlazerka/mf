@@ -25,6 +25,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +46,7 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
 
+import static android.provider.ContactsContract.QuickContact.MODE_LARGE;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -84,7 +86,14 @@ public class ContactFragment extends Fragment {
 		View view = inflater.inflate(R.layout.fragment_contact, container, false);
 
 		FriendViewHolder friendViewHolder = new FriendViewHolder(view);
-		friendViewHolder.bindFriend(personInfo);
+		friendViewHolder.bindFriend(personInfo, new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				ContactsContract.QuickContact.showQuickContact(
+						getActivity(), v, personInfo.lookupUri, MODE_LARGE, new String[0]
+				);
+			}
+		});
 
 		TextView findMsg = (TextView) view.findViewById(R.id.find_msg);
 		findMsg.setText(getString(R.string.find_person, personInfo.displayName));

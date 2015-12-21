@@ -99,8 +99,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 			}
 
 			PersonInfo personInfo = data.get(position);
-			friendViewHolder.bindFriend(personInfo);
-			friendViewHolder.itemView.setOnClickListener(new OnItemClickListener(personInfo));
+			friendViewHolder.bindFriend(personInfo, new OnItemClickListener(personInfo));
 		} else if (data.size() == position) {
 			// This is add button.
 			((AddFriendViewHolder) holder).bind(onAddFriendClickListener);

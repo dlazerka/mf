@@ -44,7 +44,7 @@ public class FriendViewHolder extends ViewHolder {
 		super(itemView);
 	}
 
-	public void bindFriend(PersonInfo personInfo) {
+	public void bindFriend(PersonInfo personInfo, View.OnClickListener listener) {
 		// Set name.
 		TextView nameView = (TextView) itemView.findViewById(R.id.name);
 		nameView.setText(personInfo.displayName);
@@ -73,5 +73,7 @@ public class FriendViewHolder extends ViewHolder {
 					});
 			imageView.setClipToOutline(true);
 		}
+
+		imageView.setOnClickListener(listener);
 	}
 }
