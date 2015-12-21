@@ -48,7 +48,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.background.ApiPost;
@@ -109,10 +108,9 @@ public class MainActivity extends GoogleApiActivity {
 		Intent intent;
 		switch (item.getItemId()) {
 			case R.id.action_logout:
-				Application.preferences.clearAccount();
-				intent = new Intent(this, LoginActivity.class);
-				startActivity(intent);
-				finish();
+				//intent = new Intent(this, LoginActivity.class);
+				//startActivity(intent);
+				//finish();
 				break;
 			case R.id.clear_token:
 				//

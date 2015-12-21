@@ -24,25 +24,29 @@ import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Looper;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.SetMultimap;
 
-import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.FriendsService;
+import rx.Subscription;
+import rx.functions.Action1;
+import rx.observers.Subscribers;
+
 import static com.google.common.base.Preconditions.checkNotNull;
-import static me.lazerka.mf.android.Application.preferences;
 
 /**
  * Combination of two CursorLoaders -- for contacts, and for their emails.
@@ -54,9 +58,13 @@ import static me.lazerka.mf.android.Application.preferences;
 public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	private static final Logger logger = LoggerFactory.getLogger(FriendsLoader.class);
 
-	private final CursorLoader contactsLoader;
-	private final CursorLoader emailsLoader;
-	private ArrayList<PersonInfo> data;
+	private final ForceLoadContentObserver observer = new ForceLoadContentObserver();
+
+	private CursorLoader contactsLoader;
+	private CursorLoader emailsLoader;
+
+	private final FriendsService friendsService = Application.friendsService;
+	private Subscription subscription;
 
 	public FriendsLoader(Context context) {
 		super(context);
@@ -65,16 +73,19 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		if (Looper.myLooper() != Looper.getMainLooper()) {
 			Looper.prepare();
 		}
+	}
 
-		Set<String> lookupUris = preferences.getFriends();
+	@Override
+	public ArrayList<PersonInfo> loadInBackground() {
+		Set<String> lookupKeys = friendsService.getFriendsLookupKeys();
 
 		// "?,?,?,?" as many as there are lookupUris
-		String placeholders = Joiner.on(',').useForNull("?").join(new String[lookupUris.size()]);
+		String placeholders = Joiner.on(',').useForNull("?").join(new String[lookupKeys.size()]);
 
-		String[] selectionArgs = lookupUris.toArray(new String[lookupUris.size()]);
+		String[] selectionArgs = lookupKeys.toArray(new String[lookupKeys.size()]);
 
 		contactsLoader = new CursorLoader(
-				context,
+				getContext(),
 				Contacts.CONTENT_URI, // Table to query
 				new String[]{
 						Contacts._ID,
@@ -88,7 +99,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		);
 
 		emailsLoader = new CursorLoader(
-				context,
+				getContext(),
 				Email.CONTENT_URI, // Table to query
 				new String[]{
 						Email.LOOKUP_KEY,
@@ -98,50 +109,42 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 				selectionArgs, // No selection arguments
 				Email.SORT_KEY_PRIMARY
 		);
-	}
 
-	@Override
-	public ArrayList<PersonInfo> loadInBackground() {
 		Cursor contactsCursor = contactsLoader.loadInBackground();
 		Cursor emailsCursor = emailsLoader.loadInBackground();
 
+		contactsCursor.registerContentObserver(observer);
+		emailsCursor.registerContentObserver(observer);
+
+		// Handle emails.
+		SetMultimap<String, String> allEmails = LinkedHashMultimap.create();
+		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
+			String lookupKey = checkNotNull(emailsCursor.getString(0));
+			String email = checkNotNull(emailsCursor.getString(1));
+			allEmails.put(lookupKey, email);
+		}
+
 		// Handle contacts.
-		Map<String, PersonInfo> data = new LinkedHashMap<>(contactsCursor.getCount());
+		ArrayList<PersonInfo> data = new ArrayList<>(contactsCursor.getCount());
 		for (contactsCursor.moveToFirst(); !contactsCursor.isAfterLast(); contactsCursor.moveToNext()) {
 			long id = checkNotNull(contactsCursor.getLong(0));
 			String lookupKey = checkNotNull(contactsCursor.getString(1));
 			String displayName = checkNotNull(contactsCursor.getString(2));
 			String photoUri = contactsCursor.getString(3);
+			Uri lookupUri = Contacts.getLookupUri(id, lookupKey);
+			Set<String> emails = allEmails.get(lookupKey);
 
-			PersonInfo personInfo = new PersonInfo(
+			data.add(new PersonInfo(
 					id,
 					lookupKey,
+					lookupUri,
 					displayName,
 					photoUri,
-					Collections.<String>emptyList()
-			);
-			data.put(personInfo.lookupKey, personInfo);
+					emails
+			));
 		}
 
-		// Handle emails.
-		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
-			String lookupKey = emailsCursor.getString(0);
-			PersonInfo personInfo = data.get(lookupKey);
-			if (personInfo != null) {
-				personInfo.emails.add(emailsCursor.getString(1));
-			} else {
-				String msg = "No personInfo for setting email to, by lookupKey " + lookupKey;
-				logger.error(msg);
-				ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
-			}
-		}
-
-		// As we've read the whole data, we don't need to stream
-		contactsCursor.close();
-		emailsCursor.close();
-
-		this.data = new ArrayList<>(data.values());
-		return this.data;
+		return data;
 	}
 
 	@Override
@@ -152,15 +155,29 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 
 	@Override
 	protected void onStartLoading() {
-		if (data != null) {
-			deliverResult(data);
+		if (subscription == null) {
+			subscription = friendsService.observable()
+					// Multithreaded OK.
+					//.subscribeOn(AndroidSchedulers.mainThread())
+					//.observeOn(AndroidSchedulers.mainThread())
+					.subscribe(Subscribers.create(new Action1<FriendsService.Change>() {
+						@Override
+						public void call(FriendsService.Change change) {
+							logger.info("Detected friends list changed, firing onChange.");
+							observer.onChange(true);
+						}
+					}));
 		}
 
-		if (takeContentChanged() || data == null) {
+		if (isStarted()) {
+			takeContentChanged();
 			forceLoad();
 		}
 	}
 
+	/**
+	 * Called when e.g. Activity is stopped.
+	 */
 	@Override
 	protected void onStopLoading() {
 		super.onStopLoading();
@@ -169,16 +186,22 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	}
 
 	@Override
-	public void onCanceled(List<PersonInfo> data) {
-		super.onCanceled(data);
-		// We cannot close `data`.
+	protected void onReset() {
+		super.onReset();
+
+		if (subscription != null) {
+			subscription.unsubscribe();
+			subscription = null;
+		}
+
+		contactsLoader.reset();
+		emailsLoader.reset();
 	}
 
 	@Override
-	protected void onReset() {
-		super.onReset();
-		contactsLoader.reset();
-		emailsLoader.reset();
+	public void onCanceled(List<PersonInfo> data) {
+		super.onCanceled(data);
+		// Nothing to release for `data`.
 	}
 
 }

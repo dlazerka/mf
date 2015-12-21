@@ -25,10 +25,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 
-import java.util.ArrayList;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 
@@ -42,53 +42,71 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class PersonInfo implements Parcelable {
-	public long id;
+	public final long id;
 
-	public String lookupKey;
+	@Nonnull
+	public final String lookupKey;
 
-	public String displayName;
+	@Nonnull
+	public final Uri lookupUri;
+
+	@Nonnull
+	public final String displayName;
 
 	@Nullable
-	public String photoUri;
+	public final String photoUri;
 
-	public final Set<String> emails = new HashSet<>();
-
-	protected PersonInfo(Parcel in) {
-		id = in.readLong();
-		lookupKey = in.readString();
-		displayName = in.readString();
-		photoUri = in.readString();
-	}
-
-	// For Jackson
-	private PersonInfo() {}
+	public final ImmutableSet<String> emails;
 
 	public PersonInfo(
 			long id,
 			@Nonnull String lookupKey,
+			@Nonnull Uri lookupUri,
 			@Nonnull String displayName,
 			@Nullable String photoUri,
 			@Nonnull Collection<String> emails
 	) {
 		this.id = id;
 		this.lookupKey = checkNotNull(lookupKey);
+		this.lookupUri = checkNotNull(lookupUri);
 		this.displayName = checkNotNull(displayName);
 		this.photoUri = photoUri;
-		this.emails.addAll(checkNotNull(emails));
+		this.emails = ImmutableSet.copyOf(emails);
 	}
 
 	@Override
-	public int describeContents() {
-		return 0;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof PersonInfo)) return false;
+		PersonInfo that = (PersonInfo) o;
+		return lookupKey.equals(that.lookupKey);
 	}
 
 	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeLong(id);
-		dest.writeString(lookupKey);
-		dest.writeString(displayName);
-		dest.writeString(photoUri);
-		dest.writeStringList(new ArrayList<>(emails));
+	public int hashCode() {
+		return lookupKey.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+				.add("id", id)
+				.add("displayName", displayName)
+				.add("emails", emails)
+				.toString();
+	}
+
+	//////
+	// For Parcelable
+	//////
+
+	protected PersonInfo(Parcel in) {
+		id = in.readLong();
+		lookupKey = in.readString();
+		lookupUri = in.readParcelable(Uri.class.getClassLoader());
+		displayName = in.readString();
+		photoUri = in.readString();
+		emails = ImmutableSet.copyOf(in.createStringArray());
 	}
 
 	public static final Creator<PersonInfo> CREATOR = new Creator<PersonInfo>() {
@@ -103,7 +121,18 @@ public class PersonInfo implements Parcelable {
 		}
 	};
 
-	public Uri getUri() {
-		return Uri.parse(lookupKey);
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeLong(id);
+		dest.writeString(lookupKey);
+		dest.writeParcelable(lookupUri, flags);
+		dest.writeString(displayName);
+		dest.writeString(photoUri);
+		dest.writeStringArray(emails.toArray(new String[emails.size()]));
 	}
 }

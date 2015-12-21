@@ -42,13 +42,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.FriendsService;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.adapter.PersonInfo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static me.lazerka.mf.android.Application.preferences;
 
 /**
  * @author Dzmitry Lazerka
@@ -65,6 +66,8 @@ public class ContactsFragment extends Fragment {
 	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 	private FriendListAdapter friendListAdapter;
 
+	private final FriendsService friendsService = Application.friendsService;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -72,6 +75,7 @@ public class ContactsFragment extends Fragment {
 		friendListAdapter = new FriendListAdapter(
 				new OnItemClickListener(),
 				new OnAddFriendClickListener());
+		friendsLoaderCallbacks = new FriendsLoaderCallbacks(friendListAdapter);
 	}
 
 	@Nullable
@@ -109,7 +113,6 @@ public class ContactsFragment extends Fragment {
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setAdapter(friendListAdapter);
 
-		friendsLoaderCallbacks = new FriendsLoaderCallbacks(friendListAdapter);
 		getLoaderManager().initLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 	}
 
@@ -142,10 +145,10 @@ public class ContactsFragment extends Fragment {
 			Uri contactUri = data.getData();
 			logger.info("Adding friend: " + contactUri);
 
-			String lookupKey = preferences.toLookupKey(contactUri);
-			preferences.addFriend(lookupKey);
+			// Should trigger loader reload.
+			friendsService.addFriend(contactUri);
 
-			getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
+			//getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 		}
 	}
 

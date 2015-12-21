@@ -21,6 +21,7 @@
 package me.lazerka.mf.android;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -28,12 +29,12 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import me.lazerka.mf.api.JsonMapper;
-import me.lazerka.mf.api.object.AcraException;
+
 import org.acra.ACRA;
 import org.acra.ACRAConfiguration;
 import org.acra.ReportingInteractionMode;
@@ -43,6 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+
+import me.lazerka.mf.api.JsonMapper;
+import me.lazerka.mf.api.object.AcraException;
 
 /**b
  * Extension of {@link android.app.Application}.
@@ -64,6 +68,7 @@ public class Application extends MultiDexApplication {
 	 */
 	public static JsonMapper jsonMapper;
 	public static Preferences preferences;
+	public static FriendsService friendsService;
 	public static Context context;
 
 	@Override
@@ -77,7 +82,11 @@ public class Application extends MultiDexApplication {
 
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
-		preferences = new Preferences(this);
+
+		SharedPreferences sharedPreferences = getSharedPreferences("default.xml", MODE_PRIVATE);
+		preferences = new Preferences(sharedPreferences);
+
+		friendsService = new FriendsService(getSharedPreferences(FriendsService.FILE_NAME, MODE_PRIVATE));
 	}
 
 	private static boolean isInsideEmulator() {
