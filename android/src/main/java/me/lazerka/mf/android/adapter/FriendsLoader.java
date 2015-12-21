@@ -21,13 +21,17 @@
 package me.lazerka.mf.android.adapter;
 
 import android.content.AsyncTaskLoader;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.os.Looper;
+import android.os.OperationCanceledException;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
+import android.support.annotation.WorkerThread;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultimap;
@@ -49,9 +53,10 @@ import rx.observers.Subscribers;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Combination of two CursorLoaders -- for contacts, and for their emails.
+ * Loads contacts along with their Emails.
  *
- * Chain down to CursorLoaders all and only methods invoked in background. Handles foreground methods itself.
+ * Almost a copy-paste of {@link CursorLoader}, but for two {@link Cursor}s.
+ * Our job is a little easier, because we read the whole cursor at once.
  *
  * @author Dzmitry Lazerka
  */
@@ -60,8 +65,8 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 
 	private final ForceLoadContentObserver observer = new ForceLoadContentObserver();
 
-	private CursorLoader contactsLoader;
-	private CursorLoader emailsLoader;
+	private CancellationSignal contactsCancellationSignal;
+	private CancellationSignal emailCancellationSignal;
 
 	private final FriendsService friendsService = Application.friendsService;
 	private Subscription subscription;
@@ -75,8 +80,17 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		}
 	}
 
+	@WorkerThread
 	@Override
 	public ArrayList<PersonInfo> loadInBackground() {
+		synchronized (this) {
+			if (isLoadInBackgroundCanceled()) {
+				throw new OperationCanceledException();
+			}
+			contactsCancellationSignal = new CancellationSignal();
+			emailCancellationSignal = new CancellationSignal();
+		}
+
 		Set<String> lookupKeys = friendsService.getFriendsLookupKeys();
 
 		// "?,?,?,?" as many as there are lookupUris
@@ -84,74 +98,99 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 
 		String[] selectionArgs = lookupKeys.toArray(new String[lookupKeys.size()]);
 
-		contactsLoader = new CursorLoader(
-				getContext(),
-				Contacts.CONTENT_URI, // Table to query
-				new String[]{
-						Contacts._ID,
-						Contacts.LOOKUP_KEY,
-						Contacts.DISPLAY_NAME_PRIMARY,
-						Contacts.PHOTO_URI,
-				}, // Projection to return
-				Contacts.LOOKUP_KEY + " IN (" + placeholders + ")", // No selection clause
-				selectionArgs, // No selection arguments
-				Contacts.SORT_KEY_PRIMARY
-		);
+		try {
+			ContentResolver contentResolver = getContext().getContentResolver();
+			Cursor contactsCursor = contentResolver.query(
+					Contacts.CONTENT_URI,
+					new String[]{
+							Contacts._ID,
+							Contacts.LOOKUP_KEY,
+							Contacts.DISPLAY_NAME_PRIMARY,
+							Contacts.PHOTO_URI,
+					},
+					Contacts.LOOKUP_KEY + " IN (" + placeholders + ")",
+					selectionArgs,
+					Contacts.SORT_KEY_PRIMARY,
+					contactsCancellationSignal);
+			Cursor emailsCursor = contentResolver.query(
+					Email.CONTENT_URI,
+					new String[]{
+							Email.LOOKUP_KEY,
+							Email.ADDRESS,
+					},
+					Email.LOOKUP_KEY + " IN (" + placeholders + ")",
+					selectionArgs,
+					Email.SORT_KEY_PRIMARY,
+					emailCancellationSignal);
 
-		emailsLoader = new CursorLoader(
-				getContext(),
-				Email.CONTENT_URI, // Table to query
-				new String[]{
-						Email.LOOKUP_KEY,
-						Email.ADDRESS
-				}, // Projection to return
-				Email.LOOKUP_KEY + " IN (" + placeholders + ")", // No selection clause
-				selectionArgs, // No selection arguments
-				Email.SORT_KEY_PRIMARY
-		);
+			ArrayList<PersonInfo> result = null;
 
-		Cursor contactsCursor = contactsLoader.loadInBackground();
-		Cursor emailsCursor = emailsLoader.loadInBackground();
+			if (contactsCursor != null && emailsCursor != null) {
+				try {
+					// Ensure the cursor window is filled.
+					contactsCursor.getCount();
+					contactsCursor.registerContentObserver(observer);
+					emailsCursor.getCount();
+					emailsCursor.registerContentObserver(observer);
 
-		contactsCursor.registerContentObserver(observer);
-		emailsCursor.registerContentObserver(observer);
+					// Handle emails.
+					SetMultimap<String, String> allEmails = LinkedHashMultimap.create();
+					for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
+						String lookupKey = checkNotNull(emailsCursor.getString(0));
+						String email = checkNotNull(emailsCursor.getString(1));
+						allEmails.put(lookupKey, email);
+					}
 
-		// Handle emails.
-		SetMultimap<String, String> allEmails = LinkedHashMultimap.create();
-		for (emailsCursor.moveToFirst(); !emailsCursor.isAfterLast(); emailsCursor.moveToNext()) {
-			String lookupKey = checkNotNull(emailsCursor.getString(0));
-			String email = checkNotNull(emailsCursor.getString(1));
-			allEmails.put(lookupKey, email);
+					// Handle contacts.
+
+					result = new ArrayList<>(contactsCursor.getCount());
+					for (contactsCursor.moveToFirst(); !contactsCursor.isAfterLast(); contactsCursor.moveToNext()) {
+						long id = checkNotNull(contactsCursor.getLong(0));
+						String lookupKey = checkNotNull(contactsCursor.getString(1));
+						String displayName = checkNotNull(contactsCursor.getString(2));
+						String photoUri = contactsCursor.getString(3);
+						Uri lookupUri = Contacts.getLookupUri(id, lookupKey);
+						Set<String> emails = allEmails.get(lookupKey);
+
+						result.add(new PersonInfo(
+								id,
+								lookupKey,
+								lookupUri,
+								displayName,
+								photoUri,
+								emails
+						));
+					}
+				} finally {
+					contactsCursor.close();
+					emailsCursor.close();
+				}
+			}
+
+			return result;
+
+		} finally {
+			synchronized (this) {
+				contactsCancellationSignal = null;
+				emailCancellationSignal = null;
+			}
 		}
-
-		// Handle contacts.
-		ArrayList<PersonInfo> data = new ArrayList<>(contactsCursor.getCount());
-		for (contactsCursor.moveToFirst(); !contactsCursor.isAfterLast(); contactsCursor.moveToNext()) {
-			long id = checkNotNull(contactsCursor.getLong(0));
-			String lookupKey = checkNotNull(contactsCursor.getString(1));
-			String displayName = checkNotNull(contactsCursor.getString(2));
-			String photoUri = contactsCursor.getString(3);
-			Uri lookupUri = Contacts.getLookupUri(id, lookupKey);
-			Set<String> emails = allEmails.get(lookupKey);
-
-			data.add(new PersonInfo(
-					id,
-					lookupKey,
-					lookupUri,
-					displayName,
-					photoUri,
-					emails
-			));
-		}
-
-		return data;
 	}
 
 	@Override
 	public void cancelLoadInBackground() {
-		contactsLoader.cancelLoadInBackground();
-		emailsLoader.cancelLoadInBackground();
+		super.cancelLoadInBackground();
+		synchronized (this) {
+			if (contactsCancellationSignal != null) {
+				contactsCancellationSignal.cancel();
+			}
+			if (emailCancellationSignal != null) {
+				emailCancellationSignal.cancel();
+			}
+		}
 	}
+
+	// No deliverResult(), because we've read all the data at once.
 
 	@Override
 	protected void onStartLoading() {
@@ -180,22 +219,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	 */
 	@Override
 	protected void onStopLoading() {
-		super.onStopLoading();
-		contactsLoader.stopLoading();
-		emailsLoader.stopLoading();
-	}
-
-	@Override
-	protected void onReset() {
-		super.onReset();
-
-		if (subscription != null) {
-			subscription.unsubscribe();
-			subscription = null;
-		}
-
-		contactsLoader.reset();
-		emailsLoader.reset();
+		cancelLoad();
 	}
 
 	@Override
@@ -204,4 +228,16 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		// Nothing to release for `data`.
 	}
 
+	@Override
+	protected void onReset() {
+		super.onReset();
+
+        // Ensure the loader is stopped
+        onStopLoading();
+
+		if (subscription != null) {
+			subscription.unsubscribe();
+			subscription = null;
+		}
+	}
 }
