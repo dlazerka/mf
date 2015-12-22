@@ -24,12 +24,16 @@ import com.google.appengine.api.mail.MailService;
 import com.google.appengine.api.mail.MailService.Attachment;
 import com.google.appengine.api.mail.MailService.Message;
 import com.google.appengine.api.users.UserService;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import me.lazerka.mf.api.object.AcraException;
-import me.lazerka.mf.gae.entity.AcraExceptionEntity;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.annotation.security.PermitAll;
@@ -39,13 +43,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MultivaluedMap;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import me.lazerka.mf.api.object.AcraException;
+import me.lazerka.mf.gae.entity.AcraExceptionEntity;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Dzmitry Lazerka
@@ -82,7 +85,7 @@ public class AcraExceptionResource {
 		message.setTo("dlazerka@gmail.com");
 		message.setSubject("Acra: " + exceptionMessage);
 		message.setTextBody(getEmailBody(map));
-		Attachment attachment = new Attachment(reportId + ".txt", report.getBytes(Charsets.UTF_8));
+		Attachment attachment = new Attachment(reportId + ".txt", report.getBytes(UTF_8));
 		message.setAttachments(attachment);
 		mailService.send(message);
 

@@ -21,9 +21,32 @@
 package me.lazerka.mf.gae.gcm;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.appengine.api.urlfetch.*;
+import com.google.appengine.api.urlfetch.FetchOptions;
 import com.google.appengine.api.urlfetch.FetchOptions.Builder;
-import com.google.common.base.Charsets;
+import com.google.appengine.api.urlfetch.HTTPHeader;
+import com.google.appengine.api.urlfetch.HTTPMethod;
+import com.google.appengine.api.urlfetch.HTTPRequest;
+import com.google.appengine.api.urlfetch.HTTPResponse;
+import com.google.appengine.api.urlfetch.URLFetchService;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.api.gcm.GcmConstants;
 import me.lazerka.mf.api.gcm.GcmPayload;
@@ -34,24 +57,9 @@ import me.lazerka.mf.gae.PairedList;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.gcm.GcmResponse.Result;
 import me.lazerka.mf.gae.user.MfUser;
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Dzmitry Lazerka
@@ -148,10 +156,10 @@ public class GcmService {
 			HTTPRequest request = new HTTPRequest(new URL(GcmConstants.GCM_SEND_ENDPOINT), HTTPMethod.POST, fetchOptions);
 			request.addHeader(new HTTPHeader("Content-Type", "application/json"));
 			request.addHeader(new HTTPHeader("Authorization", "key=" + gcmApiKey));
-			request.setPayload(requestJson.getBytes(Charsets.UTF_8));
+			request.setPayload(requestJson.getBytes(UTF_8));
 
 			HTTPResponse httpResponse = urlFetchService.fetch(request);
-			String responseContent = new String(httpResponse.getContent(), Charsets.UTF_8);
+			String responseContent = new String(httpResponse.getContent(), UTF_8);
 			logger.trace(responseContent);
 			if (httpResponse.getResponseCode() == 200) {
 				gcmResponse = objectMapper.readValue(responseContent, GcmResponse.class);
