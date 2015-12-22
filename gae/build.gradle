@@ -23,7 +23,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.28'
+        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.30'
     }
 }
 
@@ -40,8 +40,8 @@ dependencies {
 
     compile project(':api')
 
-    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.28'
-    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.28'
+    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.30'
+    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.30'
 
     // Datastore
     compile ('com.googlecode.objectify:objectify:5.1.9') {
@@ -81,9 +81,9 @@ dependencies {
     testCompile 'org.mockito:mockito-all:1.10.19'
     testCompile 'org.powermock:powermock-api-mockito:1.6.3'
     testCompile 'org.powermock:powermock-module-testng:1.6.3'
-    testCompile 'com.google.appengine:appengine-api-stubs:1.9.28'
-    testCompile 'com.google.appengine:appengine-testing:1.9.28'
-    testCompile 'com.google.appengine:appengine-tools-sdk:1.9.28'
+    testCompile 'com.google.appengine:appengine-api-stubs:1.9.30'
+    testCompile 'com.google.appengine:appengine-testing:1.9.30'
+    testCompile 'com.google.appengine:appengine-tools-sdk:1.9.30'
 }
 
 appengine {

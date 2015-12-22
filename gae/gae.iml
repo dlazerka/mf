@@ -18,7 +18,7 @@
         <option name="HTTP_PORT" value="8380" />
         <option name="WAR_DIR" value="$MODULE_DIR$/build/exploded-app" />
         <option name="WEB_APP_DIR" value="$MODULE_DIR$/src/main/webapp" />
-        <option name="APPENGINE_SDKROOT" value="$USER_HOME$/.gradle/appengine-sdk/appengine-java-sdk-1.9.28" />
+        <option name="APPENGINE_SDKROOT" value="$USER_HOME$/.gradle/appengine-sdk/appengine-java-sdk-1.9.30" />
         <option name="DISABLE_UPDATE_CHECK" value="true" />
       </configuration>
     </facet>
@@ -42,7 +42,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="api" exported="" />
-    <orderEntry type="library" exported="" name="appengine-api-1.0-sdk-1.9.28" level="project" />
+    <orderEntry type="library" exported="" name="appengine-api-1.0-sdk-1.9.30" level="project" />
     <orderEntry type="library" exported="" name="objectify-5.1.9" level="project" />
     <orderEntry type="library" exported="" name="jsr250-api-1.0" level="project" />
     <orderEntry type="library" exported="" name="google-api-client-appengine-1.21.0" level="project" />
@@ -91,9 +91,9 @@
     <orderEntry type="library" exported="" scope="TEST" name="mockito-all-1.10.19" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="powermock-api-mockito-1.6.3" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="powermock-module-testng-1.6.3" level="project" />
-    <orderEntry type="library" exported="" scope="TEST" name="appengine-api-stubs-1.9.28" level="project" />
-    <orderEntry type="library" exported="" scope="TEST" name="appengine-testing-1.9.28" level="project" />
-    <orderEntry type="library" exported="" scope="TEST" name="appengine-tools-sdk-1.9.28" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="appengine-api-stubs-1.9.30" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="appengine-testing-1.9.30" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="appengine-tools-sdk-1.9.30" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="junit-4.10" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="jcommander-1.48" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="ant-1.7.0" level="project" />
