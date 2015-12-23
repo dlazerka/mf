@@ -120,9 +120,9 @@ public class MapFragment extends Fragment {
 
 		subscription =
 				GcmReceiveService.getLocationReceivedObservable()
-				.observeOn(AndroidSchedulers.mainThread())
-				.subscribeOn(AndroidSchedulers.mainThread())
-				.subscribe(observer);
+						.subscribeOn(AndroidSchedulers.mainThread())
+						.observeOn(AndroidSchedulers.mainThread())
+						.subscribe(observer);
 	}
 
 	@Override
