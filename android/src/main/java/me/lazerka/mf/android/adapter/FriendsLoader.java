@@ -63,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	private static final Logger logger = LoggerFactory.getLogger(FriendsLoader.class);
 
-	private final ForceLoadContentObserver observer = new ForceLoadContentObserver();
+	private final ForceLoadContentObserver observer;
 
 	private CancellationSignal contactsCancellationSignal;
 	private CancellationSignal emailCancellationSignal;
@@ -74,10 +74,13 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	public FriendsLoader(Context context) {
 		super(context);
 
+		observer = new ForceLoadContentObserver();
+
 		// Can be called from background.
 		if (Looper.myLooper() != Looper.getMainLooper()) {
 			Looper.prepare();
 		}
+
 	}
 
 	@WorkerThread

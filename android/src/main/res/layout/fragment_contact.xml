@@ -64,12 +64,16 @@
 				android:text="@string/follow_for"
 				android:textSize="@dimen/contact_text_size"
 			/>
+
+			<!-- The background of Spinner causes excessive paddings on Android 6.0.1 (Nexus 6),
+			     but not on older versions. Copy-pasting background styles from Android SDK would require
+			     copying all the dependent drawables/colors/dimensions, that would litter the project,
+			     and anyway it creates visual bugs on older devices. So it would be easier to create a custom View.
+			-->
 			<Spinner
 				android:id="@+id/duration"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				style="@android:style/Widget.Material.Spinner.Underlined"
-				android:background="@drawable/spinner_background_material"
 			/>
 		</LinearLayout>
 	</LinearLayout>
@@ -98,24 +102,6 @@
 			android:scaleType="fitXY"
 			/>
 	</FrameLayout>
-
-	<!--
-
-	<View
-		android:layout_height="match_parent"
-		android:layout_width="wrap_content"
-		android:layout_alignParentStart="true"
-		android:layout_centerVertical="true"
-		android:id="@+id/badge"
-		/>
-
-	<View
-		android:layout_width="wrap_content"
-		android:layout_height="match_parent"
-		android:layout_alignParentEnd="true"
-		android:layout_centerVertical="true"
-		/>
--->
 
 </RelativeLayout>
 </me.lazerka.mf.android.view.SlidingFrameLayout>

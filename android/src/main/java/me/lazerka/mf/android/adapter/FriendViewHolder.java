@@ -20,13 +20,11 @@
 
 package me.lazerka.mf.android.adapter;
 
-import android.graphics.Outline;
 import android.graphics.drawable.shapes.RectShape;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.View;
-import android.view.ViewOutlineProvider;
-import android.widget.ImageView;
+import android.widget.QuickContactBadge;
 import android.widget.TextView;
 
 import me.lazerka.mf.android.R;
@@ -49,31 +47,23 @@ public class FriendViewHolder extends ViewHolder {
 		TextView nameView = (TextView) itemView.findViewById(R.id.name);
 		nameView.setText(personInfo.displayName);
 
-		// Set image.
-		ImageView imageView = (ImageView) itemView.findViewById(R.id.userpic);
-		if (personInfo.photoUri == null || personInfo.photoUri.isEmpty()) {
+		QuickContactBadge badge = (QuickContactBadge) itemView.findViewById(R.id.quickbadge);
+		badge.assignContactUri(personInfo.lookupUri);
+
+		if (personInfo.photoUri != null) {
+			badge.setImageURI(Uri.parse(personInfo.photoUri));
+		} else {
 			String displayName = personInfo.displayName;
 
 			char letter = displayName.charAt(0);
 			LetterDrawable drawable = new LetterDrawable(SHAPE, letter, displayName.hashCode());
-			imageView.setImageDrawable(drawable);
+			badge.setImageDrawable(drawable);
 
 			// This comment was relevant to CursorAdapter, not sure it's needed for RecyclerView anymore.
 			// Even if you don't set anything, make sure to call with null, to clear image of a newly added item.
 			// v.setImageBitmap(null);
-		} else {
-			imageView.setImageURI(Uri.parse(personInfo.photoUri));
-			imageView.setOutlineProvider(
-					new ViewOutlineProvider() {
-						@Override
-						public void getOutline(View view, Outline outline) {
-							// Also see RectShape above.
-							outline.setRect(0, 0, view.getWidth(), view.getWidth());
-						}
-					});
-			imageView.setClipToOutline(true);
 		}
 
-		imageView.setOnClickListener(listener);
+		badge.setOnClickListener(listener);
 	}
 }

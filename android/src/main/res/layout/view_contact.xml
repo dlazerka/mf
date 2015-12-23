@@ -16,7 +16,14 @@
 		android:layout_height="match_parent"
 		android:contentDescription="@string/userpic_alt"
 		android:layout_gravity="center_vertical"
+		android:visibility="gone"
 	/>
+
+	<QuickContactBadge
+		android:id="@+id/quickbadge"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:scaleType="centerCrop"/>
 
 	<LinearLayout
 		android:layout_width="match_parent"

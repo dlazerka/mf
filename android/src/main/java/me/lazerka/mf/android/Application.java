@@ -75,10 +75,12 @@ public class Application extends MultiDexApplication {
 	public void onCreate() {
 		super.onCreate();
 
-		ACRA.init(this);
 		ACRAConfiguration config = ACRA.getConfig();
 		// Unable to set that in annotation, because not constant.
 		config.setFormUri(BuildConfig.BACKEND_ROOT + AcraException.PATH);
+
+		// Must come after config is done.
+		ACRA.init(this);
 
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
