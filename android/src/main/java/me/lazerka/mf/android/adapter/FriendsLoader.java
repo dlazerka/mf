@@ -74,13 +74,13 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	public FriendsLoader(Context context) {
 		super(context);
 
-		observer = new ForceLoadContentObserver();
-
 		// Can be called from background.
 		if (Looper.myLooper() != Looper.getMainLooper()) {
 			Looper.prepare();
 		}
 
+		// Must come after Looper.prepare().
+		observer = new ForceLoadContentObserver();
 	}
 
 	@WorkerThread

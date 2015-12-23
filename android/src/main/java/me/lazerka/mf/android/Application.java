@@ -34,11 +34,12 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.google.common.base.Throwables;
 
 import org.acra.ACRA;
 import org.acra.ACRAConfiguration;
+import org.acra.ACRAConfigurationException;
 import org.acra.ReportingInteractionMode;
-import org.acra.annotation.ReportsCrashes;
 import org.acra.sender.HttpSender.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,12 +55,6 @@ import me.lazerka.mf.api.object.AcraException;
  * @author Dzmitry
  */
 
-@ReportsCrashes(
-		sharedPreferencesName = "ACRA",
-		httpMethod = Method.PUT,
-		mode = ReportingInteractionMode.TOAST,
-		resToastText = R.string.acra_toast_text
-)
 public class Application extends MultiDexApplication {
 	private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
@@ -75,12 +70,7 @@ public class Application extends MultiDexApplication {
 	public void onCreate() {
 		super.onCreate();
 
-		ACRAConfiguration config = ACRA.getConfig();
-		// Unable to set that in annotation, because not constant.
-		config.setFormUri(BuildConfig.BACKEND_ROOT + AcraException.PATH);
-
-		// Must come after config is done.
-		ACRA.init(this);
+		setUpAcra();
 
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
@@ -89,6 +79,23 @@ public class Application extends MultiDexApplication {
 		preferences = new Preferences(sharedPreferences);
 
 		friendsService = new FriendsService(getSharedPreferences(FriendsService.FILE_NAME, MODE_PRIVATE));
+	}
+
+	private void setUpAcra() {
+		ACRAConfiguration config = ACRA.getNewDefaultConfig(this);
+		// Unable to set that in @ReportsCrashes annotation, because not constant.
+		config.setFormUri(BuildConfig.BACKEND_ROOT + AcraException.PATH);
+		config.setSharedPreferenceName("ACRA");
+		config.setHttpMethod(Method.PUT);
+		config.setResToastText(R.string.acra_toast_text);
+		try {
+			config.setMode(ReportingInteractionMode.TOAST);
+		} catch (ACRAConfigurationException e) {
+			Throwables.propagate(e);
+		}
+
+		// Must come after config is done.
+		ACRA.init(this, config);
 	}
 
 	private static boolean isInsideEmulator() {
