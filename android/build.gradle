@@ -97,7 +97,7 @@ android {
 		debug {
 			// Then we'd need to get additional OAuth keys, AndroidManifest etc.
 			// applicationIdSuffix '.debug'
-			minifyEnabled false
+			minifyEnabled true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'),
 					'proguard-project.pro',
 					'proguard-acra.pro',
@@ -125,6 +125,7 @@ android {
 		}
 	}
 	lintOptions {
+//		abortOnError false
 		textReport true
 		textOutput 'stdout'
 		fatal 'UnusedResources'
@@ -133,13 +134,13 @@ android {
 }
 
 dependencies {
+	def playServicesVersion = '8.3.0'
+
 	compile project(':api')
-//	compile 'com.google.android.gms:play-services:8.3.0'
-	compile 'com.google.android.gms:play-services-auth:8.3.0'
-//	compile 'com.google.android.gms:play-services-base:8.3.0'
-	compile 'com.google.android.gms:play-services-gcm:8.3.0'
-	compile 'com.google.android.gms:play-services-location:8.3.0'
-	compile 'com.google.android.gms:play-services-maps:8.3.0'
+	compile "com.google.android.gms:play-services-auth:$playServicesVersion"
+	compile "com.google.android.gms:play-services-gcm:$playServicesVersion"
+	compile "com.google.android.gms:play-services-location:$playServicesVersion"
+	compile "com.google.android.gms:play-services-maps:$playServicesVersion"
 //	compile 'com.android.support:appcompat-v7:23.1.1'
 	compile 'com.android.support:recyclerview-v7:23.1.1'
 	compile 'com.android.support:multidex:1.0.1'
