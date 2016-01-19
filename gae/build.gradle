@@ -20,10 +20,11 @@
 
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
     }
     dependencies {
-        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.30'
+        // Must match dependencies{} below.
+        classpath "com.google.appengine:gradle-appengine-plugin:1.9.30"
     }
 }
 
@@ -32,58 +33,67 @@ apply plugin: 'war'
 apply plugin: 'appengine'
 
 repositories {
-    mavenCentral()
+    jcenter()
+    maven {
+        url  "https://dl.bintray.com/dlazerka/gae-jersey-oauth2"
+    }
 }
 
 dependencies {
-    //compile fileTree(dir: 'libs', include: ['*.jar'])
+    ext.gaeVersion = '1.9.30' // must match buildscript
+    ext.slf4jVersion = '1.7.13'
+    ext.jerseyVersion = '1.19'
+    ext.guiceVersion = '4.0'
+    ext.jacksonVersion = '2.6.3'
 
-    compile project(':api')
+    //compile fileTree(dir: "libs", include: ["*.jar"])
 
-    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.30'
-    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.30'
+    compile project(":api")
+
+    appengineSdk "com.google.appengine:appengine-java-sdk:$ext.gaeVersion"
+    compile "com.google.appengine:appengine-api-1.0-sdk:$ext.gaeVersion"
 
     // Datastore
-    compile ('com.googlecode.objectify:objectify:5.1.9') {
-        exclude module: 'appengine-api-labs' // By artifact name.
-        exclude module: 'guava' // By artifact name.
+    compile ("com.googlecode.objectify:objectify:5.1.9") {
+        exclude module: "appengine-api-labs" // By artifact name.
+        exclude module: "guava" // By artifact name.
     }
 
     // Auth
-    compile 'javax.annotation:jsr250-api:1.0'
-    compile ('com.google.api-client:google-api-client-appengine:1.21.0') {// For UrlFetchTransport
-        exclude module: 'guava-jdk5' // By artifact name.
+    compile "javax.annotation:jsr250-api:1.0"
+    compile ("com.google.api-client:google-api-client-appengine:1.21.0") {// For UrlFetchTransport
+        exclude module: "guava-jdk5" // By artifact name.
     }
-    compile ('com.google.apis:google-api-services-oauth2:v2-rev98-1.21.0') {
-        exclude module: 'guava-jdk5' // By artifact name.
+    compile ("com.google.apis:google-api-services-oauth2:v2-rev98-1.21.0") {
+        exclude module: "guava-jdk5" // By artifact name.
     }
 
     // Web Server
-    compile 'javax.servlet:servlet-api:2.5'
-    compile 'com.sun.jersey:jersey-server:1.19'
-    compile 'com.sun.jersey.contribs:jersey-guice:1.19'
-    compile ('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.6.3') {
-        exclude module: 'jackson-annotations' // By artifact name.
+    compile "javax.servlet:servlet-api:2.5"
+    compile "com.sun.jersey:jersey-server:$ext.jerseyVersion"
+    compile "com.sun.jersey.contribs:jersey-guice:$ext.jerseyVersion"
+    compile ("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$ext.jacksonVersion") {
+        exclude module: "jackson-annotations" // By artifact name.
     }
+    compile "com.google.inject.extensions:guice-servlet:$ext.guiceVersion"
 
-    compile 'io.reactivex:rxjava:1.0.16'
+    compile "io.reactivex:rxjava:1.0.16"
 
     // Misc
-    compile 'com.google.inject:guice:4.0'
-    compile 'com.google.inject.extensions:guice-servlet:4.0'
-//    compile 'javax.mail:javax.mail-api:1.5.4'
-    compile 'org.slf4j:slf4j-api:1.7.13'
-    compile 'org.slf4j:slf4j-jdk14:1.7.13' // Redirect to JUL.
+    compile "com.google.inject:guice:$ext.guiceVersion"
+//    compile "javax.mail:javax.mail-api:1.5.4"
+    compile "org.slf4j:slf4j-api:$ext.slf4jVersion"
+    compile "org.slf4j:slf4j-jdk14:$ext.slf4jVersion" // Redirect to JUL.
 
-//    testCompile 'junit:junit:4.12'
-    testCompile 'org.testng:testng:6.9.9'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-    testCompile 'org.mockito:mockito-all:1.10.19'
-    testCompile 'org.powermock:powermock-api-mockito:1.6.3'
-    testCompile 'org.powermock:powermock-module-testng:1.6.3'
-    testCompile 'com.google.appengine:appengine-api-stubs:1.9.30'
-    testCompile 'com.google.appengine:appengine-testing:1.9.30'
-    testCompile 'com.google.appengine:appengine-tools-sdk:1.9.30'
+//    testCompile "junit:junit:4.12"
+    testCompile "org.testng:testng:6.9.10"
+    testCompile "org.hamcrest:hamcrest-all:1.3"
+    testCompile "org.mockito:mockito-all:1.10.19"
+    testCompile "org.powermock:powermock-api-mockito:1.6.4"
+    testCompile "org.powermock:powermock-module-testng:1.6.4"
+    testCompile "com.google.appengine:appengine-api-stubs:$ext.gaeVersion"
+    testCompile "com.google.appengine:appengine-testing:$ext.gaeVersion"
+    testCompile "com.google.appengine:appengine-tools-sdk:$ext.gaeVersion"
 }
 
 appengine {
@@ -92,7 +102,7 @@ appengine {
         oauth2 = true
     }
 
-    // So that it's accessible from both localhost, LAN (192.168.*.*), and emulator (10.0.2.2).
+    // So that it's accessible from both localhost, LAN (192.168.*.*), and android emulator (10.0.2.2).
     httpAddress = '0.0.0.0'
     httpPort = 8380
     disableUpdateCheck = true

@@ -43,7 +43,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.FriendsService;
+import me.lazerka.mf.android.FriendsManager;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
@@ -66,7 +66,7 @@ public class ContactsFragment extends Fragment {
 	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 	private FriendListAdapter friendListAdapter;
 
-	private final FriendsService friendsService = Application.friendsService;
+	private final FriendsManager friendsManager = Application.friendsManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -88,7 +88,7 @@ public class ContactsFragment extends Fragment {
 		initList(view);
 
 		// TODO: display message "Add some friends ->"
-//		if (Application.preferences.getFriends().isEmpty()) {
+//		if (Application.friendService.getFriends().isEmpty()) {
 //			openContactPicker();
 //		}
 
@@ -146,7 +146,7 @@ public class ContactsFragment extends Fragment {
 			logger.info("Adding friend: " + contactUri);
 
 			// Should trigger loader reload.
-			friendsService.addFriend(contactUri);
+			friendsManager.addFriend(contactUri);
 
 			//getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 		}

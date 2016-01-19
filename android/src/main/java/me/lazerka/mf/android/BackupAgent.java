@@ -36,7 +36,7 @@ public class BackupAgent
 	@Override
 	public void onBackup(ParcelFileDescriptor oldState, BackupDataOutput data, ParcelFileDescriptor newState)
 			throws IOException {
-		Application.preferences.onBeforeBackup();
+		Application.gcmManager.onBeforeBackup();
 		super.onBackup(oldState, data, newState);
 	}
 }

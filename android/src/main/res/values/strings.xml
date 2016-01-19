@@ -8,6 +8,11 @@ http://developer.android.com/guide/topics/resources/string-resource.html#Formatt
 	<string name="action_clear_token">Refresh GCM Token</string>
 	<string name="action_quit">Quit</string>
 
+	<string name="preferences_file_friends">friends.xml</string>
+
+	<!-- Must match one in backup.xml. -->
+	<string name="preferences_file_gcm">gcm.xml</string>
+
 	<string name="send_my">Send My Location</string>
 	<string name="hello_world">Hello World</string>
 	<string name="add_friend">Add Friend</string>

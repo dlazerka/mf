@@ -114,7 +114,7 @@ public class MainActivity extends GoogleApiActivity {
 				break;
 			case R.id.clear_token:
 				//
-				//Application.preferences.clearGcmToken();
+				//Application.gcmManager.clearGcmToken();
 				recreate();
 				break;
 			case R.id.action_quit:

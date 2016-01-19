@@ -43,8 +43,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Friend list manager.
  */
-public class FriendsService {
-	private static final Logger logger = LoggerFactory.getLogger(FriendsService.class);
+public class FriendsManager {
+	private static final Logger logger = LoggerFactory.getLogger(FriendsManager.class);
 
 	public static final String FILE_NAME = "friends.xml";
 
@@ -53,7 +53,7 @@ public class FriendsService {
 
 	private final PublishSubject<Change> changes = PublishSubject.create();
 
-	protected FriendsService(SharedPreferences preferences) {
+	protected FriendsManager(SharedPreferences preferences) {
 		this.preferences = preferences;
 	}
 

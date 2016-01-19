@@ -20,7 +20,6 @@
 
 buildscript {
 	repositories {
-		mavenCentral()
 		jcenter()
 	}
 
@@ -34,7 +33,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 repositories {
-	mavenCentral()
+	jcenter()
 }
 
 def gitSha = 'git rev-parse --short HEAD'.execute([], project.rootDir).text.trim()
@@ -97,7 +96,7 @@ android {
 		debug {
 			// Then we'd need to get additional OAuth keys, AndroidManifest etc.
 			// applicationIdSuffix '.debug'
-			minifyEnabled true
+			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'),
 					'proguard-project.pro',
 					'proguard-acra.pro',

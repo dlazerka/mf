@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Set;
 
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.FriendsService;
+import me.lazerka.mf.android.FriendsManager;
 import rx.Subscription;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
@@ -68,7 +68,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	private CancellationSignal contactsCancellationSignal;
 	private CancellationSignal emailCancellationSignal;
 
-	private final FriendsService friendsService = Application.friendsService;
+	private final FriendsManager friendsManager = Application.friendsManager;
 	private Subscription subscription;
 
 	public FriendsLoader(Context context) {
@@ -94,7 +94,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 			emailCancellationSignal = new CancellationSignal();
 		}
 
-		Set<String> lookupKeys = friendsService.getFriendsLookupKeys();
+		Set<String> lookupKeys = friendsManager.getFriendsLookupKeys();
 
 		// "?,?,?,?" as many as there are lookupUris
 		String placeholders = Joiner.on(',').useForNull("?").join(new String[lookupKeys.size()]);
@@ -198,13 +198,13 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 	@Override
 	protected void onStartLoading() {
 		if (subscription == null) {
-			subscription = friendsService.observable()
+			subscription = friendsManager.observable()
 					// Multithreaded OK.
 					//.subscribeOn(AndroidSchedulers.mainThread())
 					//.observeOn(AndroidSchedulers.mainThread())
-					.subscribe(Subscribers.create(new Action1<FriendsService.Change>() {
+					.subscribe(Subscribers.create(new Action1<FriendsManager.Change>() {
 						@Override
-						public void call(FriendsService.Change change) {
+						public void call(FriendsManager.Change change) {
 							logger.info("Detected friends list changed, firing onChange.");
 							observer.onChange(true);
 						}

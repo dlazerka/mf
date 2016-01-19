@@ -21,7 +21,6 @@
 package me.lazerka.mf.android;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -62,8 +61,8 @@ public class Application extends MultiDexApplication {
 	 * Shared static instance, as it's a little expensive to create a new one each time.
 	 */
 	public static JsonMapper jsonMapper;
-	public static Preferences preferences;
-	public static FriendsService friendsService;
+	public static GcmManager gcmManager;
+	public static FriendsManager friendsManager;
 	public static Context context;
 
 	@Override
@@ -75,10 +74,11 @@ public class Application extends MultiDexApplication {
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 
-		SharedPreferences sharedPreferences = getSharedPreferences("default.xml", MODE_PRIVATE);
-		preferences = new Preferences(sharedPreferences);
+		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
+		gcmManager = new GcmManager(getSharedPreferences(preferencesFileGcm, MODE_PRIVATE));
 
-		friendsService = new FriendsService(getSharedPreferences(FriendsService.FILE_NAME, MODE_PRIVATE));
+		String preferencesFileFriends = getString(R.string.preferences_file_friends);
+		friendsManager = new FriendsManager(getSharedPreferences(preferencesFileFriends, MODE_PRIVATE));
 	}
 
 	private void setUpAcra() {

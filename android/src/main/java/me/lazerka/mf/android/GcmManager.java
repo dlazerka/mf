@@ -30,15 +30,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Type-safe API for SharedPreferences, so that we have one place for them.
  */
-public class Preferences {
-	private static final Logger logger = LoggerFactory.getLogger(Preferences.class);
+public class GcmManager {
+	private static final Logger logger = LoggerFactory.getLogger(GcmManager.class);
 
 	private final String GCM_APP_VERSION = "gcm.app.version";
 	private final String GCM_TOKEN_SENT_AT = "gcm.token.sent";
 
 	private final SharedPreferences sharedPreferences;
 
-	public Preferences(SharedPreferences sharedPreferences) {
+	public GcmManager(SharedPreferences sharedPreferences) {
 		// Same file name as RoboGuice default.
 		this.sharedPreferences = sharedPreferences;
 	}

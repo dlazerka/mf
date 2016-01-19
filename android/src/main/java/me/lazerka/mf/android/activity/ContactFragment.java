@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.FriendsService;
+import me.lazerka.mf.android.FriendsManager;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
@@ -63,7 +63,7 @@ public class ContactFragment extends Fragment {
 	private int[] durationValues;
 	private Spinner spinner;
 
-	private final FriendsService friendsService = Application.friendsService;
+	private final FriendsManager friendsManager = Application.friendsManager;
 
 	public static Bundle makeArguments(PersonInfo personInfo) {
 		Bundle arguments = new Bundle(1);
@@ -108,7 +108,7 @@ public class ContactFragment extends Fragment {
 						.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								friendsService.removeFriend(personInfo.lookupUri);
+								friendsManager.removeFriend(personInfo.lookupUri);
 								getFragmentManager().popBackStack();
 							}
 						})

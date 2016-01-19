@@ -38,19 +38,21 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import me.lazerka.mf.gae.oauth.OauthModule;
-import me.lazerka.mf.gae.web.WebModule;
+
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import javax.inject.Named;
+
+import me.lazerka.mf.gae.web.WebModule;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -67,15 +69,10 @@ public class MainModule extends AbstractModule {
 		install(new WebModule());
 
 		install(new ObjectifyModule());
-		useOfy();
 
 		bindGaeServices();
 
 		logger.info(MainModule.class.getSimpleName() + " set up.");
-	}
-
-	private void useOfy() {
-		//bind(TradeService.class).to(TradeServiceOfy.class);
 	}
 
 	private void bindGaeServices() {
