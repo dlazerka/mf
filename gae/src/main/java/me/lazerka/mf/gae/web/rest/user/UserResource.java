@@ -29,8 +29,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import me.lazerka.gae.jersey.oauth2.Role;
 import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.gae.oauth.Role;
 import me.lazerka.mf.gae.user.UserService;
 
 /**

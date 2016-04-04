@@ -23,13 +23,14 @@ package me.lazerka.mf.gae.web;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.regex.Pattern;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.regex.Pattern;
 
 /**
  * Bypasses _ah/* requests except some.
@@ -41,6 +42,7 @@ public class GuiceFilter extends com.google.inject.servlet.GuiceFilter {
 
 	private final Pattern NOT_BYPASS = Pattern.compile(
 			"^(/_ah/warmup)" +
+			"|(/_ah/start)" +
 			"|(/_ah/upload/.*)" +
 			"|(/_ah/channel/connected/.*)" +
 			"|(/_ah/channel/disconnected/.*)"

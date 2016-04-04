@@ -23,18 +23,26 @@ package me.lazerka.mf.gae.user;
 import com.google.appengine.api.datastore.Email;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Work;
-import me.lazerka.mf.gae.entity.CreateOrFetch;
-import me.lazerka.mf.gae.oauth.UserPrincipal;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.ws.rs.core.SecurityContext;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import me.lazerka.gae.jersey.oauth2.UserPrincipal;
+import me.lazerka.mf.gae.entity.CreateOrFetch;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.googlecode.objectify.ObjectifyService.ofy;

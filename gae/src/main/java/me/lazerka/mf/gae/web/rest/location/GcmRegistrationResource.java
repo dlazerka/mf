@@ -20,13 +20,6 @@
 
 package me.lazerka.mf.gae.web.rest.location;
 
-import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
-import me.lazerka.mf.api.object.GcmToken;
-import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.user.MfUser;
-import me.lazerka.mf.gae.oauth.Role;
-import me.lazerka.mf.gae.user.UserService;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +27,19 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
+import me.lazerka.gae.jersey.oauth2.Role;
+import me.lazerka.mf.api.ApiConstants;
+import me.lazerka.mf.api.gcm.GcmRegistrationResponse;
+import me.lazerka.mf.api.object.GcmToken;
+import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.user.UserService;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
