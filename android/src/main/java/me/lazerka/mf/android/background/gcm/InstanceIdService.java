@@ -20,17 +20,66 @@
 
 package me.lazerka.mf.android.background.gcm;
 
-import android.content.Intent;
-import com.google.android.gms.iid.InstanceIDListenerService;
+import android.util.Log;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.firebase.crash.FirebaseCrash;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Response;
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.auth.SignInManager;
+import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.api.object.GcmToken;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
 
 /**
  * @author Dzmitry Lazerka
  */
-public class InstanceIdService extends InstanceIDListenerService {
+public class InstanceIdService extends FirebaseInstanceIdService {
+	private static final String TAG = InstanceIdService.class.getSimpleName();
+
+	/**
+	 * Called if InstanceID token is updated. This may occur if the security of
+	 * the previous token had been compromised. Note that this is also called
+	 * when the InstanceID token is initially generated, so this is where
+	 * you retrieve the token.
+	 */
 	@Override
 	public void onTokenRefresh() {
 		// Fetch updated Instance ID token and notify our app's server of any changes (if applicable).
-		Intent intent = new Intent(this, GcmRegisterIntentService.class);
-		startService(intent);
+		//Intent intent = new Intent(this, GcmRegisterIntentService.class);
+		//startService(intent);
+
+		String refreshedToken = FirebaseInstanceId.getInstance().getToken();
+		Log.d(TAG, "Refreshed token: " + refreshedToken);
+		// TODO: Implement this method to send any registration to your app's servers.
+		try {
+			sendRegistrationToServer(refreshedToken);
+		} catch (IOException e) {
+			FirebaseCrash.report(e);
+			Log.w(TAG, "Cannot send registration ID to server", e);
+		}
 	}
+
+	/**
+	 * Make backend aware of the token.
+	 */
+	private void sendRegistrationToServer(String gcmToken) throws IOException {
+		GoogleSignInAccount signInAccount = new SignInManager()
+				.getAccountBlocking(this);
+
+		GcmToken content = new GcmToken(gcmToken, Application.getVersion());
+		ApiPost apiPost = new ApiPost(content);
+		Call call = apiPost.newCall(signInAccount);
+		Response response = call.execute();
+
+		if (response.code() != HttpURLConnection.HTTP_OK) {
+			String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
+			throw new IOException(msg);
+		}
+	}
+
 }

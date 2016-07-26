@@ -20,35 +20,32 @@
 
 package me.lazerka.mf.android.background.gcm;
 
-import android.os.Bundle;
 import android.support.annotation.WorkerThread;
-
-import com.google.android.gms.gcm.GcmListenerService;
-
-import org.acra.ACRA;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-
-import javax.annotation.Nonnull;
-
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.background.location.LocationRequestHandler;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationUpdate;
+import org.acra.ACRA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.subjects.BehaviorSubject;
 
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.Map;
+
 /**
- * Handler for incoming messages from GCM.
+ * Handler for incoming messages from Firebase.
  *
- * GcmListenerService will completeWakefulIntent as soon as onMessageReceived method exits.
+ * Endpoint is: fcm.googleapis.com/fcm/
  *
  * @author Dzmitry Lazerka
  */
-public class GcmReceiveService extends GcmListenerService {
+public class GcmReceiveService extends FirebaseMessagingService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmReceiveService.class);
 
 	private static final BehaviorSubject<LocationUpdate> locationReceivedSubject = BehaviorSubject.create();
@@ -63,10 +60,12 @@ public class GcmReceiveService extends GcmListenerService {
 
 	@WorkerThread
 	@Override
-	public void onMessageReceived(String from, Bundle data) {
-		String type = data.getString(GcmPayload.TYPE_FIELD);
-		String json = data.getString(GcmPayload.PAYLOAD_FIELD);
+	public void onMessageReceived(RemoteMessage message) {
+		Map<String, String> data = message.getData();
+		String type = data.get(GcmPayload.TYPE_FIELD);
+		String json = data.get(GcmPayload.PAYLOAD_FIELD);
 
+		String from = message.getFrom();
 		logger.info("Received message from {}: {} ", from, type);
 
 		if (!from.equals("769083712074")) {

@@ -20,46 +20,42 @@
 
 package me.lazerka.mf.android.activity;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
-import android.view.Display;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.MapsInitializer;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import android.util.Log;
+import android.view.*;
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.model.*;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.text.DateFormat;
-import java.util.Locale;
-import java.util.Map;
-
+import com.google.firebase.crash.FirebaseCrash;
+import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.background.gcm.GcmReceiveService;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationUpdate;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+
+import java.text.DateFormat;
+import java.util.Locale;
+import java.util.Map;
+
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class MapFragment extends Fragment {
 	private static final Logger logger = LoggerFactory.getLogger(MapFragment.class);
@@ -98,10 +94,22 @@ public class MapFragment extends Fragment {
 		mapView.onCreate(savedInstanceState);
 
 		// Gets to GoogleMap from the MapView and does initialization stuff
-		map = mapView.getMap();
-		map.getUiSettings().setMyLocationButtonEnabled(true);
-		map.setMyLocationEnabled(true);
-		map.setOnMyLocationChangeListener(new MyLocationChangeListener());
+		final Stopwatch mapReadyStopwatch = AndroidTicker.started();
+		mapView.getMapAsync(googleMap -> {
+			String msg = "map ready in " + mapReadyStopwatch.elapsed(MILLISECONDS) + "ms";
+			FirebaseCrash.logcat(Log.DEBUG, "onMapReady()", msg);
+
+			map = googleMap;
+			map.getUiSettings().setMyLocationButtonEnabled(true);
+
+			Activity activity = getActivity();
+			int fineLocationPermission = ContextCompat.checkSelfPermission(activity, ACCESS_FINE_LOCATION);
+			int coarseLocationPermission = ActivityCompat.checkSelfPermission(activity, ACCESS_COARSE_LOCATION);
+			if (fineLocationPermission == PERMISSION_GRANTED || coarseLocationPermission == PERMISSION_GRANTED) {
+				map.setMyLocationEnabled(true);
+				//map.setOnMyLocationChangeListener(new MyLocationChangeListener());
+			}
+		});
 
 		// Needs to call MapsInitializer before doing any CameraUpdateFactory calls
 		MapsInitializer.initialize(this.getActivity());
@@ -182,6 +190,11 @@ public class MapFragment extends Fragment {
 	}
 
 	private void drawLocation(Location location) throws ActivityIsNullException {
+		if (map == null) {
+			FirebaseCrash.report(new IllegalStateException("map is null"));
+			return;
+		}
+
 		LatLng position = new LatLng(location.getLat(), location.getLon());
 
 		String email = location.getEmail();
@@ -294,28 +307,28 @@ public class MapFragment extends Fragment {
 		}
 	}
 
-	private class MyLocationChangeListener implements OnMyLocationChangeListener {
-		boolean set = false;
-
-		@Override
-		public void onMyLocationChange(android.location.Location location) {
-			if (set) {
-				return;
-			}
-
-			try {
-				set = true;
-				LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-				int zoom = getNiceZoom(location.getAccuracy());
-				CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom);
-				map.moveCamera(cameraUpdate);
-				map.setOnMyLocationChangeListener(null);
-			} catch (ActivityIsNullException e) {
-				logger.info("onMyLocationChange: activity is null, doing nothing.");
-			}
-		}
-	}
-
+	//private class MyLocationChangeListener implements OnMyLocationChangeListener {
+	//	boolean set = false;
+	//
+	//	@Override
+	//	public void onMyLocationChange(android.location.Location location) {
+	//		if (set) {
+	//			return;
+	//		}
+	//
+	//		try {
+	//			set = true;
+	//			LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+	//			int zoom = getNiceZoom(location.getAccuracy());
+	//			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom);
+	//			map.moveCamera(cameraUpdate);
+	//			map.setOnMyLocationChangeListener(null);
+	//		} catch (ActivityIsNullException e) {
+	//			logger.info("onMyLocationChange: activity is null, doing nothing.");
+	//		}
+	//	}
+	//}
+	//
 	private class ActivityIsNullException extends Exception {}
 }
 

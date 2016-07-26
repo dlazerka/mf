@@ -33,12 +33,7 @@
 		Google Cloud Messaging: to receive push notifications from server when your friend asks your location.
 		More at https://developers.google.com/cloud-messaging/android/client
 	-->
-	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-	<!-- To prevent other Android applications from registering and receiving the Android application's messages -->
-	<permission
-		android:name="me.lazerka.mf.android.permission.C2D_MESSAGE"
-		android:protectionLevel="signature" />
-	<uses-permission android:name="me.lazerka.mf.android.permission.C2D_MESSAGE" />
+	<!--<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />-->
 
 	<!--
 		This notifies external services of the OpenGL ES requirement. In particular,
@@ -86,25 +81,12 @@
 			android:name="com.google.android.backup.api_key"
 			android:value="AEdPqrEAAAAIa7dbTRQVuUzcdsYSq-lPAzc_gcC5q0MvGAMCbw" />
 
-		<!-- Called by Android on a GCM message received -->
-		<receiver
-			android:name=".background.gcm.GcmBroadcastReceiver"
-			android:exported="true"
-			android:permission="com.google.android.c2dm.permission.SEND"
-			>
-			<!--android:permission="com.google.android.c2dm.permission.RECEIVE"-->
-			<intent-filter>
-				<category android:name="me.lazerka.mf.android" />
-				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
-				<!-- This is needed for pre-4.4 KitKat devices. -->
-				<action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-			</intent-filter>
-		</receiver>
-
-		<!-- Called by receiver above on a new GCM token obtained. -->
+		<!-- Called by receiver above on a new GCM token obtained.
+		TODO: exported is omitted in docs.
+		 -->
 		<service android:name=".background.gcm.InstanceIdService" android:exported="false">
 			<intent-filter>
-				<action android:name="com.google.android.gms.iid.InstanceID"/>
+				<action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
 			</intent-filter>
 		</service>
 
@@ -113,7 +95,7 @@
 			android:name=".background.gcm.GcmReceiveService"
 			android:exported="false">
 			<intent-filter>
-				<action android:name="com.google.android.c2dm.intent.RECEIVE" />
+				<action android:name="com.google.firebase.MESSAGING_EVENT" />
 			</intent-filter>
 		</service>
 		<service
@@ -137,10 +119,12 @@
 			Called by boot receiver above, on app start, and by InstanceIdService.
 			Makes sure server knows our GCM token, so it can send GCM messages to this device.
 		-->
+<!--
 		<service
 			android:name=".background.gcm.GcmRegisterIntentService"
 			android:exported="false">
 		</service>
+-->
 
 	</application>
 

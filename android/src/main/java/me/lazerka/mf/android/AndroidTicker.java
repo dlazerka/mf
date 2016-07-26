@@ -1,6 +1,6 @@
 /*
  *     Find Us: privacy oriented location tracker for your friends and family.
- *     Copyright (C) 2015 Dzmitry Lazerka dlazerka@gmail.com
+ *     Copyright (C) 2016 Dzmitry Lazerka dlazerka@gmail.com
  *
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -18,27 +18,26 @@
  *
  */
 
-package me.lazerka.mf.android.background.gcm;
+package me.lazerka.mf.android;
 
-import android.content.Context;
-import android.content.Intent;
-import com.google.android.gms.gcm.GcmReceiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import android.os.SystemClock;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Ticker;
 
 /**
- * Receiver of GCM messages.
+ * For {@link com.google.common.base.Stopwatch}.
  *
- * Hands off actual processing to GcmReceiveService, and prevents device from going to sleep.
- *
- * @author Dzmitry Lazerka
+ * Counts realtime (including time spent in deep sleep).
  */
-public class GcmBroadcastReceiver extends GcmReceiver {
-	private static final Logger logger = LoggerFactory.getLogger(GcmBroadcastReceiver.class);
+public class AndroidTicker extends Ticker {
+	private static final AndroidTicker instance = new AndroidTicker();
+
+	public static Stopwatch started() {
+		return Stopwatch.createStarted(instance);
+	}
 
 	@Override
-	public void onReceive(Context context, Intent intent) {
-		logger.trace("onReceive");
-		super.onReceive(context, intent);
+	public long read() {
+		return SystemClock.elapsedRealtimeNanos();
 	}
 }
