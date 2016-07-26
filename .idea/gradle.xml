@@ -14,6 +14,14 @@
             <option value="$PROJECT_DIR$/gae" />
           </set>
         </option>
+        <option name="myModules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/android" />
+            <option value="$PROJECT_DIR$/api" />
+            <option value="$PROJECT_DIR$/gae" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>
