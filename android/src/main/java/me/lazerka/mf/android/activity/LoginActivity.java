@@ -22,6 +22,7 @@ package me.lazerka.mf.android.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.View.OnClickListener;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -46,7 +47,7 @@ public class LoginActivity extends GoogleApiActivity {
 	}
 
 	@Override
-	public void onConnectionFailed(ConnectionResult connectionResult) {
+	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 		super.onConnectionFailed(connectionResult);
 		showSignInButton();
 	}

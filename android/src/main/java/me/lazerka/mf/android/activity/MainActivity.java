@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -125,7 +126,7 @@ public class MainActivity extends GoogleApiActivity {
 
 		runWithAccount(new SignInCallbacks() {
 			@Override
-			public void onSuccess(GoogleSignInResult result) {
+			public void onSuccess(@NonNull GoogleSignInResult result) {
 				GoogleSignInAccount account = checkNotNull(result.getSignInAccount());
 
 				String requestId = String.valueOf(SystemClock.uptimeMillis());

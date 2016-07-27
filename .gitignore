@@ -7,3 +7,6 @@
 .DS_Store
 build
 out
+
+# Android signing keys.
+keystore.properties

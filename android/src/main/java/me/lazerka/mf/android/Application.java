@@ -28,13 +28,15 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
-
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.common.base.Throwables;
-
+import me.lazerka.mf.api.JsonMapper;
+import me.lazerka.mf.api.object.AcraException;
 import org.acra.ACRA;
 import org.acra.ACRAConfiguration;
 import org.acra.ACRAConfigurationException;
@@ -45,8 +47,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import me.lazerka.mf.api.JsonMapper;
-import me.lazerka.mf.api.object.AcraException;
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**b
  * Extension of {@link android.app.Application}.
@@ -144,6 +147,13 @@ public class Application extends MultiDexApplication {
 			// should never happen
 			throw new RuntimeException("Could not get package name: " + e);
 		}
+	}
+
+	public static boolean hasLocationPermission() {
+		int fineLocationPermission = ContextCompat.checkSelfPermission(Application.context, ACCESS_FINE_LOCATION);
+		int coarseLocationPermission = ActivityCompat.checkSelfPermission(Application.context, ACCESS_COARSE_LOCATION);
+		return fineLocationPermission == PERMISSION_GRANTED ||
+				coarseLocationPermission == PERMISSION_GRANTED;
 	}
 
 }

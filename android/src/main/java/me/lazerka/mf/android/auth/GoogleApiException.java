@@ -26,6 +26,8 @@ import java.io.IOException;
  * @author Dzmitry Lazerka
  */
 public abstract class GoogleApiException extends IOException {
+	private static final long serialVersionUID = 1;
+
 	public GoogleApiException(String detailMessage) {
 		super(detailMessage);
 	}

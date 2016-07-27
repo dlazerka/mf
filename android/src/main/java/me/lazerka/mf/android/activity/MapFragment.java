@@ -20,12 +20,10 @@
 
 package me.lazerka.mf.android.activity;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
@@ -52,13 +50,11 @@ import java.text.DateFormat;
 import java.util.Locale;
 import java.util.Map;
 
-import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class MapFragment extends Fragment {
 	private static final Logger logger = LoggerFactory.getLogger(MapFragment.class);
+	private static final String TAG = MapFragment.class.getSimpleName();
 
 	public static final String CAMERA_POSITION = "cameraPosition";
 
@@ -95,19 +91,22 @@ public class MapFragment extends Fragment {
 
 		// Gets to GoogleMap from the MapView and does initialization stuff
 		final Stopwatch mapReadyStopwatch = AndroidTicker.started();
-		mapView.getMapAsync(googleMap -> {
-			String msg = "map ready in " + mapReadyStopwatch.elapsed(MILLISECONDS) + "ms";
-			FirebaseCrash.logcat(Log.DEBUG, "onMapReady()", msg);
+		//noinspection Convert2Lambda lint doesn't get it.
+		mapView.getMapAsync(new OnMapReadyCallback() {
+			@SuppressLint("MissingPermission")
+			@Override
+			public void onMapReady(GoogleMap googleMap) {
+				String msg = "map ready in " + mapReadyStopwatch.elapsed(MILLISECONDS) + "ms";
+				FirebaseCrash.logcat(Log.DEBUG, TAG, msg);
 
-			map = googleMap;
-			map.getUiSettings().setMyLocationButtonEnabled(true);
+				map = googleMap;
+				map.getUiSettings().setMyLocationButtonEnabled(true);
 
-			Activity activity = getActivity();
-			int fineLocationPermission = ContextCompat.checkSelfPermission(activity, ACCESS_FINE_LOCATION);
-			int coarseLocationPermission = ActivityCompat.checkSelfPermission(activity, ACCESS_COARSE_LOCATION);
-			if (fineLocationPermission == PERMISSION_GRANTED || coarseLocationPermission == PERMISSION_GRANTED) {
-				map.setMyLocationEnabled(true);
-				//map.setOnMyLocationChangeListener(new MyLocationChangeListener());
+				if (Application.hasLocationPermission()) {
+					//noinspection MissingPermission
+					map.setMyLocationEnabled(true);
+					//map.setOnMyLocationChangeListener(new MyLocationChangeListener());
+				}
 			}
 		});
 
@@ -120,6 +119,7 @@ public class MapFragment extends Fragment {
 
 		return view;
 	}
+
 
 	@Override
 	public void onResume() {
@@ -228,6 +228,7 @@ public class MapFragment extends Fragment {
 			item.circle.setRadius(location.getAcc());
 		}
 
+		//noinspection deprecation the recommended fix doesn't work for API < 24.
 		Locale locale = Application.context.getResources().getConfiguration().locale;
 		DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM, locale);
 
@@ -329,6 +330,8 @@ public class MapFragment extends Fragment {
 	//	}
 	//}
 	//
-	private class ActivityIsNullException extends Exception {}
+	private static class ActivityIsNullException extends Exception {
+		private static final long serialVersionUID = 1;
+	}
 }
 

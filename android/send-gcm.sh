@@ -8,17 +8,19 @@ if [ -z "$1" ]
     exit 1
 fi
 
-API_KEY="AIzaSyB9onbgaDOcYC-4-r36D3p_zdiQsOVsE70"
-
-MESSAGE='{"to":"'"$1"'",
-        "notification":{
+NOTIFICATION='"notification":{
             "body":"Test body",
             "title":"Test",
             "icon":"ic_launcher"
-        },
+        }'
+
+API_KEY="AIzaSyB9onbgaDOcYC-4-r36D3p_zdiQsOVsE70"
+
+MESSAGE='{
+        "to":"'"$1"'",
         "data":{
             "type": "LocationRequest"
-            "payload": "test"
+            "payload": "{\"requestId\": \"123\",\"requesterEmail\": \"test03365@gmail.com\",\"duration\": 150000}"
         }
     }'
 

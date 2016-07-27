@@ -44,21 +44,39 @@ def buildTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZo
 def isCi = "true".equals(System.getenv("CI"))
 def preDexEnabled = "true".equals(System.getProperty("pre-dex", "true"))
 
+// If you want to sign builds, you should create ./keystore.properties file in project root.
+def keystorePropertiesFile = rootProject.file("android/keystore.properties")
+
 android {
 	compileSdkVersion 24
 	buildToolsVersion '24.0.1'
 
 	dexOptions {
-		// not supported with --multi-dex
-		// incremental true
+        incremental true
 		// Skip pre-dexing when running on Travis CI or when disabled via -Dpre-dex=false.
 		preDexLibraries = preDexEnabled && !isCi
 	}
 
+    if (keystorePropertiesFile.exists()) {
+        def keystoreProperties = new Properties()
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+        signingConfigs {
+            release {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    } else {
+        println 'Keystore not found, not assembling signed APK: ' + keystorePropertiesFile
+    }
+
+
 	defaultConfig {
 		applicationId 'me.lazerka.mf.android'
 		minSdkVersion 21
-		targetSdkVersion 23
+		targetSdkVersion 24
 		versionCode 1
 		versionName 'first'
 		multiDexEnabled true
@@ -92,26 +110,34 @@ android {
 		release {
 			minifyEnabled true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
-					'proguard-project.pro',
-					'proguard-acra.pro',
-					'proguard-jackson.pro',
-					'proguard-guava.pro',
-					'proguard-rx-java.pro',
-					'proguard-square-okhttp.pro',
-					'proguard-square-okio.pro'
+                    // Cannot put this file into proguard folder as well, because gradle build would fail.
+					'project.pro',
+					'proguard/acra.pro',
+					'proguard/jackson.pro',
+					'proguard/guava.pro',
+					'proguard/rx-java.pro',
+					'proguard/square-okhttp.pro',
+					'proguard/square-okio.pro'
+            buildConfigField 'String', 'BACKEND_ROOT', '"https://lazerka-mf.appspot.com"'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
 		}
 		debug {
 			// Then we'd need to get additional OAuth keys, AndroidManifest etc.
 			// applicationIdSuffix '.debug'
 			minifyEnabled false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'),
-					'proguard-project.pro',
-					'proguard-acra.pro',
-					'proguard-jackson.pro',
-					'proguard-guava.pro',
-					'proguard-rx-java.pro',
-					'proguard-square-okhttp.pro',
-					'proguard-square-okio.pro'
+					'project.pro',
+					'proguard/acra.pro',
+					'proguard/jackson.pro',
+					'proguard/guava.pro',
+					'proguard/rx-java.pro',
+					'proguard/square-okhttp.pro',
+					'proguard/square-okio.pro'
+
+            buildConfigField 'String', 'BACKEND_ROOT', '"http://192.168.0.6:8380"'
+//            buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
 		}
 
 	}
@@ -119,23 +145,29 @@ android {
 		sourceCompatibility JavaVersion.VERSION_1_8
 		targetCompatibility JavaVersion.VERSION_1_8
 	}
-	productFlavors {
-		remote {
-			buildConfigField 'String', 'BACKEND_ROOT', '"https://lazerka-mf.appspot.com"'
-		}
-		local {
-			buildConfigField 'String', 'BACKEND_ROOT', '"http://192.168.1.70:8380"'
-		}
-		emulator {
-			buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
-		}
-	}
+//	productFlavors {
+//		remote {
+//            buildConfigField 'String', 'BACKEND_ROOT', '"https://lazerka-mf.appspot.com"'
+//		}
+//		local {
+//            buildConfigField 'String', 'BACKEND_ROOT', '"http://192.168.0.6:8380"'
+//		}
+//		emulator {
+//            buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
+//		}
+//	}
 	lintOptions {
 //		abortOnError false
 		textReport true
 		textOutput 'stdout'
-		fatal 'UnusedResources'
+		warning 'UnusedResources'
 		warning 'ResourceType'
+
+        // Invalid package reference in library; not included in Android: java.nio.file. Referenced from okio.Okio.
+        warning 'InvalidPackage'
+
+        // It suggests to replace hyphens in values/keys.xml.
+        disable 'TypographyDashes'
 	}
 }
 

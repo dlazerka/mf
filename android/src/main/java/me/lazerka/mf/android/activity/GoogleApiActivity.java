@@ -23,24 +23,22 @@ package me.lazerka.mf.android.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.widget.Toast;
-
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.Status;
-
+import me.lazerka.mf.android.auth.SignInManager;
 import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import me.lazerka.mf.android.auth.SignInManager;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 
@@ -70,11 +68,10 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 	}
 
 	@Override
-	public void onConnectionFailed(ConnectionResult connectionResult) {
+	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 		int errorCode = connectionResult.getErrorCode();
 		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
-		GooglePlayServicesUtil.getErrorDialog(errorCode, this, RC_PLAY_ERROR_DIALOG)
-				.show();
+		GoogleApiAvailability.getInstance().getErrorDialog(this, errorCode, RC_PLAY_ERROR_DIALOG);
 	}
 
 	@Override
@@ -169,13 +166,13 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		}
 
 		@Override
-		public void onSuccess(GoogleSignInResult result) {
+		public void onSuccess(@NonNull GoogleSignInResult result) {
 			logger.info("SignIn successful");
 			handleSignInSuccess(result.getSignInAccount());
 		}
 
 		@Override
-		public void onUnresolvableFailure(Status status) {
+		public void onUnresolvableFailure(@NonNull Status status) {
 			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
 
 			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {

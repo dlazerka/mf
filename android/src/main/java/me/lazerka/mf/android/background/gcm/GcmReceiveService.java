@@ -79,11 +79,11 @@ public class GcmReceiveService extends FirebaseMessagingService {
 			logger.warn("GCM message from unknown sender rejected: " + from);
 			return;
 		}
-
 		if (type == null) {
 			FirebaseCrash.logcat(Log.WARN, TAG, "Unknown message class " + data);
 			return;
 		}
+
 		if (json == null) {
 			logger.warn("No {} field", GcmPayload.PAYLOAD_FIELD);
 			return;

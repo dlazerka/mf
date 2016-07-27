@@ -20,30 +20,35 @@
 
 package me.lazerka.mf.android.background.location;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
-
+import android.util.Log;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
-
+import com.google.firebase.crash.FirebaseCrash;
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.activity.MainActivity;
+import me.lazerka.mf.android.adapter.FriendsLoader;
+import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.auth.SignInManager;
+import me.lazerka.mf.api.object.LocationRequest;
 import org.acra.ACRA;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -52,14 +57,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.activity.MainActivity;
-import me.lazerka.mf.android.adapter.FriendsLoader;
-import me.lazerka.mf.android.adapter.PersonInfo;
-import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.api.object.LocationRequest;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
@@ -78,6 +75,7 @@ import static com.google.android.gms.location.LocationServices.FusedLocationApi;
  */
 public class LocationRequestHandler {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
+	private static final String TAG = LocationRequestHandler.class.getSimpleName();
 
 	/**
 	 * We want to merge notifications/updates etc per requester.
@@ -128,9 +126,6 @@ public class LocationRequestHandler {
 		PendingIntent stopListener =
 				PendingIntent.getService(context, requesterCode, stopIntent, FLAG_UPDATE_CURRENT);
 
-		// To notify user they are being tracked.
-		showTrackingNotification(requester, stopListener, notificationId, notificationTag);
-
 		// Last location may be to coarse, and users get disappointed.
 		// sendLastKnownLocation(gcmRequest, apiClient);
 
@@ -138,11 +133,14 @@ public class LocationRequestHandler {
 		                    ? gcmRequest.getDuration()
 		                    : Duration.standardMinutes(5);
 
+		// To notify user they are being tracked.
+		showTrackingNotification(requester, stopListener, notificationId, notificationTag, duration);
+
 		com.google.android.gms.location.LocationRequest locationRequest =
 				new com.google.android.gms.location.LocationRequest()
 						.setPriority(PRIORITY_HIGH_ACCURACY)
 						.setInterval(TRACKING_INTERVAL.getMillis())
-								//.setMaxWaitTime(3000)
+						//.setMaxWaitTime(3000)
 						.setSmallestDisplacement(0)
 						.setFastestInterval(TRACKING_INTERVAL_FASTEST.getMillis())
 						.setExpirationDuration(duration.getMillis());
@@ -160,7 +158,8 @@ public class LocationRequestHandler {
 	private void scheduleLocationManager(
 			com.google.android.gms.location.LocationRequest locationRequest,
 			PendingIntent updateListener,
-			PendingIntent stopListener) {
+			PendingIntent stopListener)
+	{
 		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		try {
 
@@ -189,10 +188,12 @@ public class LocationRequestHandler {
 	/**
 	 * Schedules location updates using recommended FusedLocationApi.
 	 */
+	 @SuppressLint("MissingPermission")
 	private void scheduleFusedLocationApi(
 			PendingIntent listener,
 			com.google.android.gms.location.LocationRequest locationRequest
-	) {
+	)
+	{
 		SignInManager authenticator = new SignInManager();
 		GoogleApiClient apiClient = authenticator.buildClient(context);
 
@@ -208,7 +209,11 @@ public class LocationRequestHandler {
 
 		try {
 
-			// TODO check new Android 6.0 permissions
+			if (!Application.hasLocationPermission()) {
+				FirebaseCrash.logcat(Log.WARN, TAG, "No location permission");
+				return;
+			}
+			//noinspection MissingPermission
 			PendingResult<Status> pendingResult = FusedLocationApi.requestLocationUpdates(
 					apiClient,
 					locationRequest,
@@ -251,6 +256,11 @@ public class LocationRequestHandler {
 			LocationRequest gcmRequest,
 			GoogleApiClient apiClient
 	) throws JsonProcessingException {
+		if (!Application.hasLocationPermission()) {
+			FirebaseCrash.logcat(Log.WARN, TAG, "No location permission");
+			return;
+		}
+		//noinspection MissingPermission
 		android.location.Location lastLocation = FusedLocationApi.getLastLocation(apiClient);
 		if (lastLocation != null) {
 			Intent intent = getLocationListenerIntent(gcmRequest);
@@ -289,8 +299,15 @@ public class LocationRequestHandler {
 	}
 
 	private void showTrackingNotification(
-			PersonInfo person, PendingIntent stopListener, int notificationId, String notificationTag) {
-		String message = context.getString(R.string.tracking_you, person.displayName);
+			PersonInfo person,
+			PendingIntent stopListener,
+			int notificationId,
+			String notificationTag,
+			Duration duration) {
+
+		int minutes = (int) duration.getStandardMinutes();
+
+		String message = context.getString(R.string.tracking_you, person.displayName, minutes);
 		Notification notification = getNotificationBuilder(message)
 				.addPerson(person.lookupKey)
 				.addAction(R.drawable.close, context.getString(R.string.stop), stopListener)

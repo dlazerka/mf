@@ -26,6 +26,8 @@ import com.google.android.gms.common.api.Status;
  * @author Dzmitry Lazerka
  */
 class GoogleSignInException extends GoogleApiException {
+	private static final long serialVersionUID = 1;
+
 	private final Status status;
 
 	public GoogleSignInException(Status status) {

@@ -26,6 +26,8 @@ import com.google.android.gms.common.ConnectionResult;
  * @author Dzmitry Lazerka
  */
 public class GoogleApiConnectionException extends GoogleApiException {
+	private static final long serialVersionUID = 1;
+
 	private ConnectionResult connectionResult;
 
 	public GoogleApiConnectionException(ConnectionResult connectionResult) {
