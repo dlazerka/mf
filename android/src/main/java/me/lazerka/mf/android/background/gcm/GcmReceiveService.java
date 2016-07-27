@@ -21,6 +21,8 @@
 package me.lazerka.mf.android.background.gcm;
 
 import android.support.annotation.WorkerThread;
+import android.util.Log;
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import me.lazerka.mf.android.Application;
@@ -43,10 +45,15 @@ import java.util.Map;
  *
  * Endpoint is: fcm.googleapis.com/fcm/
  *
+ * If sending a notification message and app is in background, notification is shown.
+ * If sending a notification message and app is in foreground, onMessageReceived is called.
+ *
  * @author Dzmitry Lazerka
  */
 public class GcmReceiveService extends FirebaseMessagingService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmReceiveService.class);
+	private static final String TAG = GcmReceiveService.class.getSimpleName();
+
 
 	private static final BehaviorSubject<LocationUpdate> locationReceivedSubject = BehaviorSubject.create();
 
@@ -74,7 +81,7 @@ public class GcmReceiveService extends FirebaseMessagingService {
 		}
 
 		if (type == null) {
-			logger.warn("Unknown message class " + data);
+			FirebaseCrash.logcat(Log.WARN, TAG, "Unknown message class " + data);
 			return;
 		}
 		if (json == null) {
