@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-../gradlew assembleRelease
+
+# No daemon for
+../gradlew assembleRelease --no-daemon

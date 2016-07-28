@@ -22,20 +22,13 @@ package me.lazerka.mf.android;
 
 import android.content.SharedPreferences;
 import android.net.Uri;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.Nonnull;
-
 import rx.Observable;
 import rx.subjects.PublishSubject;
+
+import javax.annotation.Nonnull;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -45,8 +38,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class FriendsManager {
 	private static final Logger logger = LoggerFactory.getLogger(FriendsManager.class);
-
-	public static final String FILE_NAME = "friends.xml";
 
 	private static final String KEY = "mf.friends";
 	private final SharedPreferences preferences;
@@ -77,7 +68,7 @@ public class FriendsManager {
 		logger.info("addFriend {}", id);
 		synchronized (this) {
 			// Clone, otherwise value won't be set.
-			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<String>(1)));
+			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<>(1)));
 
 			boolean changed = friends.add(id);
 			if (!changed) {
@@ -100,7 +91,7 @@ public class FriendsManager {
 		logger.info("removeFriend {}", id);
 		synchronized (this) {
 			// Clone, otherwise value won't be set.
-			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<String>(0)));
+			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<>(0)));
 			boolean changed = friends.remove(id);
 			if (!changed) {
 				logger.warn("Trying to remove nonexistent friend {}", id);

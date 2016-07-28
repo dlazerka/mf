@@ -1,3 +1,5 @@
+import groovy.swing.SwingBuilder
+
 /*
  *     Find Us: privacy oriented location tracker for your friends and family.
  *     Copyright (C) 2015 Dzmitry Lazerka dlazerka@gmail.com
@@ -17,7 +19,6 @@
  *     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  */
-
 buildscript {
 	repositories {
 		jcenter()
@@ -44,8 +45,80 @@ def buildTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZo
 def isCi = "true".equals(System.getenv("CI"))
 def preDexEnabled = "true".equals(System.getProperty("pre-dex", "true"))
 
-// If you want to sign builds, you should create ./keystore.properties file in project root.
-def keystorePropertiesFile = rootProject.file("android/keystore.properties")
+//
+//task readPasswordFromInput << {
+//    def console = System.console()
+//
+//    ext.keystorePassword = console.readLine('\n\n\n> Enter keyPassword password: ')
+//
+//    android.signingConfigs.release.storePassword = ext.keystorePassword
+//    android.signingConfigs.release.keyPassword = ext.keystorePassword
+//}
+//
+//tasks.whenTaskAdded { task ->
+//    if (task.name == 'validateReleaseSigning') {
+//        task.dependsOn readPasswordFromInput
+//    }
+//}
+
+gradle.taskGraph.whenReady {taskGraph ->
+    if (taskGraph.hasTask(':android:validateReleaseSigning')) {
+        println 'validateReleaseSigning task found, assembling signed APK'
+
+        // If you want to sign builds, you should create ./keystore.properties file in project root.
+        def keystorePropertiesFile = rootProject.file("android/keystore.properties")
+
+        if (!keystorePropertiesFile.exists()) {
+            throw new InvalidUserDataException("You must create " + keystorePropertiesFile + " to sign builds.")
+        }
+
+        // Keystore password is read from file, by key password is read from user.
+        def keystoreProperties = new Properties()
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+
+
+        if (keystoreProperties['keyPassword'] != null) {
+            println 'Found keyPassword in keystore.properties'
+
+        } else if (System.console() != null) {
+
+            sleep 100 // Otherwise the prompt gets overwritten by other gradle output.
+            keystoreProperties['keyPassword'] =
+                    new String(System.console().readPassword('\nPlease enter signing key password: '))
+        } else {
+            new SwingBuilder().edt {
+                dialog(modal: true, // Otherwise the build will continue running before you closed the dialog
+                        title: 'Enter key password', // Dialog title
+                        alwaysOnTop: true, // pretty much what the name says
+                        resizable: false, // Don't allow the user to resize the dialog
+                        locationRelativeTo: null, // Place dialog in center of the screen
+                        pack: true, // We need to pack the dialog (so it will take the size of it's children
+                        show: true // Let's show it
+                ) {
+                    vbox { // Put everything below each other
+                        label(text: "Please enter signing key password:")
+                        input = passwordField()
+                        button(defaultButton: true, text: 'OK', actionPerformed: {
+                            keystoreProperties['keyPassword'] = input.password;
+                            dispose(); // Close dialog
+                        })
+                    }
+                }
+
+            }
+        }
+
+        if (keystoreProperties['keyPassword'].size() <= 0) {
+            throw new InvalidUserDataException("You must enter a password to proceed.")
+        }
+
+        android.signingConfigs.release.storeFile = file(keystoreProperties['storeFile'])
+        android.signingConfigs.release.storePassword = keystoreProperties['storePassword']
+        android.signingConfigs.release.keyAlias = keystoreProperties['keyAlias']
+        android.signingConfigs.release.keyPassword = keystoreProperties['keyPassword']
+    }
+}
 
 android {
 	compileSdkVersion 24
@@ -57,28 +130,22 @@ android {
 		preDexLibraries = preDexEnabled && !isCi
 	}
 
-    if (keystorePropertiesFile.exists()) {
-        def keystoreProperties = new Properties()
-        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-        signingConfigs {
-            release {
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-            }
+    signingConfigs {
+        release {
+            // Values will be overwritten above if needed, but must be non-empty otherwise no zipalign happens.
+            storeFile file('??')
+            storePassword '??'
+            keyAlias '??'
+            keyPassword '??'
         }
-    } else {
-        println 'Keystore not found, not assembling signed APK: ' + keystorePropertiesFile
     }
-
 
 	defaultConfig {
 		applicationId 'me.lazerka.mf.android'
 		minSdkVersion 21
 		targetSdkVersion 24
 		versionCode 1
-		versionName 'first'
+		versionName '0.7'
 		multiDexEnabled true
 
 		buildConfigField "String", "GIT_SHA", "\"${gitSha}\""
@@ -106,6 +173,7 @@ android {
 			manifest.srcFile 'src/debug/AndroidManifest.xml'
 		}
 	}
+
 	buildTypes {
 		release {
 			minifyEnabled true
@@ -119,22 +187,13 @@ android {
 					'proguard/square-okhttp.pro',
 					'proguard/square-okio.pro'
             buildConfigField 'String', 'BACKEND_ROOT', '"https://lazerka-mf.appspot.com"'
-            if (keystorePropertiesFile.exists()) {
-                signingConfig signingConfigs.release
-            }
+
+            signingConfig signingConfigs.release
 		}
 		debug {
 			// Then we'd need to get additional OAuth keys, AndroidManifest etc.
 			// applicationIdSuffix '.debug'
 			minifyEnabled false
-			proguardFiles getDefaultProguardFile('proguard-android.txt'),
-					'project.pro',
-					'proguard/acra.pro',
-					'proguard/jackson.pro',
-					'proguard/guava.pro',
-					'proguard/rx-java.pro',
-					'proguard/square-okhttp.pro',
-					'proguard/square-okio.pro'
 
             buildConfigField 'String', 'BACKEND_ROOT', '"http://192.168.0.6:8380"'
 //            buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
@@ -156,6 +215,14 @@ android {
 //            buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
 //		}
 //	}
+    // Verbose APK file name.
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(
+                    (String) output.outputFile.parent,
+                    output.outputFile.name.replace(".apk", "-${variant.versionName}-${variant.versionCode}.apk"))
+        }
+    }
 	lintOptions {
 //		abortOnError false
 		textReport true
@@ -195,11 +262,11 @@ dependencies {
 	compile('ch.acra:acra:4.7.0') {
 		exclude group: 'com.google.android'
 	}
-	compile 'io.reactivex:rxandroid:1.0.1'
-	compile 'io.reactivex:rxjava:1.0.16'
-	compile 'org.slf4j:slf4j-android:1.7.13'
+	compile 'io.reactivex:rxandroid:1.2.1'
+	compile 'io.reactivex:rxjava:1.1.8'
+	compile 'org.slf4j:slf4j-android:1.7.21'
 
-	testCompile ('org.testng:testng:6.9.9') {
+	testCompile ('org.testng:testng:6.9.10') {
 		exclude group: 'com.google.guava'
 	}
 	testCompile 'org.hamcrest:hamcrest-all:1.3'
