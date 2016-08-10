@@ -148,7 +148,9 @@ public class ContactsFragment extends Fragment {
 			// Should trigger loader reload.
 			friendsManager.addFriend(contactUri);
 
-			getMainActivity().logEvent("ContactsFragment: added friend");
+			getMainActivity().buildEvent("ContactsFragment: added friend")
+				.param("totalFriends", friendsManager.getFriends().size())
+				.send();
 
 			//getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 		}
@@ -161,7 +163,7 @@ public class ContactsFragment extends Fragment {
 	private class OnAddFriendClickListener implements OnClickListener {
 		@Override
 		public void onClick(View v) {
-			getMainActivity().logEvent("ContactsFragment: addFriend clicked");
+			getMainActivity().buildEvent("ContactsFragment: addFriend clicked").send();
 
 			getMainActivity().permissionAsker.checkAndRun(
 					READ_CONTACTS,
@@ -176,12 +178,10 @@ public class ContactsFragment extends Fragment {
 						@Override
 						public void run() {
 							FirebaseCrash.log("ContactsFragment: addFriend READ_CONTACTS permission declined");
-							getMainActivity().logEvent("ContactsFragment: addFriend READ_CONTACTS permission declined");
+							getMainActivity().buildEvent("ContactsFragment: addFriend READ_CONTACTS permission declined");
 						}
 					}
 			);
-
-
 		}
 	}
 

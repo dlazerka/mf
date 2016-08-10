@@ -74,7 +74,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 	}
 
-	public EventLogger logEvent(String eventName) {
+	public EventLogger buildEvent(String eventName) {
 		if (firebaseAnalytics == null) {
 			FirebaseCrash.logcat(Log.WARN, logger.getName(), "firebaseAnalytics is null");
 			FirebaseCrash.report(new NullPointerException("firebaseAnalytics is null"));
@@ -88,7 +88,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		int errorCode = connectionResult.getErrorCode();
 		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
 
-		logEvent("onConnectionFailed")
+		buildEvent("onConnectionFailed")
 				.param("errorCode", connectionResult.getErrorCode())
 				.param("errorMessage", connectionResult.getErrorMessage())
 				.param("hasResolution", connectionResult.getResolution() != null)
@@ -130,7 +130,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 
 	/** Does nothing. We shouldn't save the result and use it later -- it may expire. */
 	protected void handleSignInSuccess(GoogleSignInAccount account) {
-		logEvent("signInSuccess").send();
+		buildEvent("signInSuccess").send();
 	}
 
 	protected abstract void handleSignInFailed();

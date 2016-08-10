@@ -54,7 +54,7 @@ public class LoginActivity extends GoogleApiActivity {
 
 	@Override
 	protected void handleSignInFailed() {
-		logEvent("LoginActivity.handleSignInFailed").send();
+		buildEvent("LoginActivity.handleSignInFailed").send();
 		showSignInButton();
 	}
 
@@ -62,7 +62,7 @@ public class LoginActivity extends GoogleApiActivity {
 	protected void handleSignInSuccess(GoogleSignInAccount account) {
 		super.handleSignInSuccess(account);
 
-		logEvent("LoginActivity.handleSignInSuccess")
+		buildEvent("LoginActivity.handleSignInSuccess")
 			// FirebaseCrash doesn't support user email, so in case an exception happens
 			// we had to match exception timing with this log event in order to contact the user.
 			.param("displayName", account.getDisplayName())

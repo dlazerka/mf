@@ -32,6 +32,7 @@ import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.common.collect.Range;
+import com.google.firebase.crash.FirebaseCrash;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -77,6 +78,8 @@ public class MainActivity extends GoogleApiActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		buildEvent("MainActivity.onCreate").send();
+
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
 					// replace(), not add, because this is called
@@ -95,6 +98,8 @@ public class MainActivity extends GoogleApiActivity {
 
 	@Override
 	protected void handleSignInFailed() {
+		buildEvent("MainActivity.handleSignInFailed").send();
+
 		Intent intent = new Intent(this, LoginActivity.class);
 		startActivity(intent);
 		finish();
@@ -122,6 +127,7 @@ public class MainActivity extends GoogleApiActivity {
 				recreate();
 				break;
 			case R.id.action_quit:
+				buildEvent("MainActivity.option: quit").send();
 				this.finish();
 				break;
 		}
@@ -131,6 +137,10 @@ public class MainActivity extends GoogleApiActivity {
 	public void requestLocationUpdates(@Nonnull final PersonInfo personInfo, @Nonnull final Duration duration) {
 		checkArgument(!personInfo.emails.isEmpty());
 		checkNotNull(duration);
+
+		buildEvent("MainActivity.requestLocationUpdates")
+				.param("duration", duration.getStandardSeconds())
+				.send();
 
 		runWithAccount(new SignInCallbacks() {
 			@Override
@@ -171,7 +181,7 @@ public class MainActivity extends GoogleApiActivity {
 			if (gcmResults == null || gcmResults.isEmpty()) {
 				String msg = "Empty gcmResults list in LocationRequestResult " + gcmResults;
 				logger.warn(msg);
-				ACRA.getErrorReporter().handleSilentException(new Exception(msg));
+				FirebaseCrash.report(new Exception(msg));
 				return;
 			}
 
@@ -194,7 +204,7 @@ public class MainActivity extends GoogleApiActivity {
 			} else {
 				String msg = getString(R.string.gcm_error, error);
 				logger.warn(msg);
-				ACRA.getErrorReporter().handleSilentException(new Exception(msg));
+				FirebaseCrash.report(new Exception(msg));
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -235,7 +245,7 @@ public class MainActivity extends GoogleApiActivity {
 			}
 
 			logger.warn(msg, e);
-			ACRA.getErrorReporter().handleSilentException(e);
+			FirebaseCrash.report(e);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}
 	}
