@@ -28,6 +28,7 @@ import android.view.View.OnClickListener;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
+import com.google.firebase.auth.FirebaseUser;
 import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,22 +54,14 @@ public class LoginActivity extends GoogleApiActivity {
 	}
 
 	@Override
-	protected void handleSignInFailed() {
+	protected void onSignInFailed() {
 		buildEvent("LoginActivity.handleSignInFailed").send();
 		showSignInButton();
 	}
 
 	@Override
-	protected void handleSignInSuccess(GoogleSignInAccount account) {
-		super.handleSignInSuccess(account);
-
-		buildEvent("LoginActivity.handleSignInSuccess")
-			// FirebaseCrash doesn't support user email, so in case an exception happens
-			// we had to match exception timing with this log event in order to contact the user.
-			.param("displayName", account.getDisplayName())
-			.param("email", account.getEmail())
-			.send();
-
+	protected void onSignInSuccess(FirebaseUser user) {
+		super.onSignInSuccess(user);
 		Intent intent = new Intent(this, MainActivity.class);
 		startActivity(intent);
 		finish();

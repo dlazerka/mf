@@ -37,18 +37,25 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.auth.*;
 import com.google.firebase.crash.FirebaseCrash;
+import com.google.firebase.database.FirebaseDatabase;
 import me.lazerka.mf.android.auth.SignInManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka
  */
-public abstract class GoogleApiActivity extends Activity implements OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public abstract class GoogleApiActivity extends Activity
+		implements OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks
+{
 	private static final Logger logger = LoggerFactory.getLogger(GoogleApiActivity.class);
 
 	private static final int RC_SIGN_IN = 9001;
@@ -60,16 +67,18 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 	private GoogleApiClient googleApiClient;
 	private final SignInCallbacks signInCallbacks = new SignInCallbacks();
 	private FirebaseAnalytics firebaseAnalytics;
+	private FirebaseDatabase database;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		googleApiClient = authenticator.getGoogleApiClientBuilder(this)
-				.addOnConnectionFailedListener(this)
-				.addConnectionCallbacks(this)
-				.build();
+		                               .addOnConnectionFailedListener(this)
+		                               .addConnectionCallbacks(this)
+		                               .build();
 
+		database = FirebaseDatabase.getInstance();
 		firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 	}
 
@@ -90,6 +99,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		buildEvent("onConnectionFailed")
 				.param("errorCode", connectionResult.getErrorCode())
 				.param("errorMessage", connectionResult.getErrorMessage())
+				// If this is not null sometimes we could probably use it.
 				.param("hasResolution", connectionResult.getResolution() != null)
 				.send();
 
@@ -116,7 +126,8 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		googleApiClient.connect();
 
 		// Note this is not in onResume(), otherwise we might get infinite loop.
-		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and again.
+		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and
+		// again.
 		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
 	}
 
@@ -127,12 +138,20 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		googleApiClient.disconnect();
 	}
 
-	/** Does nothing. We shouldn't save the result and use it later -- it may expire. */
-	protected void handleSignInSuccess(GoogleSignInAccount account) {
-		buildEvent("signInSuccess").send();
+	/**
+	 * Does nothing. We shouldn't save the result and use it later -- it may expire.
+	 * @param user
+	 */
+	protected void onSignInSuccess(FirebaseUser user) {
+		buildEvent("GoogleApiActivity.onSignInSuccess")
+			// FirebaseCrash doesn't support user email, so in case an exception happens
+			// we had to match exception timing with this log event in order to contact the user.
+			.param("displayName", user.getDisplayName())
+			.param("email", user.getEmail())
+			.send();
 	}
 
-	protected abstract void handleSignInFailed();
+	protected abstract void onSignInFailed();
 
 	/**
 	 * @param callbacks to run after signing in, on main thread.
@@ -173,11 +192,12 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 					String msg = "Resolution " + RC_RESOLUTION + " resultCode: " + resultCode;
 					logger.warn(msg);
 					FirebaseCrash.report(new Exception(msg));
-					handleSignInFailed();
+					onSignInFailed();
 				}
 				break;
 			case RC_PLAY_ERROR_DIALOG:
-				handleSignInFailed();
+				buildEvent("GoogleApiActivity: RC_PLAY_ERROR_DIALOG").send();
+				onSignInFailed();
 				break;
 			default:
 				logger.warn("Not ours: " + requestCode);
@@ -192,12 +212,37 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 		@Override
 		public void onSuccess(@NonNull GoogleSignInResult result) {
 			logger.info("SignIn successful");
-			handleSignInSuccess(result.getSignInAccount());
+
+			GoogleSignInAccount signInAccount = checkNotNull(result.getSignInAccount());
+			AuthCredential authCredential = GoogleAuthProvider.getCredential(signInAccount.getIdToken(), null);
+
+			FirebaseAuth.getInstance()
+			            .signInWithCredential(authCredential)
+			            .addOnCompleteListener(GoogleApiActivity.this, new OnCompleteListener<AuthResult>() {
+				            @Override
+				            public void onComplete(@NonNull Task<AuthResult> task) {
+
+					            if (task.isSuccessful()) {
+						            AuthResult authResult = task.getResult();
+						            onSignInSuccess(authResult.getUser());
+					            } else {
+						            buildEvent("GoogleApiActivity: onComplete(Task<AuthResult>) not successful").send();
+						            onSignInFailed();
+					            }
+				            }
+			            });
 		}
 
 		@Override
 		public void onUnresolvableFailure(@NonNull Status status) {
 			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
+
+			buildEvent("GoogleApiActivity: onUnresolvableFailure")
+					.param("statusCode", status.getStatusCode())
+					.param("errorMessage", status.getStatusMessage())
+					// If this is not null sometimes we could probably use it.
+					.param("hasResolution", status.getResolution() != null)
+					.send();
 
 			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
 				launchSignInActivityForResult();
@@ -206,7 +251,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 
 			// User pressed "Deny"
 			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
-				handleSignInFailed();
+				onSignInFailed();
 				return;
 			}
 
@@ -216,7 +261,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 				GoogleSignInApi.signOut(googleApiClient);
 				Toast.makeText(GoogleApiActivity.this, "Sign-In failed", Toast.LENGTH_LONG).show();
 			}
-			handleSignInFailed();
+			onSignInFailed();
 		}
 	}
 }

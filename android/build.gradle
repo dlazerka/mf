@@ -164,6 +164,7 @@ android {
 		exclude 'META-INF/LICENSE.txt'
 		exclude 'META-INF/NOTICE.txt'
 		exclude 'LICENSE.txt'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
 	}
 	sourceSets {
 		main {
@@ -247,6 +248,7 @@ dependencies {
 	compile "com.google.android.gms:play-services-location:$playServicesVersion"
 	compile "com.google.android.gms:play-services-maps:$playServicesVersion"
     compile "com.google.firebase:firebase-crash:$playServicesVersion"
+    compile "com.google.firebase:firebase-database:$playServicesVersion"
 
 	compile 'com.android.support:appcompat-v7:24.1.1'
 	compile 'com.android.support:recyclerview-v7:24.1.1'

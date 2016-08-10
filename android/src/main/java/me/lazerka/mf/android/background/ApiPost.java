@@ -22,8 +22,11 @@ package me.lazerka.mf.android.background;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.squareup.okhttp.*;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Request.Builder;
+import com.squareup.okhttp.RequestBody;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.object.ApiObject;

@@ -33,10 +33,15 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 import me.lazerka.mf.api.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -98,6 +103,20 @@ public class Application extends MultiDexApplication {
 		});
 		return result;
 	}
+
+	@Nonnull
+	public static FirebaseDatabase getFirebaseDatabase() {
+		FirebaseDatabase database = FirebaseDatabase.getInstance();
+		database.setPersistenceEnabled(true);
+		return database;
+	}
+
+	@Nullable
+	public static FirebaseUser getCurrentUser() {
+		return FirebaseAuth.getInstance().getCurrentUser();
+	}
+
+
 
 	private boolean isDebugRun() {
 		return Debug.isDebuggerConnected();

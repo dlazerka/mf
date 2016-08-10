@@ -96,7 +96,7 @@ public class MainActivity extends GoogleApiActivity {
 	}
 
 	@Override
-	protected void handleSignInFailed() {
+	protected void onSignInFailed() {
 		buildEvent("MainActivity.handleSignInFailed").send();
 
 		Intent intent = new Intent(this, LoginActivity.class);

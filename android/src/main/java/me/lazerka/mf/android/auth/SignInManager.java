@@ -34,9 +34,13 @@ import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 
@@ -130,11 +134,16 @@ public class SignInManager {
 
 		OptionalPendingResult<GoogleSignInResult> opr = GoogleSignInApi.silentSignIn(client);
 
-		GoogleSignInResult signInResult = opr.await();// Blocks;
+		GoogleSignInResult signInResult = opr.await();// Blocks.
 		if (!signInResult.isSuccess()) {
 			throw new GoogleSignInException(signInResult.getStatus());
 		}
 
 		return signInResult.getSignInAccount();
+	}
+
+	@Nullable
+	public FirebaseUser getCurrentUser() {
+		return FirebaseAuth.getInstance().getCurrentUser();
 	}
 }

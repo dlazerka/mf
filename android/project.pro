@@ -44,6 +44,12 @@
 -keep class android.support.v4.** { *; }
 -keep interface android.support.v4.** { *; }
 
+# For Firebase Realtime
+-keepattributes Signature
+-keepclassmembers class me.lazerka.mf.api.** {
+  *;
+}
+
 # Application classes that will be serialized/deserialized over Gson
 # or have been blown up by ProGuard in the past
 
