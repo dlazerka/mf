@@ -20,7 +20,6 @@
 
 package me.lazerka.mf.android.background.gcm;
 
-import android.util.Log;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -31,6 +30,8 @@ import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.api.object.GcmToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -39,7 +40,7 @@ import java.net.HttpURLConnection;
  * @author Dzmitry Lazerka
  */
 public class InstanceIdService extends FirebaseInstanceIdService {
-	private static final String TAG = InstanceIdService.class.getSimpleName();
+	private static final Logger logger = LoggerFactory.getLogger(InstanceIdService.class);
 
 	/**
 	 * Called if InstanceID token is updated. This may occur if the security of
@@ -54,13 +55,12 @@ public class InstanceIdService extends FirebaseInstanceIdService {
 		//startService(intent);
 
 		String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-		Log.d(TAG, "Refreshed token: " + refreshedToken);
-		// TODO: Implement this method to send any registration to your app's servers.
+		//logger.debug("Refreshed token: " + refreshedToken);
 		try {
 			sendRegistrationToServer(refreshedToken);
 		} catch (IOException e) {
 			FirebaseCrash.report(e);
-			Log.w(TAG, "Cannot send registration ID to server", e);
+			logger.warn("Cannot send registration ID to server", e);
 		}
 	}
 
@@ -78,7 +78,7 @@ public class InstanceIdService extends FirebaseInstanceIdService {
 
 		if (response.code() != HttpURLConnection.HTTP_OK) {
 			String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
-			throw new IOException(msg);
+			FirebaseCrash.report(new IOException(msg));
 		}
 	}
 

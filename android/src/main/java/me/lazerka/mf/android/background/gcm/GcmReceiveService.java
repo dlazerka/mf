@@ -52,7 +52,6 @@ import java.util.Map;
  */
 public class GcmReceiveService extends FirebaseMessagingService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmReceiveService.class);
-	private static final String TAG = GcmReceiveService.class.getSimpleName();
 
 
 	private static final BehaviorSubject<LocationUpdate> locationReceivedSubject = BehaviorSubject.create();
@@ -80,7 +79,7 @@ public class GcmReceiveService extends FirebaseMessagingService {
 			return;
 		}
 		if (type == null) {
-			FirebaseCrash.logcat(Log.WARN, TAG, "Unknown message class " + data);
+			FirebaseCrash.logcat(Log.WARN, logger.getName(), "Unknown message class " + data);
 			return;
 		}
 

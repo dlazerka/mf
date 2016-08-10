@@ -21,12 +21,14 @@
 package me.lazerka.mf.android;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +46,7 @@ import static java.lang.String.format;
  * @author Dzmitry Lazerka
  */
 public class PermissionAsker {
-    private static final String TAG = PermissionAsker.class.getSimpleName();
+	private static final Logger logger = LoggerFactory.getLogger(PermissionAsker.class);
 
     private final Activity activity;
     private final Range<Integer> requestCodesPool;
@@ -71,15 +73,15 @@ public class PermissionAsker {
         Callback callback = tasks.remove(requestCode);
 
         if (callback == null) {
-            Log.d(TAG, "Callback for requestCode " + requestCode + " is null");
+            logger.debug("Callback for requestCode " + requestCode + " is null");
             return false;
         }
 
         if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-            Log.d(TAG, format("Permissions %s GRANTED on %d", Lists.newArrayList(permissions), requestCode));
+            logger.debug("Permissions {} GRANTED on {}", Lists.newArrayList(permissions), requestCode);
             callback.onGranted.run();
         } else {
-            Log.d(TAG, format("Permissions %s DECLINED on %d", Lists.newArrayList(permissions), requestCode));
+            logger.debug("Permissions {} DECLINED on {}", Lists.newArrayList(permissions), requestCode);
             if (callback.onDeclined != null) {
                 callback.onDeclined.run();
             }
@@ -99,6 +101,10 @@ public class PermissionAsker {
         throw new IllegalStateException(
                 format("All request codes in range %s are occupied. Try larger range?", requestCodesPool));
     }
+
+	public static boolean hasPermission(String permission, Context context) {
+		return ContextCompat.checkSelfPermission(context, permission) == PERMISSION_GRANTED;
+	}
 
     /**
      * @param onGranted To call on success.

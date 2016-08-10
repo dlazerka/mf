@@ -22,3 +22,7 @@
   public void set*(***);
   public *** get*();
 }
+
+-keepclassmembers class * {
+    @com.fasterxml.jackson.annotation.JsonProperty *;
+}

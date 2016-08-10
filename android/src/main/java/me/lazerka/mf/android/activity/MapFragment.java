@@ -54,7 +54,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class MapFragment extends Fragment {
 	private static final Logger logger = LoggerFactory.getLogger(MapFragment.class);
-	private static final String TAG = MapFragment.class.getSimpleName();
 
 	public static final String CAMERA_POSITION = "cameraPosition";
 
@@ -97,7 +96,7 @@ public class MapFragment extends Fragment {
 			@Override
 			public void onMapReady(GoogleMap googleMap) {
 				String msg = "map ready in " + mapReadyStopwatch.elapsed(MILLISECONDS) + "ms";
-				FirebaseCrash.logcat(Log.DEBUG, TAG, msg);
+				FirebaseCrash.logcat(Log.DEBUG, logger.getName(), msg);
 
 				map = googleMap;
 				map.getUiSettings().setMyLocationButtonEnabled(true);

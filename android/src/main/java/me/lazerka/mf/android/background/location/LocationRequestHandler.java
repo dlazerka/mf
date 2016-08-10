@@ -75,7 +75,6 @@ import static com.google.android.gms.location.LocationServices.FusedLocationApi;
  */
 public class LocationRequestHandler {
 	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
-	private static final String TAG = LocationRequestHandler.class.getSimpleName();
 
 	/**
 	 * We want to merge notifications/updates etc per requester.
@@ -210,7 +209,7 @@ public class LocationRequestHandler {
 		try {
 
 			if (!Application.hasLocationPermission()) {
-				FirebaseCrash.logcat(Log.WARN, TAG, "No location permission");
+				FirebaseCrash.logcat(Log.WARN, logger.getName(), "No location permission");
 				return;
 			}
 			//noinspection MissingPermission
@@ -257,7 +256,7 @@ public class LocationRequestHandler {
 			GoogleApiClient apiClient
 	) throws JsonProcessingException {
 		if (!Application.hasLocationPermission()) {
-			FirebaseCrash.logcat(Log.WARN, TAG, "No location permission");
+			FirebaseCrash.logcat(Log.WARN, logger.getName(), "No location permission");
 			return;
 		}
 		//noinspection MissingPermission
