@@ -35,8 +35,10 @@ import android.support.annotation.WorkerThread;
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.FriendsManager;
+import me.lazerka.mf.android.PermissionAsker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Subscription;
@@ -48,6 +50,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static android.Manifest.permission.READ_CONTACTS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -95,6 +98,12 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		Set<String> lookupKeys = friendsManager.getFriendsLookupKeys();
 		if (lookupKeys.isEmpty()) {
 			// Helps on the first run, when user might not yet give contacts permission, we don't even want to try.
+			return Collections.emptyList();
+		}
+
+		if (PermissionAsker.hasPermission(READ_CONTACTS, getContext())) {
+			FirebaseCrash.report(new IllegalStateException("No READ_CONTACTS perm while loading contacts"));
+			logger.error("No READ_CONTACTS perm while loading contacts");
 			return Collections.emptyList();
 		}
 
