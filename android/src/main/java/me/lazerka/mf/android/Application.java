@@ -28,7 +28,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -151,7 +150,7 @@ public class Application extends MultiDexApplication {
 
 	public static boolean hasLocationPermission() {
 		int fineLocationPermission = ContextCompat.checkSelfPermission(Application.context, ACCESS_FINE_LOCATION);
-		int coarseLocationPermission = ActivityCompat.checkSelfPermission(Application.context, ACCESS_COARSE_LOCATION);
+		int coarseLocationPermission = ContextCompat.checkSelfPermission(Application.context, ACCESS_COARSE_LOCATION);
 		return fineLocationPermission == PERMISSION_GRANTED ||
 				coarseLocationPermission == PERMISSION_GRANTED;
 	}

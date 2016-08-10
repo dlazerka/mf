@@ -24,7 +24,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.support.annotation.WorkerThread;
-
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -35,11 +34,9 @@ import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.LocationServices;
-
+import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import me.lazerka.mf.android.R;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 

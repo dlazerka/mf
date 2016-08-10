@@ -31,9 +31,11 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.common.collect.Range;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.background.ApiPost;
@@ -63,6 +65,12 @@ import static org.joda.time.DateTimeZone.UTC;
  */
 public class MainActivity extends GoogleApiActivity {
 	private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
+
+	public final PermissionAsker permissionAsker;
+
+	public MainActivity() {
+		this.permissionAsker = new PermissionAsker(Range.closedOpen(400, 500), this);
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

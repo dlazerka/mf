@@ -21,9 +21,11 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -35,6 +37,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.Status;
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.auth.SignInManager;
 import org.acra.ACRA;
 import org.slf4j.Logger;
@@ -56,6 +60,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 
 	private GoogleApiClient googleApiClient;
 	private final SignInCallbacks signInCallbacks = new SignInCallbacks();
+	private FirebaseAnalytics firebaseAnalytics;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -65,13 +70,33 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 				.addOnConnectionFailedListener(this)
 				.addConnectionCallbacks(this)
 				.build();
+
+		firebaseAnalytics = FirebaseAnalytics.getInstance(this);
+	}
+
+	public EventLogger logEvent(String eventName) {
+		if (firebaseAnalytics == null) {
+			FirebaseCrash.logcat(Log.WARN, logger.getName(), "firebaseAnalytics is null");
+			FirebaseCrash.report(new NullPointerException("firebaseAnalytics is null"));
+			return new EventLogger(eventName, null);
+		}
+		return new EventLogger(eventName, firebaseAnalytics);
 	}
 
 	@Override
 	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 		int errorCode = connectionResult.getErrorCode();
 		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
-		GoogleApiAvailability.getInstance().getErrorDialog(this, errorCode, RC_PLAY_ERROR_DIALOG);
+
+		logEvent("onConnectionFailed")
+				.param("errorCode", connectionResult.getErrorCode())
+				.param("errorMessage", connectionResult.getErrorMessage())
+				.param("hasResolution", connectionResult.getResolution() != null)
+				.send();
+
+		Dialog errorDialog = GoogleApiAvailability.getInstance()
+		                                          .getErrorDialog(this, errorCode, RC_PLAY_ERROR_DIALOG);
+		errorDialog.show();
 	}
 
 	@Override
@@ -91,11 +116,9 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 
 		googleApiClient.connect();
 
-		logger.info("1");
 		// Note this is not in onResume(), otherwise we might get infinite loop.
 		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and again.
 		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
-		logger.info("2");
 	}
 
 	@Override
@@ -106,7 +129,9 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 	}
 
 	/** Does nothing. We shouldn't save the result and use it later -- it may expire. */
-	protected void handleSignInSuccess(GoogleSignInAccount account) {}
+	protected void handleSignInSuccess(GoogleSignInAccount account) {
+		logEvent("signInSuccess").send();
+	}
 
 	protected abstract void handleSignInFailed();
 

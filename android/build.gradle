@@ -239,9 +239,10 @@ android {
 }
 
 dependencies {
-	def playServicesVersion = '9.2.1'
+	def playServicesVersion = '9.4.0'
 
 	compile project(':api')
+    compile "com.google.firebase:firebase-auth:$playServicesVersion"
 	compile "com.google.android.gms:play-services-auth:$playServicesVersion"
 	compile "com.google.firebase:firebase-messaging:$playServicesVersion"
 	compile "com.google.android.gms:play-services-location:$playServicesVersion"

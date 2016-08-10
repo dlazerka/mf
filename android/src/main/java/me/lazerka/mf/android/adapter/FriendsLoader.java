@@ -32,23 +32,21 @@ import android.os.OperationCanceledException;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.WorkerThread;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.FriendsManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Subscription;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -85,7 +83,7 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 
 	@WorkerThread
 	@Override
-	public ArrayList<PersonInfo> loadInBackground() {
+	public List<PersonInfo> loadInBackground() {
 		synchronized (this) {
 			if (isLoadInBackgroundCanceled()) {
 				throw new OperationCanceledException();
@@ -95,6 +93,10 @@ public class FriendsLoader extends AsyncTaskLoader<List<PersonInfo>> {
 		}
 
 		Set<String> lookupKeys = friendsManager.getFriendsLookupKeys();
+		if (lookupKeys.isEmpty()) {
+			// Helps on the first run, when user might not yet give contacts permission, we don't even want to try.
+			return Collections.emptyList();
+		}
 
 		// "?,?,?,?" as many as there are lookupUris
 		String placeholders = Joiner.on(',').useForNull("?").join(new String[lookupKeys.size()]);

@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Obtains {@link GoogleSignInAccount}, which is usually valid for 60 minites.
+ * Obtains {@link GoogleSignInAccount}, which is usually valid for 60 minutes.
  *
  * @author Dzmitry Lazerka
  */
@@ -54,12 +54,20 @@ public class LoginActivity extends GoogleApiActivity {
 
 	@Override
 	protected void handleSignInFailed() {
+		logEvent("LoginActivity.handleSignInFailed").send();
 		showSignInButton();
 	}
 
 	@Override
 	protected void handleSignInSuccess(GoogleSignInAccount account) {
 		super.handleSignInSuccess(account);
+
+		logEvent("LoginActivity.handleSignInSuccess")
+			// FirebaseCrash doesn't support user email, so in case an exception happens
+			// we had to match exception timing with this log event in order to contact the user.
+			.param("displayName", account.getDisplayName())
+			.param("email", account.getEmail())
+			.send();
 
 		Intent intent = new Intent(this, MainActivity.class);
 		startActivity(intent);

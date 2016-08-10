@@ -34,21 +34,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.FriendsManager;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import java.util.List;
+
+import static android.Manifest.permission.READ_CONTACTS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -61,7 +60,7 @@ public class ContactsFragment extends Fragment {
 	private static final int FRIENDS_LOADER_ID = 12345;
 
 	/** Result code of ContactPicker dialog. */
-	private final int CONTACT_PICKER_RESULT = 1;
+	private final int RC_CONTACT_PICKER = 1;
 
 	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 	private FriendListAdapter friendListAdapter;
@@ -84,6 +83,7 @@ public class ContactsFragment extends Fragment {
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
 	) {
 		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
+
 
 		initList(view);
 
@@ -136,7 +136,7 @@ public class ContactsFragment extends Fragment {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode != CONTACT_PICKER_RESULT) {
+		if (requestCode != RC_CONTACT_PICKER) {
 			logger.warn("Unknown request code: " + requestCode);
 			super.onActivityResult(requestCode, resultCode, data);
 		}
@@ -148,15 +148,40 @@ public class ContactsFragment extends Fragment {
 			// Should trigger loader reload.
 			friendsManager.addFriend(contactUri);
 
+			getMainActivity().logEvent("ContactsFragment: added friend");
+
 			//getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
 		}
+	}
+
+	public MainActivity getMainActivity() {
+		return (MainActivity) getActivity();
 	}
 
 	private class OnAddFriendClickListener implements OnClickListener {
 		@Override
 		public void onClick(View v) {
-			Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
-			startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);
+			getMainActivity().logEvent("ContactsFragment: addFriend clicked");
+
+			getMainActivity().permissionAsker.checkAndRun(
+					READ_CONTACTS,
+					new Runnable() {
+						@Override
+						public void run() {
+							Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+							startActivityForResult(contactPickerIntent, RC_CONTACT_PICKER);
+						}
+					},
+					new Runnable() {
+						@Override
+						public void run() {
+							FirebaseCrash.log("ContactsFragment: addFriend READ_CONTACTS permission declined");
+							getMainActivity().logEvent("ContactsFragment: addFriend READ_CONTACTS permission declined");
+						}
+					}
+			);
+
+
 		}
 	}
 
