@@ -180,7 +180,6 @@ android {
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     // Cannot put this file into proguard folder as well, because gradle build would fail.
 					'project.pro',
-					'proguard/acra.pro',
 					'proguard/jackson.pro',
 					'proguard/guava.pro',
 					'proguard/rx-java.pro',
@@ -260,9 +259,6 @@ dependencies {
 //    compile 'com.squareup.retrofit:converter-jackson:2.0.0-beta2'
 //    compile 'com.squareup.retrofit:adapter-rxjava:2.0.0-beta2'
 
-	compile('ch.acra:acra:4.7.0') {
-		exclude group: 'com.google.android'
-	}
 	compile 'io.reactivex:rxandroid:1.2.1'
 	compile 'io.reactivex:rxjava:1.1.8'
 	compile 'org.slf4j:slf4j-android:1.7.21'

@@ -27,23 +27,19 @@ import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-import javax.inject.Singleton;
-
 import me.lazerka.gae.jersey.oauth2.AuthFilterFactory;
 import me.lazerka.gae.jersey.oauth2.OauthModule;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.gae.gcm.GcmModule;
-import me.lazerka.mf.gae.web.rest.AcraExceptionResource;
 import me.lazerka.mf.gae.web.rest.location.GcmRegistrationResource;
 import me.lazerka.mf.gae.web.rest.location.LocationRequestResource;
 import me.lazerka.mf.gae.web.rest.location.LocationUpdateResource;
 import me.lazerka.mf.gae.web.rest.user.UserResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Singleton;
+import java.util.Map;
 
 /**
  * Web stuff configuration (servlets, filters, etc).
@@ -79,7 +75,6 @@ public class WebModule extends JerseyServletModule {
 		bind(GcmRegistrationResource.class);
 		bind(LocationRequestResource.class);
 		bind(LocationUpdateResource.class);
-		bind(AcraExceptionResource.class);
 	}
 
 	private void setUpJackson() {

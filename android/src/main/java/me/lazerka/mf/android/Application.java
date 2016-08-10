@@ -33,14 +33,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.google.common.base.Throwables;
 import me.lazerka.mf.api.JsonMapper;
-import me.lazerka.mf.api.object.AcraException;
-import org.acra.ACRA;
-import org.acra.ACRAConfiguration;
-import org.acra.ACRAConfigurationException;
-import org.acra.ReportingInteractionMode;
-import org.acra.sender.HttpSender.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +64,6 @@ public class Application extends MultiDexApplication {
 	public void onCreate() {
 		super.onCreate();
 
-		setUpAcra();
-
 		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 
@@ -81,23 +72,6 @@ public class Application extends MultiDexApplication {
 
 		String preferencesFileFriends = getString(R.string.preferences_file_friends);
 		friendsManager = new FriendsManager(getSharedPreferences(preferencesFileFriends, MODE_PRIVATE));
-	}
-
-	private void setUpAcra() {
-		ACRAConfiguration config = ACRA.getNewDefaultConfig(this);
-		// Unable to set that in @ReportsCrashes annotation, because not constant.
-		config.setFormUri(BuildConfig.BACKEND_ROOT + AcraException.PATH);
-		config.setSharedPreferenceName("ACRA");
-		config.setHttpMethod(Method.PUT);
-		config.setResToastText(R.string.acra_toast_text);
-		try {
-			config.setMode(ReportingInteractionMode.TOAST);
-		} catch (ACRAConfigurationException e) {
-			Throwables.propagate(e);
-		}
-
-		// Must come after config is done.
-		ACRA.init(this, config);
 	}
 
 	private static boolean isInsideEmulator() {

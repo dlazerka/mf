@@ -40,7 +40,6 @@ import com.google.android.gms.common.api.Status;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.auth.SignInManager;
-import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,7 +172,7 @@ public abstract class GoogleApiActivity extends Activity implements OnConnection
 				} else {
 					String msg = "Resolution " + RC_RESOLUTION + " resultCode: " + resultCode;
 					logger.warn(msg);
-					ACRA.getErrorReporter().handleSilentException(new Exception(msg));
+					FirebaseCrash.report(new Exception(msg));
 					handleSignInFailed();
 				}
 				break;

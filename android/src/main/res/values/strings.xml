@@ -30,7 +30,6 @@ via <a href=\"#\">%2$s</a> app]]></string>
 	<string name="add_contact">Add contact</string>
 	<string name="locate_contact">Locate</string>
 	<string name="login">Sign In</string>
-	<string name="acra_toast_text">Uncaught Exception happened</string>
 
 	<string name="duration_minutes">minutes</string>
 	<string name="signing_in">Signing in…</string>

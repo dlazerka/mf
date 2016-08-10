@@ -30,7 +30,6 @@ import me.lazerka.mf.android.background.location.LocationRequestHandler;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationUpdate;
-import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -103,7 +102,7 @@ public class GcmReceiveService extends FirebaseMessagingService {
 			}
 		} catch (IOException e) {
 			logger.warn("Cannot parse {}: {}", type, json, e);
-			ACRA.getErrorReporter().handleSilentException(e);
+			FirebaseCrash.report(e);
 			// Don't call onError(), because well-behaved observables can issue onError only once.
 			// Observers probably cannot even do much with it anyway.
 			// observer.onError(e);

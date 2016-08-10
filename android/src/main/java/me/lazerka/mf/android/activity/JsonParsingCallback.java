@@ -23,12 +23,12 @@ package me.lazerka.mf.android.activity;
 import android.app.Activity;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
+import com.google.firebase.crash.FirebaseCrash;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 import me.lazerka.mf.android.Application;
-import org.acra.ACRA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,7 @@ public abstract class JsonParsingCallback<R> implements Callback {
 		if (body == null || body.contentLength() == 0) {
 			String msg = "Empty body for " + responseType.getSimpleName();
 			logger.warn(msg);
-			ACRA.getErrorReporter().handleException(new Exception(msg));
+			FirebaseCrash.report(new Exception(msg));
 			return;
 		}
 

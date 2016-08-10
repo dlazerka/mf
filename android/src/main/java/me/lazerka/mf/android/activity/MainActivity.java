@@ -43,7 +43,6 @@ import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
-import org.acra.ACRA;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -226,7 +225,7 @@ public class MainActivity extends GoogleApiActivity {
 					response.code(),
 					response.message());
 			logger.error(msg);
-			ACRA.getErrorReporter().handleSilentException(new Exception(logger.getName() + ": " + msg));
+			FirebaseCrash.report(new Exception(logger.getName() + ": " + msg));
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}
 

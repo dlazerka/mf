@@ -24,7 +24,6 @@ import com.google.inject.AbstractModule;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.impl.translate.opt.joda.JodaTimeTranslators;
-import me.lazerka.mf.gae.entity.AcraExceptionEntity;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
 import me.lazerka.mf.gae.user.MfUser;
 import org.slf4j.Logger;
@@ -54,7 +53,6 @@ public class ObjectifyModule extends AbstractModule {
 	}
 
 	private void registerEntities(ObjectifyFactory factory) {
-		factory.register(AcraExceptionEntity.class);
 		factory.register(MfUser.class);
 		factory.register(GcmRegistrationEntity.class);
 	}

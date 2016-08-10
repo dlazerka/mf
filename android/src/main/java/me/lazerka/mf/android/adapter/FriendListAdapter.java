@@ -26,18 +26,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-
-import org.acra.ACRA;
+import com.google.firebase.crash.FirebaseCrash;
+import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import javax.annotation.Nonnull;
-
-import me.lazerka.mf.android.R;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -69,7 +66,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 		} else {
 			String msg = "Illegal item position: " + position + " vs " + getItemCount();
 			logger.error(msg);
-			ACRA.getErrorReporter().handleException(new IndexOutOfBoundsException(msg));
+			FirebaseCrash.report(new IndexOutOfBoundsException(msg));
 			return 0;
 		}
 	}
@@ -94,7 +91,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 			} catch (ClassCastException e) {
 				String msg = "Holder is not of type FriendViewHolder for position " + position;
 				logger.error(msg);
-				ACRA.getErrorReporter().handleException(new IllegalStateException(msg, e));
+				FirebaseCrash.report(new IllegalStateException(msg, e));
 				return;
 			}
 
@@ -106,7 +103,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 		} else {
 			String msg = "Illegal item position: " + position + " vs " + getItemCount();
 			logger.error(msg);
-			ACRA.getErrorReporter().handleException(new IllegalStateException(msg));
+			FirebaseCrash.report(new IllegalStateException(msg));
 		}
 	}
 

@@ -49,7 +49,6 @@ import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.LocationRequest;
-import org.acra.ACRA;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,7 +179,7 @@ public class LocationRequestHandler {
 			logger.info("Scheduled updates using LocationManager");
 		} catch (SecurityException e) {
 			logger.error("No location permissions", e);
-			ACRA.getErrorReporter().handleSilentException(e);
+			FirebaseCrash.report(e);
 		}
 	}
 
@@ -225,13 +224,13 @@ public class LocationRequestHandler {
 				String msg = "requestLocationUpdates unsuccessful: "
 						+ status.getStatusCode() + " " + status.getStatusMessage();
 				logger.warn(msg);
-				ACRA.getErrorReporter().handleSilentException(new Exception(msg));
+				FirebaseCrash.report(new Exception(msg));
 
 				// We could also send response back to server and requester.
 			}
 		} catch (Exception e) {
 			logger.error("Unable to schedule location updates", e);
-			ACRA.getErrorReporter().handleException(e);
+			FirebaseCrash.report(e);
 		} finally {
 			apiClient.disconnect();
 		}
