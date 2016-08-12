@@ -32,7 +32,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
 import android.util.Log;
@@ -47,15 +46,15 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.contacts.FriendsManager;
 import me.lazerka.mf.api.object.LocationRequest;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Subscriber;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
@@ -266,46 +265,35 @@ public class LocationRequestHandler {
 		}
 	}
 
-	/**
-	 * @return friendInfo if authorized, or null otherwise.
-	 */
-	@Nullable
 	private void authorizeRequest(LocationRequest locationRequest) {
 		if (locationRequest.getRequesterEmail() == null) {
 			showForbiddenNotification(null);
 		}
 
-		new FriendsManager()
-			.viewFriends(context, true)
-			.subscribe(new Subscriber<List<PersonInfo>>() {
-				@Override
-				public void onNext(List<PersonInfo> friends) {
-					String requesterEmail = locationRequest.getRequesterEmail();
+		try {
+			Future<List<PersonInfo>> future =
+					Application.getFriendsManager().getFriends();
 
-					for(PersonInfo friend : friends) {
-						// TODO normalize email
-						if (friend.emails.contains(requesterEmail)) {
-							processAuthorizedRequest(locationRequest, friend);
-							break;
-						}
-					}
+			List<PersonInfo> friends = future.get();
 
-					logger.warn("Requester not in friends list, rejecting " + requesterEmail);
+			String requesterEmail = locationRequest.getRequesterEmail();
 
-					// TODO add setting "Ignore unknown to prevent spamming".
-					showForbiddenNotification(requesterEmail);
+			for(PersonInfo friend : friends) {
+				// TODO normalize email
+				if (friend.emails.contains(requesterEmail)) {
+					processAuthorizedRequest(locationRequest, friend);
+					break;
 				}
+			}
 
-				@Override
-				public void onCompleted() {
-				}
+			logger.warn("Requester not in friends list, rejecting " + requesterEmail);
 
-				@Override
-				public void onError(Throwable e) {
-					FirebaseCrash.report(e);
-				}
-			});
+			// TODO add setting "Ignore unknown to prevent spamming".
+			showForbiddenNotification(requesterEmail);
 
+		} catch (InterruptedException | ExecutionException e) {
+			FirebaseCrash.report(e);
+		}
 	}
 
 	private void showTrackingNotification(

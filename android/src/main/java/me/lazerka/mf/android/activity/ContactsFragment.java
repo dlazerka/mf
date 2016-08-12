@@ -34,10 +34,10 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
 import com.google.firebase.crash.FirebaseCrash;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.PersonInfo;
-import me.lazerka.mf.android.contacts.FriendsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Subscriber;
@@ -92,8 +92,8 @@ public class ContactsFragment extends Fragment {
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setAdapter(friendListAdapter);
 
-		new FriendsManager()
-				.viewFriends(getActivity(), false)
+		Application.getFriendsManager()
+				.watchFriends()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(new Subscriber<List<PersonInfo>>() {
 					@Override
@@ -152,7 +152,7 @@ public class ContactsFragment extends Fragment {
 			Uri contactUri = data.getData();
 			logger.info("Adding friend: " + contactUri);
 
-			new FriendsManager()
+			Application.getFriendsManager()
 				.addFriend(contactUri);
 
 			getMainActivity().buildEvent("ContactsFragment: added friend").send();

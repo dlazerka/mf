@@ -21,6 +21,7 @@
 package me.lazerka.mf.android;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -36,6 +37,7 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
+import me.lazerka.mf.android.contacts.FriendsManager;
 import me.lazerka.mf.api.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +66,9 @@ public class Application extends MultiDexApplication {
 	public static GcmManager gcmManager;
 	public static Context context;
 
+	private static SharedPreferences friendsSharedPreferences;
+	private static FriendsManager friendsManager;
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -73,6 +78,22 @@ public class Application extends MultiDexApplication {
 
 		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
 		gcmManager = new GcmManager(getSharedPreferences(preferencesFileGcm, MODE_PRIVATE));
+
+		friendsSharedPreferences = getSharedPreferences(getString(R.string.preferences_file_friends), MODE_PRIVATE);
+	}
+
+	public static FriendsManager getFriendsManager() {
+		if (friendsManager != null) {
+			return friendsManager;
+		}
+
+		if (friendsSharedPreferences == null || context == null) {
+			throw new IllegalStateException("app not created yet");
+		}
+
+		friendsManager = new FriendsManager(friendsSharedPreferences, context);
+
+		return friendsManager;
 	}
 
 	private static boolean isInsideEmulator() {

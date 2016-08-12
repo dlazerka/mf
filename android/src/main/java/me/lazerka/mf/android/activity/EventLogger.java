@@ -24,6 +24,9 @@ import android.os.Bundle;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import javax.annotation.Nullable;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 public class EventLogger {
 	private final String eventName;
@@ -31,27 +34,41 @@ public class EventLogger {
 	private final FirebaseAnalytics firebaseAnalytics;
 	private final Bundle bundle = new Bundle();
 
+	/**
+	 * Otherwise FirebaseCrash errors "Name must consist of letters, digits or _ (underscores). Type, name: event,".
+	 */
+	private static final Pattern KEY = Pattern.compile("^[a-z0-9_]+$", CASE_INSENSITIVE);
+	private static void checkKey(String key) {
+		if (!KEY.matcher(key).matches()) {
+			throw new IllegalArgumentException("Event key");
+		}
+	}
+
 	public EventLogger(String eventName, @Nullable FirebaseAnalytics firebaseAnalytics) {
 		this.eventName = eventName;
 		this.firebaseAnalytics = firebaseAnalytics;
 	}
 
 	public EventLogger param(String key, String value) {
+		checkKey(key);
 		bundle.putString(key, value);
 		return this;
 	}
 
 	public EventLogger param(String key, int value) {
+		checkKey(key);
 		bundle.putInt(key, value);
 		return this;
 	}
 
 	public EventLogger param(String key, long value) {
+		checkKey(key);
 		bundle.putLong(key, value);
 		return this;
 	}
 
 	public EventLogger param(String key, boolean value) {
+		checkKey(key);
 		bundle.putBoolean(key, value);
 		return this;
 	}

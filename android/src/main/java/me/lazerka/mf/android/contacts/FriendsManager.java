@@ -23,36 +23,31 @@ package me.lazerka.mf.android.contacts;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.NonNull;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
-import com.google.firebase.database.*;
-import com.google.firebase.database.DatabaseReference.CompletionListener;
 import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import rx.Observable.OnSubscribe;
-import rx.Subscriber;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -60,12 +55,44 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Friend list manager.
+ *
+ * We store full lookup-uri in SharedProperties,
+ * like "content://com.android.contacts/contacts/lookup/1715ia0e28ef087ba578/983"
+ *
+ * But for querying, we need only lookup-key (1715ia0e28ef087ba578).
+ * The last path part (983) is unstable row id which we don't use.
  */
 public class FriendsManager {
 	private static final Logger logger = LoggerFactory.getLogger(FriendsManager.class);
 
-	private static DatabaseReference getFriendsReference(FirebaseUser currentUser) {
-		return FirebaseDatabase.getInstance().getReference("private/" + currentUser.getUid() + "/friends");
+	private static final String KEY = "mf.friends";
+	private final SharedPreferences preferences;
+	private final Context context;
+
+	private final PublishSubject<Void> changes = PublishSubject.create();
+
+	public FriendsManager(SharedPreferences preferences, Context context) {
+		this.preferences = preferences;
+		this.context = context;
+	}
+
+	@Nonnull
+	public Set<Uri> getFriendsLookupUris() {
+		Set<String> stringUris = preferences.getStringSet(KEY, Collections.<String>emptySet());
+		Set<Uri> result = new LinkedHashSet<>(stringUris.size());
+		for (String stringUri : stringUris) {
+			result.add(Uri.parse(stringUri));
+		}
+		return Collections.unmodifiableSet(result);
+	}
+
+	public List<String> getFriendsLookupKeys() {
+		Set<Uri> friends = getFriendsLookupUris();
+		LinkedHashSet<String> result = new LinkedHashSet<>(friends.size());
+		for (Uri uri : friends) {
+			result.add(toLookupKey(uri));
+		}
+		return ImmutableList.copyOf(result);
 	}
 
 	/**
@@ -84,132 +111,96 @@ public class FriendsManager {
 		return Uri.encode(pathSegments.get(2));
 	}
 
+	public Future<List<PersonInfo>> getFriends() {
+		return watchFriends()
+				.first()
+				.toBlocking()
+				.toFuture();
+	}
+
 	/**
-	 * @param oneoff Emit onComplete() after first value received.
-	 * @return Cold observable that never completes, but can terminate with error.
+	 * @return Observable that never completes, but can terminate with error.
 	 */
-	public Observable<List<PersonInfo>> viewFriends(Context context, boolean oneoff) {
-		return fetchFriendKeys(oneoff)
-				.map(new FetchContactInfo(context));
+	public Observable<List<PersonInfo>> watchFriends() {
+		return watchFriendKeys()
+				.observeOn(Schedulers.io())
+				.map(new FetchContactInfo());
 	}
 
-	Observable<List<String>> fetchFriendKeys(boolean oneoff) {
-		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-		if (currentUser == null) {
-			logger.error("currentUser is null");
-			IllegalStateException e = new IllegalStateException("FriendsManager.getFriends(): currentUser is null");
-			FirebaseCrash.report(e);
-			return Observable.error(e);
-		};
+	private Observable<List<String>> watchFriendKeys() {
+		return changes.asObservable()
+			.map(new Func1<Void, List<String>>() {
+				@Override
+				public List<String> call(Void aVoid) {
+					return getFriendsLookupKeys();
+				}
+			})
+			// Return current first.
+			.startWith(getFriendsLookupKeys());
+	}
 
-		return Observable.create(new OnSubscribe<List<String>>() {
-			@Override
-			public void call(Subscriber<? super List<String>> subscriber) {
-				Stopwatch stopwatch = AndroidTicker.started();
-				DatabaseReference friendsReference = getFriendsReference(currentUser);
+	/**
+	 * @return Whether friend list changed.
+	 */
+	public boolean addFriend(Uri lookupUri) {
+		logger.info("addFriend({}): {}", lookupUri);
 
-				ValueEventListener[] holder = new ValueEventListener[1];
+		String id = lookupUri.toString();
 
-				holder[0] = new ValueEventListener() {
-					@Override
-					public void onDataChange(DataSnapshot dataSnapshot) {
-						logger.info("onDataChange in {}ms", stopwatch.elapsed(MILLISECONDS));
+		logger.info("addFriend {}", id);
+		synchronized (this) {
+			// Clone, otherwise value won't be set.
+			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<>(1)));
 
-						@SuppressWarnings("unchecked")
-						List<String> friendsLookupKeys = dataSnapshot.getValue(List.class);
-						if (friendsLookupKeys != null) {
-							subscriber.onNext(friendsLookupKeys);
-						}
-
-						if (oneoff) {
-							if (holder[0] != null) {
-								friendsReference.removeEventListener(holder[0]);
-							}
-							subscriber.onCompleted();
-						}
-					}
-
-					@Override
-					public void onCancelled(DatabaseError databaseError) {
-						logger.info("onCancelled {}: {} in {}ms",
-								databaseError.getMessage(),
-								databaseError.getDetails(),
-								stopwatch.elapsed(MILLISECONDS));
-
-						// Subscriber should report the crash.
-						subscriber.onError(databaseError.toException());
-					}
-				};
-
-				friendsReference.addListenerForSingleValueEvent(holder[0]);
+			boolean changed = friends.add(id);
+			if (!changed) {
+				logger.warn("Trying to add already friended {}", id);
+				return false;
 			}
-		});
-
-	}
-
-	public void addFriend(Uri lookupUri) {
-		String lookupKey = toLookupKey(lookupUri);
-		logger.info("addFriend({})", lookupKey);
-
-		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-		if (currentUser == null) {
-			logger.error("currentUser is null");
-			FirebaseCrash.report(new IllegalStateException("FriendsManager.getFriends(): currentUser is null"));
-		};
-
-		Stopwatch stopwatch = AndroidTicker.started();
-		getFriendsReference(currentUser)
-			.push()
-			.setValue(lookupKey)
-			.addOnCompleteListener(new OnCompleteListener<Void>() {
-				@Override
-				public void onComplete(@NonNull Task<Void> task) {
-					logger.info(
-							"Adding friend {} successful={} in {}ms",
-							lookupKey,
-							task.isSuccessful(),
-							stopwatch.elapsed(MILLISECONDS));
-				}
-			});
-	}
-
-	public void removeFriend(Uri lookupUri) {
-		String lookupKey = toLookupKey(lookupUri);
-		logger.info("Removing friend {}", lookupKey);
-
-		FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-		if (currentUser == null) {
-			logger.error("currentUser is null");
-			FirebaseCrash.report(new IllegalStateException("FriendsManager.getFriends(): currentUser is null"));
-		};
-
-		Stopwatch stopwatch = AndroidTicker.started();
-		getFriendsReference(currentUser)
-			.child(lookupKey)
-			.removeValue(new CompletionListener() {
-				@Override
-				public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-					logger.info(
-							"Removing friend {} successful={} in {}ms",
-							databaseError == null,
-							stopwatch.elapsed(MILLISECONDS));
-					if (databaseError != null) {
-						FirebaseCrash.report(databaseError.toException());
-					}
-				}
-			});
-	}
-
-	private static class FetchContactInfo implements Func1<List<String>, List<PersonInfo>> {
-		private final Context context;
-
-		public FetchContactInfo(Context context) {
-			this.context = context;
+			preferences.edit()
+			           .putStringSet(KEY, friends)
+			           .apply();
 		}
 
+		changes.onNext(null);
+
+		return true;
+	}
+
+	/**
+	 * @return Whether friend list changed.
+	 */
+	public boolean removeFriend(Uri lookupUri) {
+		String id = lookupUri.toString();
+
+		logger.info("removeFriend {}", id);
+		synchronized (this) {
+			// Clone, otherwise value won't be set.
+			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<>(0)));
+			boolean changed = friends.remove(id);
+			if (!changed) {
+				logger.warn("Trying to remove nonexistent friend {}", id);
+				return false;
+			}
+			preferences.edit()
+			           .putStringSet(KEY, friends)
+			           .apply();
+		}
+
+		changes.onNext(null);
+
+		return true;
+	}
+
+	private class FetchContactInfo implements Func1<List<String>, List<PersonInfo>> {
 		@Override
 		public List<PersonInfo> call(List<String> lookupKeys) {
-			if (PermissionAsker.hasPermission(Manifest.permission.READ_CONTACTS, context)) {
+			// No need to check for permission when it's empty. Useful on first ever start.
+			if (lookupKeys.isEmpty()) {
+				return Collections.emptyList();
+			}
+
+			if (!PermissionAsker.hasPermission(Manifest.permission.READ_CONTACTS, context)) {
 				FirebaseCrash.report(new IllegalStateException("No READ_CONTACTS perm while loading contacts"));
 				logger.error("No READ_CONTACTS perm while loading contacts");
 				return Collections.emptyList();
@@ -267,7 +258,8 @@ public class FriendsManager {
 				}
 			}
 
-			logger.info("Fetched {} contacts in {}ms", result.size(), stopwatch.elapsed(MILLISECONDS));
+			logger.info("Fetched {} contacts for {} keys in {}ms",
+					result.size(), lookupKeys.size(), stopwatch.elapsed(MILLISECONDS));
 
 			return result;
 		}

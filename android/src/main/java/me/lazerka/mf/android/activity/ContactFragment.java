@@ -35,10 +35,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
-import me.lazerka.mf.android.contacts.FriendsManager;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +103,7 @@ public class ContactFragment extends Fragment {
 						.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								new FriendsManager().removeFriend(personInfo.lookupUri);
+								Application.getFriendsManager().removeFriend(personInfo.lookupUri);
 								getFragmentManager().popBackStack();
 							}
 						})

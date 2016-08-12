@@ -97,10 +97,10 @@ public abstract class GoogleApiActivity extends Activity
 		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
 
 		buildEvent("onConnectionFailed")
-				.param("errorCode", connectionResult.getErrorCode())
-				.param("errorMessage", connectionResult.getErrorMessage())
+				.param("error_code", connectionResult.getErrorCode())
+				.param("error_message", connectionResult.getErrorMessage())
 				// If this is not null sometimes we could probably use it.
-				.param("hasResolution", connectionResult.getResolution() != null)
+				.param("has_resolution", connectionResult.getResolution() != null)
 				.send();
 
 		Dialog errorDialog = GoogleApiAvailability.getInstance()
@@ -123,7 +123,9 @@ public abstract class GoogleApiActivity extends Activity
 	protected void onStart() {
 		super.onStart();
 
-		googleApiClient.connect();
+		if (!googleApiClient.isConnected()) {
+			googleApiClient.connect();
+		}
 
 		// Note this is not in onResume(), otherwise we might get infinite loop.
 		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and
@@ -140,13 +142,12 @@ public abstract class GoogleApiActivity extends Activity
 
 	/**
 	 * Does nothing. We shouldn't save the result and use it later -- it may expire.
-	 * @param user
 	 */
 	protected void onSignInSuccess(FirebaseUser user) {
 		buildEvent("GoogleApiActivity.onSignInSuccess")
 			// FirebaseCrash doesn't support user email, so in case an exception happens
 			// we had to match exception timing with this log event in order to contact the user.
-			.param("displayName", user.getDisplayName())
+			.param("display_name", user.getDisplayName())
 			.param("email", user.getEmail())
 			.send();
 	}
@@ -238,10 +239,10 @@ public abstract class GoogleApiActivity extends Activity
 			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
 
 			buildEvent("GoogleApiActivity: onUnresolvableFailure")
-					.param("statusCode", status.getStatusCode())
-					.param("errorMessage", status.getStatusMessage())
+					.param("status_code", status.getStatusCode())
+					.param("error_message", status.getStatusMessage())
 					// If this is not null sometimes we could probably use it.
-					.param("hasResolution", status.getResolution() != null)
+					.param("has_resolution", status.getResolution() != null)
 					.send();
 
 			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
