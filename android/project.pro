@@ -46,7 +46,7 @@
 
 # For Firebase Realtime
 -keepattributes Signature
--keepclassmembers class me.lazerka.mf.api.** {
+-keepclassmembers class me.lazerka.mf.android.model.** {
   *;
 }
 

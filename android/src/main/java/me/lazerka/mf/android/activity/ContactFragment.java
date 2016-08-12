@@ -35,16 +35,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.FriendsManager;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.contacts.FriendsManager;
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static android.provider.ContactsContract.QuickContact.MODE_LARGE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -62,8 +59,6 @@ public class ContactFragment extends Fragment {
 	private PersonInfo personInfo;
 	private int[] durationValues;
 	private Spinner spinner;
-
-	private final FriendsManager friendsManager = Application.friendsManager;
 
 	public static Bundle makeArguments(PersonInfo personInfo) {
 		Bundle arguments = new Bundle(1);
@@ -108,7 +103,7 @@ public class ContactFragment extends Fragment {
 						.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								friendsManager.removeFriend(personInfo.lookupUri);
+								new FriendsManager().removeFriend(personInfo.lookupUri);
 								getFragmentManager().popBackStack();
 							}
 						})

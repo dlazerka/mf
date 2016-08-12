@@ -62,7 +62,6 @@ public class Application extends MultiDexApplication {
 	 */
 	public static JsonMapper jsonMapper;
 	public static GcmManager gcmManager;
-	public static FriendsManager friendsManager;
 	public static Context context;
 
 	@Override
@@ -74,9 +73,6 @@ public class Application extends MultiDexApplication {
 
 		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
 		gcmManager = new GcmManager(getSharedPreferences(preferencesFileGcm, MODE_PRIVATE));
-
-		String preferencesFileFriends = getString(R.string.preferences_file_friends);
-		friendsManager = new FriendsManager(getSharedPreferences(preferencesFileFriends, MODE_PRIVATE));
 	}
 
 	private static boolean isInsideEmulator() {

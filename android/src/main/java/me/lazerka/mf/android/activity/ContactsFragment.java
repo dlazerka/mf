@@ -22,9 +22,7 @@ package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
@@ -34,21 +32,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Toast;
 import com.google.firebase.crash.FirebaseCrash;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.FriendsManager;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
-import me.lazerka.mf.android.adapter.FriendsLoader;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.contacts.FriendsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka
@@ -57,15 +55,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ContactsFragment extends Fragment {
 	private static final Logger logger = LoggerFactory.getLogger(ContactsFragment.class);
 
-	private static final int FRIENDS_LOADER_ID = 12345;
-
 	/** Result code of ContactPicker dialog. */
 	private final int RC_CONTACT_PICKER = 1;
 
-	private FriendsLoaderCallbacks friendsLoaderCallbacks;
 	private FriendListAdapter friendListAdapter;
-
-	private final FriendsManager friendsManager = Application.friendsManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -74,7 +67,6 @@ public class ContactsFragment extends Fragment {
 		friendListAdapter = new FriendListAdapter(
 				new OnItemClickListener(),
 				new OnAddFriendClickListener());
-		friendsLoaderCallbacks = new FriendsLoaderCallbacks(friendListAdapter);
 	}
 
 	@Nullable
@@ -84,22 +76,9 @@ public class ContactsFragment extends Fragment {
 	) {
 		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
 
-
 		initList(view);
 
-		// TODO: display message "Add some friends ->"
-//		if (Application.friendService.getFriends().isEmpty()) {
-//			openContactPicker();
-//		}
-
 		return view;
-	}
-
-
-	@Override
-	public void onResume() {
-		super.onResume();
-		friendListAdapter.notifyDataSetChanged();
 	}
 
 	private void initList(View view) {
@@ -113,7 +92,35 @@ public class ContactsFragment extends Fragment {
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setAdapter(friendListAdapter);
 
-		getLoaderManager().initLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
+		new FriendsManager()
+				.viewFriends(getActivity(), false)
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(new Subscriber<List<PersonInfo>>() {
+					@Override
+					public void onCompleted() {
+						// Never happens.
+					}
+
+					@Override
+					public void onError(Throwable e) {
+						FirebaseCrash.report(e);
+
+						Toast.makeText(getActivity(),
+								getResources().getString(R.string.error_fetching_friends, e.getMessage()),
+								Toast.LENGTH_LONG).show();
+					}
+
+					@Override
+					public void onNext(List<PersonInfo> data) {
+						friendListAdapter.setData(data);
+					}
+				});
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		friendListAdapter.notifyDataSetChanged();
 	}
 
 	private class OnItemClickListener implements FriendListAdapter.OnFriendClickListener {
@@ -145,14 +152,10 @@ public class ContactsFragment extends Fragment {
 			Uri contactUri = data.getData();
 			logger.info("Adding friend: " + contactUri);
 
-			// Should trigger loader reload.
-			friendsManager.addFriend(contactUri);
+			new FriendsManager()
+				.addFriend(contactUri);
 
-			getMainActivity().buildEvent("ContactsFragment: added friend")
-				.param("totalFriends", friendsManager.getFriends().size())
-				.send();
-
-			//getLoaderManager().restartLoader(FRIENDS_LOADER_ID, null, friendsLoaderCallbacks);
+			getMainActivity().buildEvent("ContactsFragment: added friend").send();
 		}
 	}
 
@@ -182,38 +185,6 @@ public class ContactsFragment extends Fragment {
 						}
 					}
 			);
-		}
-	}
-
-	/**
-	 * Invokes {@link FriendsLoader} to load contacts and their emails.
-	 *
-	 * @author Dzmitry Lazerka
-	 */
-	public class FriendsLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<PersonInfo>> {
-		private final FriendListAdapter friendListAdapter;
-
-		public FriendsLoaderCallbacks(FriendListAdapter friendListAdapter) {
-			this.friendListAdapter = checkNotNull(friendListAdapter);
-		}
-
-		@Override
-		public Loader<List<PersonInfo>> onCreateLoader(int loaderId, Bundle args) {
-			if (loaderId != FRIENDS_LOADER_ID) {
-				return null;
-			}
-
-			return new FriendsLoader(getActivity());
-		}
-
-		@Override
-		public void onLoadFinished(Loader<List<PersonInfo>> loader, List<PersonInfo> data) {
-			friendListAdapter.setData(data);
-		}
-
-		@Override
-		public void onLoaderReset(Loader<List<PersonInfo>> loader) {
-			friendListAdapter.resetData();
 		}
 	}
 }
