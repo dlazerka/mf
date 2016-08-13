@@ -27,21 +27,18 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationResult;
 import com.google.firebase.crash.FirebaseCrash;
-import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GoogleApiException;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.api.object.*;
+import me.lazerka.mf.api.object.Location;
+import me.lazerka.mf.api.object.LocationRequest2;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.joda.time.DateTimeZone.UTC;
 
 /**
  * Receives location updates that were scheduled in {@link LocationRequestHandler},
@@ -82,7 +79,7 @@ public class LocationUpdateListener extends IntentService {
 		if (location != null) {
 			try {
 				byte[] json = checkNotNull(intent.getByteArrayExtra(EXTRA_GCM_REQUEST));
-				LocationRequest gcmRequest = Application.jsonMapper.readValue(json, LocationRequest.class);
+				LocationRequest2 gcmRequest = Application.getJsonMapper().readValue(json, LocationRequest2.class);
 
 				sendLocation(location, gcmRequest);
 
@@ -94,7 +91,7 @@ public class LocationUpdateListener extends IntentService {
 		}
 	}
 
-	void sendLocation(android.location.Location location, LocationRequest gcmRequest) {
+	void sendLocation(android.location.Location location, LocationRequest2 gcmRequest) {
 		SignInManager signInManager = new SignInManager();
 		GoogleSignInAccount account;
 		try {
@@ -106,37 +103,12 @@ public class LocationUpdateListener extends IntentService {
 		}
 
 		Location locationBean = new Location(
-				DateTime.now(UTC),
-				account.getEmail(),
+				new DateTime(location.getTime()),
 				location.getLatitude(),
 				location.getLongitude(),
 				location.getAccuracy()
 		);
 
-		LocationUpdate locationUpdate = new LocationUpdate(locationBean, gcmRequest);
-
-		ApiPost post = new ApiPost(locationUpdate);
-		try {
-			Response response = post.newCall(account).execute();
-
-			if (response.code() == 200) {
-				String json = response.body().string();
-				LocationUpdateResponse bean =
-						Application.jsonMapper.readValue(json, LocationUpdateResponse.class);
-				List<GcmResult> gcmResults = bean.getGcmResults();
-
-				for(GcmResult gcmResult : gcmResults) {
-					if (!gcmResult.isSuccessful()) {
-						logger.warn("Unsuccessful sending: " + gcmResult.getError());
-						break;
-					}
-				}
-			} else {
-				logger.warn("Failed: {}, {}", response.code(), response.message());
-			}
-		} catch (IOException e) {
-			logger.warn("IOException: {}", e.getMessage());
-			FirebaseCrash.log("IOException: " + e.getMessage());
-		}
+		Application.getLocationService().sendLocationUpdate(location, gcmRequest);
 	}
 }

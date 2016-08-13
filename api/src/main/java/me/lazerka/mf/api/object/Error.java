@@ -1,6 +1,6 @@
 /*
  *     Find Us: privacy oriented location tracker for your friends and family.
- *     Copyright (C) 2015 Dzmitry Lazerka dlazerka@gmail.com
+ *     Copyright (C) 2016 Dzmitry Lazerka dlazerka@gmail.com
  *
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -21,58 +21,23 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.joda.time.DateTime;
 
 /**
  * @author Dzmitry Lazerka
  */
-public class Location {
-	public static final String PATH = "/rest/location";
+public class Error {
+	public final String code;
 
-	@JsonProperty
-	private DateTime when;
+	/**
+	 * For unknown errors to show to user.
+	 */
+	public final String message;
 
-	@JsonProperty
-	private double lat;
-
-	@JsonProperty
-	private double lon;
-
-	@JsonProperty
-	private float acc;
-
-	// For Jackson.
-	private Location() {}
-
-	public Location(DateTime when, double lat, double lon, float acc) {
-		this.when = when;
-		this.lat = lat;
-		this.lon = lon;
-		this.acc = acc;
-	}
-
-	public DateTime getWhen() {
-		return when;
-	}
-
-	public void setWhen(DateTime when) {
-		this.when = when;
-	}
-
-	public double getLat() {
-		return lat;
-	}
-
-	public double getLon() {
-		return lon;
-	}
-
-	public float getAcc() {
-		return acc;
-	}
-
-	@Override
-	public String toString() {
-		return lat + "," + lon + "," + acc + "," + when;
+	public Error(
+		@JsonProperty String code,
+		@JsonProperty String message
+	) {
+		this.code = code;
+		this.message = message;
 	}
 }

@@ -42,8 +42,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.*;
 import com.google.firebase.crash.FirebaseCrash;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
 import me.lazerka.mf.android.auth.SignInManager;
+import me.lazerka.mf.android.background.gcm.GcmReceiveService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,12 +63,11 @@ public abstract class GoogleApiActivity extends Activity
 	private static final int RC_RESOLUTION = 9002;
 	private static final int RC_PLAY_ERROR_DIALOG = 9003;
 
-	private SignInManager authenticator = new SignInManager();
+	protected SignInManager authenticator = new SignInManager();
 
 	private GoogleApiClient googleApiClient;
 	private final SignInCallbacks signInCallbacks = new SignInCallbacks();
 	private FirebaseAnalytics firebaseAnalytics;
-	private FirebaseDatabase database;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +78,6 @@ public abstract class GoogleApiActivity extends Activity
 		                               .addConnectionCallbacks(this)
 		                               .build();
 
-		database = FirebaseDatabase.getInstance();
 		firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 	}
 
@@ -127,10 +126,12 @@ public abstract class GoogleApiActivity extends Activity
 			googleApiClient.connect();
 		}
 
-		// Note this is not in onResume(), otherwise we might get infinite loop.
-		// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and
-		// again.
-		authenticator.getAccountAsync(googleApiClient, signInCallbacks);
+		if (authenticator.getCurrentUser() == null) {
+			// Note this is not in onResume(), otherwise we might get infinite loop.
+			// E.g. with wrong OAuth client IDs, we get SIGN_IN_CANCELLED after clicking on account and try again and
+			// again.
+			authenticator.getAccountAsync(googleApiClient, signInCallbacks);
+		}
 	}
 
 	@Override
@@ -150,6 +151,9 @@ public abstract class GoogleApiActivity extends Activity
 			.param("display_name", user.getDisplayName())
 			.param("email", user.getEmail())
 			.send();
+
+		String topicName = GcmReceiveService.getLocationRequestsTopic(user.getEmail());
+		FirebaseMessaging.getInstance().subscribeToTopic(topicName);
 	}
 
 	protected abstract void onSignInFailed();

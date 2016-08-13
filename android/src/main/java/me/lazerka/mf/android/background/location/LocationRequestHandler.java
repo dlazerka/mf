@@ -46,28 +46,26 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationRequest2;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 import static com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY;
 import static com.google.android.gms.location.LocationServices.FusedLocationApi;
+import static java.lang.String.format;
 
 /**
  * Ever-running background service that handles requests for our location.
- * <p/>
+ * <p>
  * This handler can run in background, heed the wake lock.
- * <p/>
+ * <p>
  * Keeps GoogleApiClient connected for the duration of the whole tracking session.
- * <p/>
+ * <p>
  * TODO: show persistent notification for as long as we're tracking.
  *
  * @author Dzmitry Lazerka
@@ -95,15 +93,7 @@ public class LocationRequestHandler {
 		this.context = context;
 	}
 
-	public void handle(LocationRequest locationRequest) {
-		String requesterEmail = locationRequest.getRequesterEmail();
-		logger.info("Received location request from " + requesterEmail);
-
-		// Authorize request.
-		authorizeRequest(locationRequest);
-	}
-
-	private void processAuthorizedRequest(LocationRequest gcmRequest, PersonInfo requester) {
+	public void processAuthorizedRequest(LocationRequest2 gcmRequest, PersonInfo requester) {
 		requesterCodes.putIfAbsent(requester.lookupKey, nextCode.getAndIncrement());
 		int requesterCode = requesterCodes.get(requester.lookupKey);
 		int notificationId = TRACKING_NOTIFICATION_ID;
@@ -145,7 +135,7 @@ public class LocationRequestHandler {
 	}
 
 	/**
-	 * Schedules location updates using old LocationManager.
+	 * Schedules location updates using old LocationService.
 	 * Doesn't require GoogleApiClient, so doesn't depend on Play Services.
 	 * Cannot specify duration, so have to manually call removeUpdates().
 	 */
@@ -182,7 +172,7 @@ public class LocationRequestHandler {
 	/**
 	 * Schedules location updates using recommended FusedLocationApi.
 	 */
-	 @SuppressLint("MissingPermission")
+	@SuppressLint("MissingPermission")
 	private void scheduleFusedLocationApi(
 			PendingIntent listener,
 			com.google.android.gms.location.LocationRequest locationRequest
@@ -193,10 +183,10 @@ public class LocationRequestHandler {
 
 		ConnectionResult connectionResult = apiClient.blockingConnect();
 		if (!connectionResult.isSuccess()) {
-			logger.warn(
-					"GoogleApiClient not connected: {}, {}",
+			String msg = format("GoogleApiClient not connected: %s, %s",
 					connectionResult.getErrorCode(),
 					connectionResult.getErrorMessage());
+			FirebaseCrash.logcat(Log.WARN, logger.getName(), msg);
 			// TODO retry
 			return;
 		}
@@ -233,10 +223,10 @@ public class LocationRequestHandler {
 	}
 
 	@NonNull
-	private Intent getLocationListenerIntent(LocationRequest gcmRequest) {
+	private Intent getLocationListenerIntent(LocationRequest2 gcmRequest) {
 		// We already received and parsed it so
 		try {
-			byte[] bytes = Application.jsonMapper.writeValueAsBytes(gcmRequest);
+			byte[] bytes = Application.getJsonMapper().writeValueAsBytes(gcmRequest);
 			Intent intent = new Intent(context, LocationUpdateListener.class);
 			intent.putExtra(LocationUpdateListener.EXTRA_GCM_REQUEST, bytes);
 			return intent;
@@ -247,9 +237,10 @@ public class LocationRequestHandler {
 	}
 
 	private void sendLastKnownLocation(
-			LocationRequest gcmRequest,
+			LocationRequest2 gcmRequest,
 			GoogleApiClient apiClient
-	) throws JsonProcessingException {
+	) throws JsonProcessingException
+	{
 		if (!Application.hasLocationPermission()) {
 			FirebaseCrash.logcat(Log.WARN, logger.getName(), "No location permission");
 			return;
@@ -265,43 +256,13 @@ public class LocationRequestHandler {
 		}
 	}
 
-	private void authorizeRequest(LocationRequest locationRequest) {
-		if (locationRequest.getRequesterEmail() == null) {
-			showForbiddenNotification(null);
-		}
-
-		try {
-			Future<List<PersonInfo>> future =
-					Application.getFriendsManager().getFriends();
-
-			List<PersonInfo> friends = future.get();
-
-			String requesterEmail = locationRequest.getRequesterEmail();
-
-			for(PersonInfo friend : friends) {
-				// TODO normalize email
-				if (friend.emails.contains(requesterEmail)) {
-					processAuthorizedRequest(locationRequest, friend);
-					break;
-				}
-			}
-
-			logger.warn("Requester not in friends list, rejecting " + requesterEmail);
-
-			// TODO add setting "Ignore unknown to prevent spamming".
-			showForbiddenNotification(requesterEmail);
-
-		} catch (InterruptedException | ExecutionException e) {
-			FirebaseCrash.report(e);
-		}
-	}
-
 	private void showTrackingNotification(
 			PersonInfo person,
 			PendingIntent stopListener,
 			int notificationId,
 			String notificationTag,
-			Duration duration) {
+			Duration duration)
+	{
 
 		int minutes = (int) duration.getStandardMinutes();
 

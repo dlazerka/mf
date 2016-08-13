@@ -20,6 +20,8 @@
 
 package me.lazerka.mf.api.object;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.annotation.Nullable;
@@ -30,7 +32,10 @@ import java.util.List;
  *
  * @author Dzmitry Lazerka
  */
+@JsonInclude(Include.NON_NULL)
 public class LocationRequestResult {
+	public static final String ERROR_USER_NOT_FOUND = "user_not_found";
+
 	/**
 	 * User's email where the request was sent.
 	 */
@@ -39,6 +44,9 @@ public class LocationRequestResult {
 
 	@JsonProperty
 	private List<GcmResult> gcmResults;
+
+	@JsonProperty
+	private Error error;
 
 	// For Jackson.
 	private LocationRequestResult() {}
@@ -58,4 +66,17 @@ public class LocationRequestResult {
 		return gcmResults;
 	}
 
+	public Error getError() {
+		return error;
+	}
+
+	public boolean isSuccess() {
+		return error == null;
+	}
+
+	public static LocationRequestResult notFound() {
+		LocationRequestResult result = new LocationRequestResult();
+		result.error = new Error(ERROR_USER_NOT_FOUND, null);
+		return result;
+	}
 }

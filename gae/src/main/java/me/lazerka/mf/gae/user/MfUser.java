@@ -21,6 +21,7 @@
 package me.lazerka.mf.gae.user;
 
 import com.google.appengine.api.datastore.Email;
+import com.google.common.base.MoreObjects;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.googlecode.objectify.annotation.*;
@@ -108,6 +109,14 @@ public class MfUser {
 
 	public EmailNormalized getEmail() {
 		return new EmailNormalized(email.getEmail());
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+				.add("googleId", googleId)
+				.add("email", email)
+				.toString();
 	}
 
 	/**

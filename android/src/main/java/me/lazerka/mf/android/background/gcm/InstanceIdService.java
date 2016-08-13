@@ -20,21 +20,10 @@
 
 package me.lazerka.mf.android.background.gcm;
 
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Response;
-import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.api.object.GcmToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
 
 /**
  * @author Dzmitry Lazerka
@@ -56,30 +45,30 @@ public class InstanceIdService extends FirebaseInstanceIdService {
 
 		String refreshedToken = FirebaseInstanceId.getInstance().getToken();
 		//logger.debug("Refreshed token: " + refreshedToken);
-		try {
-			sendRegistrationToServer(refreshedToken);
-		} catch (IOException e) {
-			FirebaseCrash.report(e);
-			logger.warn("Cannot send registration ID to server", e);
-		}
+
+		//try {
+		//	sendRegistrationToServer(refreshedToken);
+		//} catch (IOException e) {
+		//	FirebaseCrash.report(e);
+		//	logger.warn("Cannot send registration ID to server", e);
+		//}
 	}
 
 	/**
 	 * Make backend aware of the token.
 	 */
-	private void sendRegistrationToServer(String gcmToken) throws IOException {
-		GoogleSignInAccount signInAccount = new SignInManager()
-				.getAccountBlocking(this);
-
-		GcmToken content = new GcmToken(gcmToken, Application.getVersion());
-		ApiPost apiPost = new ApiPost(content);
-		Call call = apiPost.newCall(signInAccount);
-		Response response = call.execute();
-
-		if (response.code() != HttpURLConnection.HTTP_OK) {
-			String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
-			FirebaseCrash.report(new IOException(msg));
-		}
-	}
-
+	//private void sendRegistrationToServer(String gcmToken) throws IOException {
+	//	GoogleSignInAccount signInAccount = new SignInManager()
+	//			.getAccountBlocking(this);
+	//
+	//	GcmToken content = new GcmToken(gcmToken, Application.getVersion());
+	//	ApiPost apiPost = new ApiPost(content);
+	//	Call call = apiPost.newCall(signInAccount);
+	//	Response response = call.execute();
+	//
+	//	if (response.code() != HttpURLConnection.HTTP_OK) {
+	//		String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
+	//		FirebaseCrash.report(new IOException(msg));
+	//	}
+	//}
 }

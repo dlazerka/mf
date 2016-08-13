@@ -29,26 +29,24 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
-import android.support.v4.content.ContextCompat;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.FirebaseDatabase;
 import me.lazerka.mf.android.contacts.FriendsManager;
+import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.google.common.base.Preconditions.checkState;
 
 /**b
  * Extension of {@link android.app.Application}.
@@ -62,18 +60,20 @@ public class Application extends MultiDexApplication {
 	/**
 	 * Shared static instance, as it's a little expensive to create a new one each time.
 	 */
-	public static JsonMapper jsonMapper;
+	private static JsonMapper jsonMapper;
+
 	public static GcmManager gcmManager;
 	public static Context context;
 
 	private static SharedPreferences friendsSharedPreferences;
 	private static FriendsManager friendsManager;
 
+	private static LocationService locationService;
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		jsonMapper = createJsonMapper();
 		context = getApplicationContext();
 
 		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
@@ -82,16 +82,19 @@ public class Application extends MultiDexApplication {
 		friendsSharedPreferences = getSharedPreferences(getString(R.string.preferences_file_friends), MODE_PRIVATE);
 	}
 
+	private static void checkContext() {
+		checkState(context != null, "app not created yet");
+	}
+
 	public static FriendsManager getFriendsManager() {
-		if (friendsManager != null) {
-			return friendsManager;
-		}
+		if (friendsManager == null) {
+			checkContext();
+			if (friendsSharedPreferences == null) {
+				throw new IllegalStateException("app not created yet");
+			}
 
-		if (friendsSharedPreferences == null || context == null) {
-			throw new IllegalStateException("app not created yet");
+			friendsManager = new FriendsManager(friendsSharedPreferences, context);
 		}
-
-		friendsManager = new FriendsManager(friendsSharedPreferences, context);
 
 		return friendsManager;
 	}
@@ -100,40 +103,44 @@ public class Application extends MultiDexApplication {
 		return Build.DEVICE.startsWith("generic");
 	}
 
-	private JsonMapper createJsonMapper() {
-		JsonMapper result = new JsonMapper();
-		// Warn, but don't fail on unknown property.
-		result.addHandler(new DeserializationProblemHandler() {
-			@Override
-			public boolean handleUnknownProperty(
-					DeserializationContext deserializationContext,
-					JsonParser jsonParser,
-					JsonDeserializer<?> deserializer,
-					Object beanOrClass,
-					String propertyName
-			) throws IOException {
-				String msg = "Unknown property `" + propertyName + "` in " + beanOrClass;
-				logger.warn(msg);
-				jsonParser.skipChildren();
-				return true;
-			}
-		});
-		return result;
+	public static JsonMapper getJsonMapper() {
+		if (jsonMapper == null) {
+			JsonMapper result = new JsonMapper();
+			// Warn, but don't fail on unknown property.
+			result.addHandler(new DeserializationProblemHandler() {
+				@Override
+				public boolean handleUnknownProperty(
+						DeserializationContext deserializationContext,
+						JsonParser jsonParser,
+						JsonDeserializer<?> deserializer,
+						Object beanOrClass,
+						String propertyName
+				) throws IOException
+				{
+					String msg = "Unknown property `" + propertyName + "` in " + beanOrClass;
+					logger.warn(msg);
+					jsonParser.skipChildren();
+					return true;
+				}
+			});
+			jsonMapper = result;
+		}
+
+		return jsonMapper;
 	}
 
-	@Nonnull
-	public static FirebaseDatabase getFirebaseDatabase() {
-		FirebaseDatabase database = FirebaseDatabase.getInstance();
-		database.setPersistenceEnabled(true);
-		return database;
+	public static LocationService getLocationService() {
+		if (locationService == null) {
+			checkContext();
+			locationService = new LocationService(context);
+		}
+		return locationService;
 	}
 
 	@Nullable
 	public static FirebaseUser getCurrentUser() {
 		return FirebaseAuth.getInstance().getCurrentUser();
 	}
-
-
 
 	private boolean isDebugRun() {
 		return Debug.isDebuggerConnected();
@@ -159,10 +166,7 @@ public class Application extends MultiDexApplication {
 	}
 
 	public static boolean hasLocationPermission() {
-		int fineLocationPermission = ContextCompat.checkSelfPermission(Application.context, ACCESS_FINE_LOCATION);
-		int coarseLocationPermission = ContextCompat.checkSelfPermission(Application.context, ACCESS_COARSE_LOCATION);
-		return fineLocationPermission == PERMISSION_GRANTED ||
-				coarseLocationPermission == PERMISSION_GRANTED;
+		return PermissionAsker.hasPermission(ACCESS_FINE_LOCATION, context)
+				|| PermissionAsker.hasPermission(ACCESS_COARSE_LOCATION, context);
 	}
-
 }

@@ -26,10 +26,11 @@ import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.background.location.LocationRequestHandler;
 import me.lazerka.mf.api.gcm.GcmPayload;
-import me.lazerka.mf.api.object.LocationRequest;
+import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationUpdate;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -38,6 +39,8 @@ import rx.subjects.BehaviorSubject;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Map;
+
+import static java.lang.String.format;
 
 /**
  * Handler for incoming messages from Firebase.
@@ -51,7 +54,6 @@ import java.util.Map;
  */
 public class GcmReceiveService extends FirebaseMessagingService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmReceiveService.class);
-
 
 	private static final BehaviorSubject<LocationUpdate> locationReceivedSubject = BehaviorSubject.create();
 
@@ -73,12 +75,8 @@ public class GcmReceiveService extends FirebaseMessagingService {
 		String from = message.getFrom();
 		logger.info("Received message from {}: {} ", from, type);
 
-		if (!from.equals("769083712074")) {
-			logger.warn("GCM message from unknown sender rejected: " + from);
-			return;
-		}
 		if (type == null) {
-			FirebaseCrash.logcat(Log.WARN, logger.getName(), "Unknown message class " + data);
+			FirebaseCrash.logcat(Log.WARN, logger.getName(), format("No %s field: %s", GcmPayload.PAYLOAD_FIELD, data));
 			return;
 		}
 
@@ -90,15 +88,25 @@ public class GcmReceiveService extends FirebaseMessagingService {
 		try {
 			switch (type) {
 				case LocationUpdate.TYPE:
-					LocationUpdate payload = Application.jsonMapper.readValue(json, LocationUpdate.class);
+					// Testing. DONOTSHIP
+					logger.info(message.getFrom());
+
+					LocationUpdate payload = Application.getJsonMapper().readValue(json, LocationUpdate.class);
 					locationReceivedSubject.onNext(payload);
 					break;
-				case LocationRequest.TYPE:
-					LocationRequest locationRequest = Application.jsonMapper.readValue(json, LocationRequest.class);
-					new LocationRequestHandler(this).handle(locationRequest);
+				case LocationRequestFromServer.TYPE:
+					LocationRequestFromServer locationRequest =
+							Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
+
+					Application.getLocationService()
+							.handleRequest(
+									locationRequest,
+									message.getFrom(),
+									new DateTime(message.getSentTime(), DateTimeZone.UTC)
+							);
 					break;
 				default:
-					logger.warn("Unknown message type: " + type);
+					FirebaseCrash.logcat(Log.WARN, "Unknown message type: " + type, logger.getName());
 			}
 		} catch (IOException e) {
 			logger.warn("Cannot parse {}: {}", type, json, e);

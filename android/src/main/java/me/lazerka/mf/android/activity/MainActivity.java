@@ -23,7 +23,6 @@ package me.lazerka.mf.android.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.view.Menu;
@@ -32,18 +31,21 @@ import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.common.collect.Range;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.android.background.gcm.GcmReceiveService;
 import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
-import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +58,6 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.joda.time.DateTimeZone.UTC;
 
 /**
  * Extends FragmentActivity only for GoogleApiClient.
@@ -65,6 +66,7 @@ import static org.joda.time.DateTimeZone.UTC;
  */
 public class MainActivity extends GoogleApiActivity {
 	private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
+	private static final Duration LOCATION_REQUEST_TTL = Duration.standardHours(3);
 
 	public final PermissionAsker permissionAsker;
 
@@ -141,18 +143,19 @@ public class MainActivity extends GoogleApiActivity {
 				.param("duration", duration.getStandardSeconds())
 				.send();
 
+
 		runWithAccount(new SignInCallbacks() {
 			@Override
 			public void onSuccess(@NonNull GoogleSignInResult result) {
 				GoogleSignInAccount account = checkNotNull(result.getSignInAccount());
 
-				String requestId = String.valueOf(SystemClock.uptimeMillis());
-				DateTime sentAt = DateTime.now(UTC);
-				LocationRequest locationRequest = new LocationRequest(
-						requestId,
-						personInfo.emails,
-						sentAt,
-						duration);
+				Application.getLocationService()
+						.requestLocationUpdates(account, personInfo, duration);
+
+				LocationRequest locationRequest = GcmReceiveService.buildLocationRequestPayload(
+						duration, personInfo, user.getEmail());
+
+				FirebaseMessaging.getInstance().subscribeToTopic(locationRequest.getUpdatesTopic());
 
 				Call call = new ApiPost(locationRequest).newCall(account);
 				call.enqueue(new LocationRequestCallback(personInfo));
