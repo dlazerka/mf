@@ -20,32 +20,22 @@
 
 package me.lazerka.mf.gae.web.rest.location;
 
+import me.lazerka.gae.jersey.oauth2.Role;
+import me.lazerka.mf.api.ApiConstants;
+import me.lazerka.mf.api.object.*;
+import me.lazerka.mf.gae.gcm.GcmService;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.user.UserService;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-
-import me.lazerka.gae.jersey.oauth2.Role;
-import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.object.GcmResult;
-import me.lazerka.mf.api.object.Location;
-import me.lazerka.mf.api.object.LocationRequest;
-import me.lazerka.mf.api.object.LocationUpdate;
-import me.lazerka.mf.api.object.LocationUpdateResponse;
-import me.lazerka.mf.gae.gcm.GcmService;
-import me.lazerka.mf.gae.user.MfUser;
-import me.lazerka.mf.gae.user.UserService;
+import java.util.List;
 
 import static me.lazerka.mf.gae.web.rest.JerseyUtil.throwIfNull;
 
@@ -80,9 +70,6 @@ public class LocationUpdateResource {
 
 		MfUser user = userService.getCurrentUser();
 
-		// We don't trust client to set this, obviously.
-		location.setEmail(user.getEmail().getEmail());
-
 		DateTime clientsWhen = location.getWhen();
 		if (new Duration(now, clientsWhen).isLongerThan(Duration.standardMinutes(1))) {
 			logger.warn(
@@ -108,7 +95,7 @@ public class LocationUpdateResource {
 				logger.warn(
 						"GCM error while sending to {} for {}: {}",
 						requester.getEmail(),
-						location.getEmail(),
+						user.getEmail(),
 						gcmResult.getError());
 			}
 		}

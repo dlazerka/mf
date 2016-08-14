@@ -33,14 +33,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class LocationRequest2 {
-	public static final String TYPE = "LocationRequest";
-
-	@JsonProperty
-	private String googleAuthToken;
+public class LocationRequest2 implements ApiObject {
+	public static final String PATH = "/rest/locationRequest";
 
 	@JsonProperty
 	private String updatesTopic;
+
+	@JsonProperty
+	private PersonId to;
 
 	/** For how long user wants to receive location updates from their friend. */
 	@JsonProperty
@@ -49,18 +49,21 @@ public class LocationRequest2 {
 	// For Jackson.
 	public LocationRequest2() {}
 
-	public LocationRequest2(String googleAuthToken, String updatesTopic, Duration duration) {
-		this.googleAuthToken = checkNotNull(googleAuthToken);
+	public LocationRequest2(String updatesTopic, PersonId to, Duration duration) {
 		this.updatesTopic = checkNotNull(updatesTopic);
+		this.to = checkNotNull(to);
 		this.duration = checkNotNull(duration);
 	}
 
-	public String getGoogleAuthToken() {
-		return googleAuthToken;
-	}
-
+	/**
+	 * Where to send location updates.
+	 */
 	public String getUpdatesTopic() {
 		return updatesTopic;
+	}
+
+	public PersonId getTo() {
+		return to;
 	}
 
 	public Duration getDuration() {
@@ -68,10 +71,15 @@ public class LocationRequest2 {
 	}
 
 	@Override
+	public String getPath() {
+		return PATH;
+	}
+
+	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				// No googleAuthToken
 				.add("updatesTopic", updatesTopic)
+				.add("to", to)
 				.add("duration", duration)
 				.toString();
 	}

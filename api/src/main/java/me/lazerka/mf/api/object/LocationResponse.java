@@ -43,8 +43,10 @@ import javax.annotation.Nullable;
 public class LocationResponse implements GcmPayload {
 	public static final String TYPE = "LocationUpdate";
 
-	@JsonProperty
-	private String googleAuthToken;
+	/**
+	 * Recipient rejected location request.
+	 */
+	public static final String ERROR_REJECTED = "denied";
 
 	@Nullable
 	@JsonProperty
@@ -56,18 +58,27 @@ public class LocationResponse implements GcmPayload {
 	@JsonProperty
 	private Error error;
 
+	@JsonProperty
+	private boolean complete;
+
 	// For Jackson.
 	private LocationResponse() {}
 
 	public static LocationResponse denied() {
 		LocationResponse result = new LocationResponse();
-		result.error = new Error("denied", null);
+		result.error = new Error(ERROR_REJECTED, null);
+		return result;
+	}
+
+	public static LocationResponse complete() {
+		LocationResponse result = new LocationResponse();
+		result.complete = true;
 		return result;
 	}
 
 	public LocationResponse(
 			@Nullable Location location,
-			Duration duration
+			@Nullable Duration duration
 	) {
 		this.location = location;
 		this.duration = duration;
@@ -79,10 +90,6 @@ public class LocationResponse implements GcmPayload {
 		return TYPE;
 	}
 
-	public String getGoogleAuthToken() {
-		return googleAuthToken;
-	}
-
 	@Nullable
 	public Location getLocation() {
 		return location;
@@ -92,6 +99,11 @@ public class LocationResponse implements GcmPayload {
 		return error != null;
 	}
 
+	public boolean isComplete() {
+		return complete;
+	}
+
+	@Nullable
 	public Duration getDuration() {
 		return duration;
 	}
@@ -103,7 +115,6 @@ public class LocationResponse implements GcmPayload {
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
-				// No googleAuthToken
 				.add("location", location)
 				.add("duration", duration)
 				.add("error", error)
