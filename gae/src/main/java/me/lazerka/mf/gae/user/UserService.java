@@ -23,26 +23,20 @@ package me.lazerka.mf.gae.user;
 import com.google.appengine.api.datastore.Email;
 import com.google.common.collect.ImmutableList;
 import com.googlecode.objectify.Work;
-
+import me.lazerka.gae.jersey.oauth2.UserPrincipal;
+import me.lazerka.gae.jersey.oauth2.google.GoogleUserPrincipal;
+import me.lazerka.mf.api.EmailNormalized;
+import me.lazerka.mf.gae.entity.CreateOrFetch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.ws.rs.core.SecurityContext;
-
-import me.lazerka.gae.jersey.oauth2.UserPrincipal;
-import me.lazerka.mf.gae.entity.CreateOrFetch;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.googlecode.objectify.ObjectifyService.ofy;
@@ -55,50 +49,8 @@ import static com.googlecode.objectify.ObjectifyService.ofy;
 public class UserService {
 	private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-	/** Any period that is followed by @. */
-	private static final Pattern emailAddressSplitPattern = Pattern.compile("^(.*)(@.*)$");
-	/** Just a single period. */
-	private static final Pattern periodRegex = Pattern.compile(".", Pattern.LITERAL);
-
 	@Inject
 	SecurityContext securityContext;
-
-	/**
-	 * Try to normalize email addresses by lowercasing domain part.
-	 *
-	 * If we detect address is GMail one, we also apply GMail specific features normalizer.
-	 *
-	 * If we cannot parse email, we log a warning and return non-normalized email instead of throwing an exception,
-	 * because email addresses could be very tricky to parse, and there's no silver bullet despite RFCs.
-	 */
-	public static EmailNormalized normalizeEmail(String address){
-		Matcher matcher = emailAddressSplitPattern.matcher(address);
-		if (!matcher.matches()) {
-			logger.warn("Email address invalid: {}", address);
-			return new EmailNormalized(address);
-		}
-
-		String localPart = matcher.group(1);
-		String domainPart = matcher.group(2);
-
-		domainPart = domainPart.toLowerCase(Locale.US);
-
-		if (domainPart.equals("@gmail.com") || domainPart.equals("@googlemail.com")) {
-			// Remove everything after plus sign (GMail-specific feature).
-			int plusIndex = localPart.indexOf('+');
-			if (plusIndex != -1) {
-				localPart = localPart.substring(0, plusIndex);
-			}
-
-			// Remove periods.
-			localPart = periodRegex.matcher(localPart).replaceAll("");
-
-			// GMail addresses are case-insensitive.
-			localPart = localPart.toLowerCase(Locale.US);
-		}
-
-		return new EmailNormalized(localPart + domainPart);
-	}
 
 	private UserPrincipal getCurrentOauthUser() {
 		return (UserPrincipal) checkNotNull(securityContext.getUserPrincipal());
@@ -107,7 +59,8 @@ public class UserService {
 	@Nonnull
 	public MfUser getCurrentUser() {
 		UserPrincipal oauthUser = getCurrentOauthUser();
-		EmailNormalized normalized = normalizeEmail(oauthUser.getEmail());
+		String email = ((GoogleUserPrincipal) oauthUser).getEmail();
+		EmailNormalized normalized = EmailNormalized.normalizeEmail(email);
 
 		MfUser user = new MfUser(oauthUser.getId(), normalized);
 		MfUser existingEntity = ofy().load().entity(user).now();
@@ -138,32 +91,18 @@ public class UserService {
 	public MfUser getUserByEmails(Collection<String> emails) {
 		logger.trace("Requesting user by emails {}", emails);
 
-		List<Email> normalized = new ArrayList<>(emails.size());
+		List<Email> normalizedList = new ArrayList<>(emails.size());
 		for(String email : emails) {
-			Email value = new Email(normalizeEmail(email).getEmail());
-			normalized.add(value);
+			EmailNormalized normalized = EmailNormalized.normalizeEmail(email);
+			Email value = new Email(normalized.getEmail());
+			normalizedList.add(value);
 		}
 
 		// All emails must belong to only one user
 		return ofy().load()
 				.type(MfUser.class)
-				.filter("email IN ", normalized)
+				.filter("email IN ", normalizedList)
 				.first()
 				.now();
 	}
-
-	public Set<MfUser> getUsersByEmails(Set<EmailNormalized> emails) {
-		logger.trace("Requesting users by emails {}", emails);
-
-		List<MfUser> users = ofy().load()
-				.type(MfUser.class)
-				.filter("email IN ", emails)
-				.list();
-		if (users.isEmpty()) {
-			logger.warn("No users found by emails: {}", emails);
-		}
-		logger.trace("Found {} users", users);
-		return new LinkedHashSet<>(users);
-	}
-
 }

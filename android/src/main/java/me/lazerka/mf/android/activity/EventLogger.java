@@ -35,16 +35,24 @@ public class EventLogger {
 	private final Bundle bundle = new Bundle();
 
 	/**
-	 * Otherwise FirebaseCrash errors "Name must consist of letters, digits or _ (underscores). Type, name: event,".
+	 * Otherwise FirebaseCrash errors "Name must consist of letters, digits or _ (underscores)."
+	 * for both event name and param name.
 	 */
-	private static final Pattern KEY = Pattern.compile("^[a-z0-9_]+$", CASE_INSENSITIVE);
+	private static final Pattern NAME = Pattern.compile("^[a-z0-9_]{1,32}$", CASE_INSENSITIVE);
 	private static void checkKey(String key) {
-		if (!KEY.matcher(key).matches()) {
-			throw new IllegalArgumentException("Event key");
+		if (!NAME.matcher(key).matches()) {
+			throw new IllegalArgumentException("Event key " + key);
+		}
+	}
+
+	private static void checkName(String name) {
+		if (!NAME.matcher(name).matches()) {
+			throw new IllegalArgumentException("Event name: " + name);
 		}
 	}
 
 	public EventLogger(String eventName, @Nullable FirebaseAnalytics firebaseAnalytics) {
+		checkName(eventName);
 		this.eventName = eventName;
 		this.firebaseAnalytics = firebaseAnalytics;
 	}

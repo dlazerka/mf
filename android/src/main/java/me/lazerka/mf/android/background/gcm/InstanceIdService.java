@@ -20,7 +20,7 @@
 
 package me.lazerka.mf.android.background.gcm;
 
-import com.google.firebase.iid.FirebaseInstanceId;
+import android.content.Intent;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,36 +39,7 @@ public class InstanceIdService extends FirebaseInstanceIdService {
 	 */
 	@Override
 	public void onTokenRefresh() {
-		// Fetch updated Instance ID token and notify our app's server of any changes (if applicable).
-		//Intent intent = new Intent(this, GcmRegisterIntentService.class);
-		//startService(intent);
-
-		String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-		//logger.debug("Refreshed token: " + refreshedToken);
-
-		//try {
-		//	sendRegistrationToServer(refreshedToken);
-		//} catch (IOException e) {
-		//	FirebaseCrash.report(e);
-		//	logger.warn("Cannot send registration ID to server", e);
-		//}
+		Intent intent = new Intent(this, SendTokenToServerService.class);
+		startService(intent);
 	}
-
-	/**
-	 * Make backend aware of the token.
-	 */
-	//private void sendRegistrationToServer(String gcmToken) throws IOException {
-	//	GoogleSignInAccount signInAccount = new SignInManager()
-	//			.getAccountBlocking(this);
-	//
-	//	GcmToken content = new GcmToken(gcmToken, Application.getVersion());
-	//	ApiPost apiPost = new ApiPost(content);
-	//	Call call = apiPost.newCall(signInAccount);
-	//	Response response = call.execute();
-	//
-	//	if (response.code() != HttpURLConnection.HTTP_OK) {
-	//		String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
-	//		FirebaseCrash.report(new IOException(msg));
-	//	}
-	//}
 }

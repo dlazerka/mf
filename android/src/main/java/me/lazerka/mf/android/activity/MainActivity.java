@@ -25,26 +25,23 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.common.collect.Range;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.PersonInfo;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.android.background.gcm.GcmReceiveService;
+import me.lazerka.mf.android.background.gcm.SendTokenToServerService;
+import me.lazerka.mf.android.location.LocationService.NoEmailsException;
 import me.lazerka.mf.api.object.GcmResult;
-import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.api.object.LocationRequestResult;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
@@ -79,7 +76,7 @@ public class MainActivity extends GoogleApiActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		buildEvent("MainActivity.onCreate").send();
+		Application.getEventLogger("app_launched").send();
 
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
@@ -94,12 +91,12 @@ public class MainActivity extends GoogleApiActivity {
 		super.onStart();
 
 		// Make sure server knows our GCM token.
-		//startService(new Intent(this, GcmRegisterIntentService.class));
+		startService(new Intent(this, SendTokenToServerService.class));
 	}
 
 	@Override
 	protected void onSignInFailed() {
-		buildEvent("MainActivity.handleSignInFailed").send();
+		Application.getEventLogger("main_sign_in_failed").send();
 
 		Intent intent = new Intent(this, LoginActivity.class);
 		startActivity(intent);
@@ -128,7 +125,7 @@ public class MainActivity extends GoogleApiActivity {
 				recreate();
 				break;
 			case R.id.action_quit:
-				buildEvent("MainActivity.option: quit").send();
+				Application.getEventLogger("app_quit").send();
 				this.finish();
 				break;
 		}
@@ -139,7 +136,7 @@ public class MainActivity extends GoogleApiActivity {
 		checkArgument(!personInfo.emails.isEmpty());
 		checkNotNull(duration);
 
-		buildEvent("MainActivity.requestLocationUpdates")
+		Application.getEventLogger("request_location")
 				.param("duration", duration.getStandardSeconds())
 				.send();
 
@@ -149,16 +146,20 @@ public class MainActivity extends GoogleApiActivity {
 			public void onSuccess(@NonNull GoogleSignInResult result) {
 				GoogleSignInAccount account = checkNotNull(result.getSignInAccount());
 
-				Application.getLocationService()
-						.requestLocationUpdates(account, personInfo, duration);
+				try {
+					Application.getLocationService().requestLocationUpdates(
+							account,
+							personInfo,
+							duration,
+							new LocationRequestCallback(personInfo));
 
-				LocationRequest locationRequest = GcmReceiveService.buildLocationRequestPayload(
-						duration, personInfo, user.getEmail());
 
-				FirebaseMessaging.getInstance().subscribeToTopic(locationRequest.getUpdatesTopic());
-
-				Call call = new ApiPost(locationRequest).newCall(account);
-				call.enqueue(new LocationRequestCallback(personInfo));
+				} catch (NoEmailsException e) {
+					FirebaseCrash.logcat(Log.INFO, logger.getName(), "Contact has no emails to request to");
+					String msg = getString(R.string.contact_no_emails, personInfo.displayName);
+					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+					return;
+				}
 
 				// Todo change to UI text instead of a Toast.
 				String text = getString(R.string.sending_location_request, personInfo.displayName);

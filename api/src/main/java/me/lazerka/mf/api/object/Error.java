@@ -40,4 +40,9 @@ public class Error {
 		this.code = code;
 		this.message = message;
 	}
+
+	@Override
+	public String toString() {
+		return code + (message == null ? "" : ": " + message);
+	}
 }

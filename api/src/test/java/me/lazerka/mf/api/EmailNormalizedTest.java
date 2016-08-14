@@ -1,6 +1,6 @@
 /*
  *     Find Us: privacy oriented location tracker for your friends and family.
- *     Copyright (C) 2015 Dzmitry Lazerka dlazerka@gmail.com
+ *     Copyright (C) 2016 Dzmitry Lazerka dlazerka@gmail.com
  *
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -18,38 +18,38 @@
  *
  */
 
-package me.lazerka.mf.gae.user;
+package me.lazerka.mf.api;
 
+import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
 
-import static me.lazerka.mf.gae.user.UserService.normalizeEmail;
+import static me.lazerka.mf.api.EmailNormalized.normalizeEmail;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 /**
  * @author Dzmitry Lazerka
  */
-public class UserServiceTest {
+public class EmailNormalizedTest {
 	@Test
 	public void testCanonicalizeGmailAddress() throws Exception {
-		assertThat(normalizeEmail("email@example.com"), is(new EmailNormalized("email@example.com")));
+		assertThat(normalizeEmail("email@example.com"), Matchers.is(new EmailNormalized("email@example.com")));
 
-		assertThat(normalizeEmail("email+extra@example.com"), is(new EmailNormalized("email+extra@example.com")));
-		assertThat(normalizeEmail("email+extra@gmail.com"), is(new EmailNormalized("email@gmail.com")));
+		assertThat(normalizeEmail("email+extra@example.com"), Matchers.is(new EmailNormalized("email+extra@example.com")));
+		assertThat(normalizeEmail("email+extra@gmail.com"), Matchers.is(new EmailNormalized("email@gmail.com")));
 
 		assertThat(normalizeEmail("email+extra+another@example.com"),
-				is(new EmailNormalized("email+extra+another@example.com")));
-		assertThat(normalizeEmail("email+extra+another@gmail.com"), is(new EmailNormalized("email@gmail.com")));
+				Matchers.is(new EmailNormalized("email+extra+another@example.com")));
+		assertThat(normalizeEmail("email+extra+another@gmail.com"), Matchers.is(new EmailNormalized("email@gmail.com")));
 
 		assertThat(normalizeEmail("first.middle.last@example.com"),
-				is(new EmailNormalized("first.middle.last@example.com")));
+				Matchers.is(new EmailNormalized("first.middle.last@example.com")));
 		assertThat(normalizeEmail("first.middle.last@gmail.com"),
-				is(new EmailNormalized("firstmiddlelast@gmail.com")));
+				Matchers.is(new EmailNormalized("firstmiddlelast@gmail.com")));
 
-		assertThat(normalizeEmail("CapitalCase@eXample.com"), is(new EmailNormalized("CapitalCase@example.com")));
-		assertThat(normalizeEmail("CapitalCase@GMail.com"), is(new EmailNormalized("capitalcase@gmail.com")));
+		assertThat(normalizeEmail("CapitalCase@eXample.com"), Matchers.is(new EmailNormalized("CapitalCase@example.com")));
+		assertThat(normalizeEmail("CapitalCase@GMail.com"), Matchers.is(new EmailNormalized("capitalcase@gmail.com")));
 
 		// That's right, we accept invalid emails, because see unit javadoc.
-		assertThat(normalizeEmail("invalid.email.COM"), is(new EmailNormalized("invalid.email.COM")));
+		assertThat(normalizeEmail("invalid.email.COM"), Matchers.is(new EmailNormalized("invalid.email.COM")));
 	}
 }

@@ -61,7 +61,7 @@ dependencies {
     }
 
     // Auth
-    compile "me.lazerka.gae-jersey-oauth2:gae-jersey-oauth2:1.0-beta2"
+    compile "me.lazerka.gae-jersey-oauth2:gae-jersey-oauth2:2.3"
 
     // Web Server
     compile "javax.servlet:servlet-api:2.5"
@@ -72,7 +72,7 @@ dependencies {
     }
     compile "com.google.inject.extensions:guice-servlet:$ext.guiceVersion"
 
-    compile "io.reactivex:rxjava:1.0.16"
+//    compile "io.reactivex:rxjava:1.0.16"
 
     // Misc
     compile "com.google.inject:guice:$ext.guiceVersion"

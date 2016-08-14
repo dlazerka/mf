@@ -22,25 +22,24 @@ package me.lazerka.mf.android.background.gcm;
 
 import android.support.annotation.WorkerThread;
 import android.util.Log;
+import com.google.common.base.Stopwatch;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
-import me.lazerka.mf.api.object.LocationUpdate;
+import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.subjects.BehaviorSubject;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Map;
 
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Handler for incoming messages from Firebase.
@@ -55,16 +54,6 @@ import static java.lang.String.format;
 public class GcmReceiveService extends FirebaseMessagingService {
 	private static final Logger logger = LoggerFactory.getLogger(GcmReceiveService.class);
 
-	private static final BehaviorSubject<LocationUpdate> locationReceivedSubject = BehaviorSubject.create();
-
-	/**
-	 * @return Interface to get {@link LocationUpdate} GCM messages by other services.
-	 */
-	@Nonnull
-	public static Observable<LocationUpdate> getLocationReceivedObservable() {
-		return locationReceivedSubject;
-	}
-
 	@WorkerThread
 	@Override
 	public void onMessageReceived(RemoteMessage message) {
@@ -73,7 +62,7 @@ public class GcmReceiveService extends FirebaseMessagingService {
 		String json = data.get(GcmPayload.PAYLOAD_FIELD);
 
 		String from = message.getFrom();
-		logger.info("Received message from {}: {} ", from, type);
+		logger.info("Received message from {}: {}", from, type);
 
 		if (type == null) {
 			FirebaseCrash.logcat(Log.WARN, logger.getName(), format("No %s field: %s", GcmPayload.PAYLOAD_FIELD, data));
@@ -86,27 +75,28 @@ public class GcmReceiveService extends FirebaseMessagingService {
 		}
 
 		try {
+			Stopwatch stopwatch = AndroidTicker.started();
 			switch (type) {
-				case LocationUpdate.TYPE:
-					// Testing. DONOTSHIP
-					logger.info(message.getFrom());
-
-					LocationUpdate payload = Application.getJsonMapper().readValue(json, LocationUpdate.class);
-					locationReceivedSubject.onNext(payload);
+				case LocationResponse.TYPE:
+					LocationResponse payload = Application.getJsonMapper().readValue(json, LocationResponse.class);
+					logger.info("Parsed LocationResponse in {}ms", stopwatch.elapsed(MILLISECONDS));
+					Application.getLocationService()
+							.handleLocationResponse(payload, from);
 					break;
 				case LocationRequestFromServer.TYPE:
 					LocationRequestFromServer locationRequest =
 							Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
+					logger.info("Parsed LocationResponse in {}ms", stopwatch.elapsed(MILLISECONDS));
 
 					Application.getLocationService()
 							.handleRequest(
 									locationRequest,
-									message.getFrom(),
-									new DateTime(message.getSentTime(), DateTimeZone.UTC)
+									from,
+									new DateTime(message.getSentTime())
 							);
 					break;
 				default:
-					FirebaseCrash.logcat(Log.WARN, "Unknown message type: " + type, logger.getName());
+					FirebaseCrash.report(new Exception("Unknown message type: " + type));
 			}
 		} catch (IOException e) {
 			logger.warn("Cannot parse {}: {}", type, json, e);

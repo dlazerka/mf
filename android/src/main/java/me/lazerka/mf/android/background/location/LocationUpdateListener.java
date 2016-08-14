@@ -23,15 +23,13 @@ package me.lazerka.mf.android.background.location;
 import android.app.IntentService;
 import android.content.Intent;
 import android.location.LocationManager;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationResult;
 import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.auth.GoogleApiException;
-import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.Location;
-import me.lazerka.mf.api.object.LocationRequest2;
+import me.lazerka.mf.api.object.LocationRequestFromServer;
+import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,21 +65,43 @@ public class LocationUpdateListener extends IntentService {
 
 		// From FusedLocationApi.
 		if (LocationResult.hasResult(intent)) {
-			logger.info("Got LocationResult"); // todo trace
-			location = LocationResult.extractResult(intent).getLastLocation();
+			//logger.info("Sending LocationResult");
+
+			// May throw
+			// java.lang.ClassCastException: android.location.Location cannot be cast to
+			// com.google.android.gms.location.LocationResult
+			//
+			// Also see https://code.google.com/p/android/issues/detail?id=81812
+			try {
+				location = LocationResult.extractResult(intent).getLastLocation();
+			} catch (ClassCastException e) {
+				location = intent.getExtras().getParcelable("com.google.android.gms.location.EXTRA_LOCATION_RESULT");
+			}
 		}
 		// From LocationManager.
 		else if (intent.hasExtra(LocationManager.KEY_LOCATION_CHANGED)) {
-			logger.info("Got Location"); // todo trace
+			//logger.info("Sending Location");
 			location = intent.getExtras().getParcelable(LocationManager.KEY_LOCATION_CHANGED);
 		}
 
 		if (location != null) {
 			try {
 				byte[] json = checkNotNull(intent.getByteArrayExtra(EXTRA_GCM_REQUEST));
-				LocationRequest2 gcmRequest = Application.getJsonMapper().readValue(json, LocationRequest2.class);
+				LocationRequestFromServer gcmRequest = Application.getJsonMapper()
+						.readValue(json, LocationRequestFromServer.class);
 
-				sendLocation(location, gcmRequest);
+				Location locationBean = new Location(
+						new DateTime(location.getTime()),
+						location.getLatitude(),
+						location.getLongitude(),
+						location.getAccuracy()
+				);
+
+				LocationResponse locationResponse = new LocationResponse(locationBean, gcmRequest.getDuration());
+				Application.getLocationService().sendLocationUpdate(
+						locationResponse,
+						gcmRequest.getUpdatesTopic()
+				);
 
 			} catch (IOException e) {
 				// Unrealistic, we already parsed it once in GcmReceiveService.
@@ -89,26 +109,5 @@ public class LocationUpdateListener extends IntentService {
 				FirebaseCrash.report(e);
 			}
 		}
-	}
-
-	void sendLocation(android.location.Location location, LocationRequest2 gcmRequest) {
-		SignInManager signInManager = new SignInManager();
-		GoogleSignInAccount account;
-		try {
-			account = signInManager.getAccountBlocking(this);
-		} catch (GoogleApiException e) {
-			logger.warn("Unable to sign in: {} {}", e.getCode(), e.getMessage());
-			// TODO implement reconnection logic
-			return;
-		}
-
-		Location locationBean = new Location(
-				new DateTime(location.getTime()),
-				location.getLatitude(),
-				location.getLongitude(),
-				location.getAccuracy()
-		);
-
-		Application.getLocationService().sendLocationUpdate(location, gcmRequest);
 	}
 }

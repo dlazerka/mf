@@ -79,7 +79,7 @@ public abstract class JsonParsingCallback<R> implements Callback {
 			return;
 		}
 
-		final R result = Application.jsonMapper.readValue(
+		final R result = Application.getJsonMapper().readValue(
 				body.string(),
 				responseType);
 

@@ -27,13 +27,19 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.LocationManager;
-
+import com.google.firebase.crash.FirebaseCrash;
+import me.lazerka.mf.android.Application;
+import me.lazerka.mf.api.object.LocationRequestFromServer;
+import me.lazerka.mf.api.object.LocationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.background.location.LocationUpdateListener.EXTRA_GCM_REQUEST;
 
 /**
  * Stops location updates.
@@ -93,5 +99,22 @@ public class LocationStopListener extends IntentService {
 		PendingIntent selfPendingIntent = PendingIntent.getService(this, requesterCode, intent, FLAG_CANCEL_CURRENT);
 		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		alarmManager.cancel(selfPendingIntent);
+
+
+		// Send requester final "complete" update.
+		byte[] json = listenerToStop.getByteArrayExtra(EXTRA_GCM_REQUEST);
+		if (json == null) {
+			FirebaseCrash.report(new IllegalStateException("Extra" + EXTRA_GCM_REQUEST + " is null"));
+			return;
+		}
+
+		try {
+			LocationRequestFromServer originalRequest =
+					Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
+			Application.getLocationService()
+					.sendLocationUpdate(LocationResponse.complete(), originalRequest.getUpdatesTopic());
+		} catch (IOException e) {
+			FirebaseCrash.report(e);
+		}
 	}
 }

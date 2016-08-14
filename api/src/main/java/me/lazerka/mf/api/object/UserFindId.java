@@ -20,6 +20,8 @@
 
 package me.lazerka.mf.api.object;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -32,13 +34,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Dzmitry Lazerka
  */
-public class PersonId {
+public class UserFindId {
+	@JsonProperty
 	Set<String> emails;
 
 	// For Jackson
-	private PersonId() {}
+	private UserFindId() {}
 
-	public PersonId(Set<String> emails) {
+	public UserFindId(Set<String> emails) {
 		this.emails = checkNotNull(emails);
 		checkArgument(!emails.isEmpty());
 	}

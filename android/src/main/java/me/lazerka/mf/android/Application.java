@@ -33,15 +33,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.analytics.FirebaseAnalytics;
+import me.lazerka.mf.android.activity.EventLogger;
 import me.lazerka.mf.android.contacts.FriendsManager;
 import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -99,6 +98,14 @@ public class Application extends MultiDexApplication {
 		return friendsManager;
 	}
 
+	public static FirebaseAnalytics getFirebaseAnalytics() {
+		return FirebaseAnalytics.getInstance(context);
+	}
+
+	public static EventLogger getEventLogger(String eventName) {
+		return new EventLogger(eventName, getFirebaseAnalytics());
+	}
+
 	private static boolean isInsideEmulator() {
 		return Build.DEVICE.startsWith("generic");
 	}
@@ -135,11 +142,6 @@ public class Application extends MultiDexApplication {
 			locationService = new LocationService(context);
 		}
 		return locationService;
-	}
-
-	@Nullable
-	public static FirebaseUser getCurrentUser() {
-		return FirebaseAuth.getInstance().getCurrentUser();
 	}
 
 	private boolean isDebugRun() {

@@ -38,27 +38,33 @@ import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.messaging.RemoteMessage.Builder;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.android.background.location.LocationRequestHandler;
+import me.lazerka.mf.api.EmailNormalized;
 import me.lazerka.mf.api.gcm.GcmPayload;
-import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationRequest2;
+import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
+import me.lazerka.mf.api.object.UserFindId;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.subjects.BehaviorSubject;
 
-import javax.annotation.Nonnull;
-import java.security.SecureRandom;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -74,15 +80,17 @@ public class LocationService {
 	public static final int TRACKING_NOTIFICATION_ID = 4321;
 	public static final int FORBIDDEN_NOTIFICATION_ID = 4322;
 
-	private final SecureRandom rng = new SecureRandom();
-
 	private final Context context;
 	private final SharedPreferences preferences;
 	private final LocationRequestHandler locationRequestHandler;
 
+	private final BehaviorSubject<FriendLocationResponse> locationUpdates = BehaviorSubject.create();
+	private final FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
+
 	public LocationService(Context context) {
 		this.context = context;
-		this.preferences = context.getSharedPreferences(context.getString(R.string.preferences_file_friends), MODE_PRIVATE);
+		this.preferences = context.getSharedPreferences(context.getString(R.string.preferences_file_friends),
+				MODE_PRIVATE);
 		this.locationRequestHandler = new LocationRequestHandler(context);
 	}
 
@@ -93,134 +101,54 @@ public class LocationService {
 		return context.getString(R.string.gcm_defaultSenderId);
 	}
 
-	private static String getLocationRequestsTopic(@Nonnull String email) {
-		String emailNormalized = normalizeEmail(email);
-		return "location_request/" + emailNormalized;
+	public Observable<FriendLocationResponse> getLocationUpdates() {
+		return locationUpdates;
 	}
 
 	public void requestLocationUpdates(
 			GoogleSignInAccount account,
 			PersonInfo to,
-			Duration duration
-	) {
-		LocationRequest2 locationRequest = buildLocationRequest(account, duration);
+			Duration duration,
+			Callback locationRequestCallback
+	) throws NoEmailsException
+	{
+		LocationRequest2 locationRequest = buildLocationRequest(to, duration);
 
-		try {
-			String json = Application.getJsonMapper().writeValueAsString(locationRequest);
+		Call call = new ApiPost(locationRequest).newCall(account);
+		call.enqueue(locationRequestCallback);
 
-			subscribeToTopic(locationRequest.getUpdatesTopic());
+		String topic = locationRequest.getUpdatesTopic();
+		firebaseMessaging.subscribeToTopic(topic);
 
-			sendRequest(to, json);
+		// DEBUG
+		//logger.info("Subscribing to {}", topic);
 
-		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage(), e);
-			FirebaseCrash.report(e);
-		}
+		saveToSharedPreferences(topic);
 	}
 
 	LocationRequest2 buildLocationRequest(
-			GoogleSignInAccount account,
+			PersonInfo to,
 			Duration duration
-	) {
-		// 256 bits.
-		String randomSecret =
-				Integer.toHexString(rng.nextInt()) +
-						Integer.toHexString(rng.nextInt()) +
-						Integer.toHexString(rng.nextInt()) +
-						Integer.toHexString(rng.nextInt());
+	) throws NoEmailsException
+	{
+		String updatesTopic = TopicName.random(to.lookupKey)
+				.toString();
 
-		String updatesTopic = account.getEmail() + "/" + randomSecret;
+		if (to.emails == null || to.emails.isEmpty()) {
+			throw new NoEmailsException();
+		}
 
 		return new LocationRequest2(
-				account.getIdToken(),
 				updatesTopic,
+				new UserFindId(to.emails),
 				duration);
 	}
 
-	/**
-	 * Sends requests to all emails we have for user, hoping that at least some of them are listened.
-	 */
-	void sendRequest(PersonInfo to, String json) {
-		FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-
-		for(String email : to.emails) {
-			ImmutableMap<String, String> data = ImmutableMap.of(
-					GcmPayload.TYPE_FIELD, LocationRequest2.TYPE,
-					GcmPayload.PAYLOAD_FIELD, json
-			);
-			RemoteMessage remoteMessage = new Builder(getLocationRequestsTopic(email))
-				.setData(data)
-				.build();
-
-			firebaseMessaging.send(remoteMessage);
-		}
-	}
-
-	/** Anything containing @. */
-	static final Pattern emailAddressSplitPattern = Pattern.compile("^(.*)(@.*)$");
-	/** Just a single period. */
-	static final Pattern periodRegex = Pattern.compile(".", Pattern.LITERAL);
-
-	/**
-	 * Try to normalize email addresses by lowercasing domain part.
-	 *
-	 * If we detect address is GMail one, we also apply GMail specific features normalizer.
-	 *
-	 * If we cannot parse email, we log a warning and return non-normalized email instead of throwing an exception,
-	 * because email addresses could be very tricky to parse, and there's no silver bullet despite RFCs.
-	 */
-	static String normalizeEmail(String address){
-		Matcher matcher = emailAddressSplitPattern.matcher(address);
-		if (!matcher.matches()) {
-			FirebaseCrash.logcat(Log.WARN, logger.getName(), "Email address invalid: {}" + address);
-			return address;
-		}
-
-		String localPart = matcher.group(1);
-		String domainPart = matcher.group(2);
-
-		domainPart = domainPart.toLowerCase(Locale.US);
-
-		if (domainPart.equals("@gmail.com") || domainPart.equals("@googlemail.com")) {
-			// Remove everything after plus sign (GMail-specific feature).
-			int plusIndex = localPart.indexOf('+');
-			if (plusIndex != -1) {
-				localPart = localPart.substring(0, plusIndex);
-			}
-
-			// Remove periods.
-			localPart = periodRegex.matcher(localPart).replaceAll("");
-
-			// GMail addresses are case-insensitive.
-			localPart = localPart.toLowerCase(Locale.US);
-		}
-
-		return localPart + domainPart;
-	}
-
-	boolean subscribeToTopic(String topic) {
-		FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-		firebaseMessaging.subscribeToTopic(topic);
-
-		synchronized (this) {
-			// Clone, otherwise value won't be set.
-			Set<String> topicsSubscribed =
-					new LinkedHashSet<>(preferences.getStringSet(TOPICS_SUBSCRIBED, new HashSet<>(1)));
-
-			boolean changed = topicsSubscribed.add(topic);
-			if (!changed) {
-				FirebaseCrash.logcat(Log.WARN, logger.getName(), "Already subscribed to topic");
-				return false;
-			}
-			preferences.edit()
-			           .putStringSet(TOPICS_SUBSCRIBED, topicsSubscribed)
-			           .apply();
-		}
-
-		return true;
-	}
-
-	public void handleRequest(LocationRequest2 locationRequest, String gcmMessageFrom, DateTime gcmSentAt) {
+	public void handleRequest(
+			LocationRequestFromServer locationRequest,
+			String gcmMessageFrom,
+			DateTime gcmSentAt
+	) {
 		if (!gcmMessageFrom.equals(getDefaultSenderId())) {
 			String msg = "GCM message from unknown sender rejected: " + gcmMessageFrom;
 			logger.error(msg);
@@ -228,22 +156,26 @@ public class LocationService {
 			return;
 		}
 
-		String requesterEmail = authenticateRequester(locationRequest.getGoogleAuthToken());
+		String requesterEmail = locationRequest.getRequesterEmail();
 		logger.info("Received location request from " + requesterEmail);
 
 		// Authorize request.
 		PersonInfo friend = authorizeRequest(requesterEmail);
+
+		// TODO: if no such user in friends, we may still want to show a confirmation popup to user,
+		// so they could authorize a verified email even if it's not friended yet.
+
 		if (friend != null) {
 			locationRequestHandler.processAuthorizedRequest(locationRequest, friend);
 		} else {
-			// TODO add setting "Ignore unknown to prevent spamming".
+
+			LocationResponse locationResponse = LocationResponse.denied();
+
+			sendLocationUpdate(locationResponse, locationRequest.getUpdatesTopic());
+
+			// TODO add setting "Ignore requests from non-friends to prevent spamming".
 			showForbiddenNotification(requesterEmail);
 		}
-	}
-
-	private String authenticateRequester(String requesterEmail) {
-
-
 	}
 
 	private PersonInfo authorizeRequest(String requesterEmail) {
@@ -264,8 +196,9 @@ public class LocationService {
 				return friend;
 			}
 
-			for (String friendEmail: friend.emails) {
-				if (normalizeEmail(friendEmail).equals(requesterEmail)) {
+			for(String friendEmail : friend.emails) {
+				EmailNormalized normalized = EmailNormalized.normalizeEmail(friendEmail);
+				if (normalized.getEmail().equals(requesterEmail)) {
 					return friend;
 				}
 			}
@@ -274,7 +207,7 @@ public class LocationService {
 		FirebaseCrash.logcat(
 				Log.WARN, logger.getName(), "Requester not in friends list, rejecting " + requesterEmail);
 
-				return null;
+		return null;
 	}
 
 	private void showForbiddenNotification(String requesterEmail) {
@@ -303,8 +236,90 @@ public class LocationService {
 				.setContentIntent(pendingIntent);
 	}
 
-	public void sendLocationUpdate(Location location, LocationRequest2 request) {
-		LocationResponse locationResponse = new LocationResponse(location, request.getDuration());
+	public void sendLocationUpdate(LocationResponse locationResponse, String topic) {
+		String json;
+		try {
+			json = Application.getJsonMapper().writeValueAsString(locationResponse);
+		} catch (JsonProcessingException e) {
+			FirebaseCrash.report(e);
+			return;
+		}
 
+		ImmutableMap<String, String> data = ImmutableMap.of(
+				GcmPayload.TYPE_FIELD, LocationResponse.TYPE,
+				GcmPayload.PAYLOAD_FIELD, json
+		);
+		RemoteMessage gcmMessage = new Builder("/topics/" + topic) // Should be prefixed with "/topics/"?
+				.setData(data)
+				.build();
+		// DEBUG
+		//logger.info("Sending location update to {}", topic);
+		logger.info("Sending location update", topic);
+		firebaseMessaging.send(gcmMessage);
+	}
+
+	/**
+	 * @param topicFrom Like "/topics/61b166a188d-1715ia0e28ef087ba578"
+	 */
+	public void handleLocationResponse(LocationResponse response, String topicFrom) {
+
+		if (response.isComplete()) {
+			logger.info("Finished location session {}, unsubscribing.", topicFrom);
+			firebaseMessaging.unsubscribeFromTopic(topicFrom);
+		}
+
+		if (!response.isSuccessful()) {
+			logger.warn("LocationResponse unsuccessful: {}, unsubscribing from {}.", response.getError(), topicFrom);
+			firebaseMessaging.unsubscribeFromTopic(topicFrom);
+		}
+
+		if (response.getLocation() != null) {
+			TopicName topicName = TopicName.parse(topicFrom);
+
+			PersonInfo senderContact = Application.getFriendsManager().getFriend(topicName.getFriendLookupKey());
+
+			FriendLocationResponse friendLocationResponse = new FriendLocationResponse(senderContact, response);
+			locationUpdates.onNext(friendLocationResponse);
+		}
+	}
+
+	private boolean saveToSharedPreferences(String topic) {
+		// Remember all the topics we listen to, to clean up later.
+		synchronized (preferences) {
+			// Clone, otherwise value won't be set.
+			Set<String> set = new LinkedHashSet<>(preferences.getStringSet(TOPICS_SUBSCRIBED, new HashSet<>(1)));
+
+			boolean changed = set.add(topic);
+			if (!changed) {
+				FirebaseCrash.logcat(Log.WARN, logger.getName(), "Already subscribed to topic");
+				return true;
+			}
+			preferences.edit()
+					.putStringSet(TOPICS_SUBSCRIBED, set)
+					.apply();
+		}
+		return false;
+	}
+
+	private boolean removeFromSharedPreferences(String topic) {
+		// Remember all the topics we listen to, to clean up later.
+		synchronized (preferences) {
+			// Clone, otherwise value won't be set.
+			Set<String> set = new LinkedHashSet<>(preferences.getStringSet(TOPICS_SUBSCRIBED, new HashSet<>(0)));
+
+			boolean changed = set.remove(topic);
+			if (!changed) {
+				FirebaseCrash.logcat(Log.WARN, logger.getName(), "Already unsubscribed from topic");
+				return true;
+			}
+			preferences.edit()
+					.putStringSet(TOPICS_SUBSCRIBED, set)
+					.apply();
+		}
+		return false;
+	}
+
+
+	public static class NoEmailsException extends Exception {
 	}
 }

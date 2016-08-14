@@ -36,9 +36,10 @@ import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.background.gcm.GcmReceiveService;
+import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.location.FriendLocationResponse;
 import me.lazerka.mf.api.object.Location;
-import me.lazerka.mf.api.object.LocationUpdate;
+import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ import java.text.DateFormat;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class MapFragment extends Fragment {
@@ -125,11 +127,11 @@ public class MapFragment extends Fragment {
 		super.onResume();
 		mapView.onResume();
 
-		subscription =
-				GcmReceiveService.getLocationReceivedObservable()
-						.subscribeOn(AndroidSchedulers.mainThread())
-						.observeOn(AndroidSchedulers.mainThread())
-						.subscribe(observer);
+		subscription = Application.getLocationService()
+			.getLocationUpdates()
+			.subscribeOn(AndroidSchedulers.mainThread())
+			.observeOn(AndroidSchedulers.mainThread())
+			.subscribe(observer);
 	}
 
 	@Override
@@ -188,23 +190,27 @@ public class MapFragment extends Fragment {
 		return zoom > 4 ? zoom - 3 : zoom;
 	}
 
-	private void drawLocation(Location location) throws ActivityIsNullException {
+	private void drawLocation(FriendLocationResponse locationResponse) throws ActivityIsNullException {
 		if (map == null) {
 			FirebaseCrash.report(new IllegalStateException("map is null"));
 			return;
 		}
 
+		LocationResponse response = locationResponse.getResponse();
+		Location location = checkNotNull(response.getLocation());
+		PersonInfo personInfo = checkNotNull(locationResponse.getContact());
+
 		LatLng position = new LatLng(location.getLat(), location.getLon());
 
-		String email = location.getEmail();
-		Item item = items.get(email);
+		String displayName = personInfo.displayName;
+		Item item = items.get(displayName);
 		if (item == null) {
 			item = new Item();
-			items.put(email, item);
+			items.put(displayName, item);
 
 			MarkerOptions markerOptions = new MarkerOptions();
 			markerOptions.position(position);
-			markerOptions.title(email);
+			markerOptions.title(displayName);
 			item.marker = map.addMarker(markerOptions);
 
 			CircleOptions options = new CircleOptions();
@@ -281,19 +287,19 @@ public class MapFragment extends Fragment {
 	}
 	*/
 
-	public void showLocation(Location location) {
+	public void showLocation(FriendLocationResponse friendLocationResponse) {
 		try {
-			drawLocation(location);
+			drawLocation(friendLocationResponse);
 		} catch (ActivityIsNullException e) {
 			logger.warn("showLocation: activity is null");
 		}
 
 	}
 
-	private class FriendLocationObserver extends Subscriber<LocationUpdate> {
+	private class FriendLocationObserver extends Subscriber<FriendLocationResponse> {
 		@Override
-		public void onNext(LocationUpdate payload) {
-			showLocation(payload.getLocation());
+		public void onNext(FriendLocationResponse response) {
+			showLocation(response);
 		}
 
 		@Override

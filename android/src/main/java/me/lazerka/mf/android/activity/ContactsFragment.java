@@ -155,7 +155,7 @@ public class ContactsFragment extends Fragment {
 			Application.getFriendsManager()
 				.addFriend(contactUri);
 
-			getMainActivity().buildEvent("ContactsFragment: added friend").send();
+			Application.getEventLogger("friend_added").send();
 		}
 	}
 
@@ -166,7 +166,7 @@ public class ContactsFragment extends Fragment {
 	private class OnAddFriendClickListener implements OnClickListener {
 		@Override
 		public void onClick(View v) {
-			getMainActivity().buildEvent("ContactsFragment: addFriend clicked").send();
+			Application.getEventLogger("friend_add_clicked").send();
 
 			getMainActivity().permissionAsker.checkAndRun(
 					READ_CONTACTS,
@@ -181,7 +181,7 @@ public class ContactsFragment extends Fragment {
 						@Override
 						public void run() {
 							FirebaseCrash.log("ContactsFragment: addFriend READ_CONTACTS permission declined");
-							getMainActivity().buildEvent("ContactsFragment: addFriend READ_CONTACTS permission declined");
+							Application.getEventLogger("READ_CONTACTS_declined").send();
 						}
 					}
 			);

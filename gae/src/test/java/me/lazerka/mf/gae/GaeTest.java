@@ -31,7 +31,7 @@ import com.google.appengine.tools.development.testing.LocalUserServiceTestConfig
 import com.google.apphosting.api.ApiProxy;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.util.Closeable;
-import me.lazerka.mf.gae.user.EmailNormalized;
+import me.lazerka.mf.api.EmailNormalized;
 import me.lazerka.mf.gae.user.MfUser;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterMethod;

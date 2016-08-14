@@ -25,6 +25,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.googlecode.objectify.annotation.*;
+import me.lazerka.mf.api.EmailNormalized;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

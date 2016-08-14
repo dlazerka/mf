@@ -32,7 +32,7 @@ import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequest;
 import me.lazerka.mf.gae.GaeTest;
 import me.lazerka.mf.gae.entity.GcmRegistrationEntity;
-import me.lazerka.mf.gae.user.EmailNormalized;
+import me.lazerka.mf.api.EmailNormalized;
 import me.lazerka.mf.gae.user.MfUser;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;

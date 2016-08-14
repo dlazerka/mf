@@ -16,8 +16,11 @@ NOTIFICATION='"notification":{
 
 API_KEY="AIzaSyB9onbgaDOcYC-4-r36D3p_zdiQsOVsE70"
 
+# MessageType can be either "gcm", "deleted_messages", "send_error", "send_event"
+
 MESSAGE='{
         "to":"'"$1"'",
+        "message_type": "asd",
         "data":{
             "type": "LocationRequest"
             "payload": "{\"requestId\": \"123\",\"requesterEmail\": \"test03365@gmail.com\",\"duration\": 150000}"

@@ -76,7 +76,7 @@ public class ApiPost extends ApiRequest {
 
 		private byte[] getBytes() throws JsonProcessingException {
 			if (bytes == null) {
-				bytes = Application.jsonMapper.writeValueAsBytes(object);
+				bytes = Application.getJsonMapper().writeValueAsBytes(object);
 			}
 			return bytes;
 		}

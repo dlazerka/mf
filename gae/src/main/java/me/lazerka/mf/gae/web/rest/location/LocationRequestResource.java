@@ -20,39 +20,31 @@
 
 package me.lazerka.mf.gae.web.rest.location;
 
+import me.lazerka.gae.jersey.oauth2.Role;
+import me.lazerka.mf.api.ApiConstants;
+import me.lazerka.mf.api.object.*;
+import me.lazerka.mf.gae.gcm.GcmService;
+import me.lazerka.mf.gae.user.MfUser;
+import me.lazerka.mf.gae.user.UserService;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Set;
-
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-
-import me.lazerka.gae.jersey.oauth2.Role;
-import me.lazerka.mf.api.ApiConstants;
-import me.lazerka.mf.api.object.GcmResult;
-import me.lazerka.mf.api.object.LocationRequest;
-import me.lazerka.mf.api.object.LocationRequestResult;
-import me.lazerka.mf.gae.gcm.GcmService;
-import me.lazerka.mf.gae.user.MfUser;
-import me.lazerka.mf.gae.user.UserService;
+import java.util.List;
+import java.util.Set;
 
 import static me.lazerka.mf.gae.web.rest.JerseyUtil.throwIfNull;
 
 /**
  * @author Dzmitry Lazerka
  */
-@Path(LocationRequest.PATH)
+@Path(LocationRequest2.PATH)
 @Produces(ApiConstants.APPLICATION_JSON)
 @RolesAllowed(Role.USER)
 public class LocationRequestResource {
@@ -80,8 +72,8 @@ public class LocationRequestResource {
 	 */
 	@POST
 	@Consumes("application/json")
-	public LocationRequestResult byEmail(LocationRequest locationRequest) {
-		Set<String> forEmails = throwIfNull(locationRequest.getEmails(), "emails");
+	public LocationRequestResult byEmail(LocationRequest2 locationRequest) {
+		Set<String> forEmails = throwIfNull(locationRequest.getTo().getEmails(), "emails");
 		logger.trace("byEmail for {}", forEmails);
 
 		MfUser sender = userService.getCurrentUser();
@@ -95,19 +87,19 @@ public class LocationRequestResource {
 		Duration duration = locationRequest.getDuration() == null
 				? Duration.standardMinutes(15)
 				: locationRequest.getDuration();
-		LocationRequest cleanCopy = new LocationRequest(
-				locationRequest.getRequestId(),
-				sender.getEmail().getEmail(), // requesterEmail
-				now,
-				duration
+
+		LocationRequestFromServer requestFromServer = new LocationRequestFromServer(
+				sender.getEmail().getEmail(),
+				locationRequest.getUpdatesTopic(),
+				locationRequest.getDuration(),
+				DateTime.now()
 		);
 
-		List<GcmResult> gcmResults = gcmService.send(recipient, cleanCopy);
+		List<GcmResult> gcmResults = gcmService.send(recipient, requestFromServer);
 
-		LocationRequestResult result = new LocationRequestResult(
+		return new LocationRequestResult(
 				recipient.getEmail().getEmail(),
 				gcmResults
 		);
-		return result;
 	}
 }

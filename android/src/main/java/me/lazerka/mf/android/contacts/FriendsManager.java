@@ -192,6 +192,16 @@ public class FriendsManager {
 		return true;
 	}
 
+	public PersonInfo getFriend(String lookupKey) {
+		List<PersonInfo> infos = new FetchContactInfo()
+				.call(ImmutableList.of(lookupKey));
+		if (infos == null || infos.isEmpty()) {
+			return null;
+		} else {
+			return infos.get(0);
+		}
+	}
+
 	private class FetchContactInfo implements Func1<List<String>, List<PersonInfo>> {
 		@Override
 		public List<PersonInfo> call(List<String> lookupKeys) {

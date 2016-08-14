@@ -32,6 +32,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
 import android.util.Log;
@@ -46,7 +47,7 @@ import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.api.object.LocationRequest2;
+import me.lazerka.mf.api.object.LocationRequestFromServer;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +94,7 @@ public class LocationRequestHandler {
 		this.context = context;
 	}
 
-	public void processAuthorizedRequest(LocationRequest2 gcmRequest, PersonInfo requester) {
+	public void processAuthorizedRequest(LocationRequestFromServer gcmRequest, PersonInfo requester) {
 		requesterCodes.putIfAbsent(requester.lookupKey, nextCode.getAndIncrement());
 		int requesterCode = requesterCodes.get(requester.lookupKey);
 		int notificationId = TRACKING_NOTIFICATION_ID;
@@ -111,7 +112,7 @@ public class LocationRequestHandler {
 				PendingIntent.getService(context, requesterCode, stopIntent, FLAG_UPDATE_CURRENT);
 
 		// Last location may be to coarse, and users get disappointed.
-		// sendLastKnownLocation(gcmRequest, apiClient);
+		sendLastKnownLocation(gcmRequest);
 
 		Duration duration = gcmRequest.getDuration() != null
 		                    ? gcmRequest.getDuration()
@@ -178,18 +179,8 @@ public class LocationRequestHandler {
 			com.google.android.gms.location.LocationRequest locationRequest
 	)
 	{
-		SignInManager authenticator = new SignInManager();
-		GoogleApiClient apiClient = authenticator.buildClient(context);
-
-		ConnectionResult connectionResult = apiClient.blockingConnect();
-		if (!connectionResult.isSuccess()) {
-			String msg = format("GoogleApiClient not connected: %s, %s",
-					connectionResult.getErrorCode(),
-					connectionResult.getErrorMessage());
-			FirebaseCrash.logcat(Log.WARN, logger.getName(), msg);
-			// TODO retry
-			return;
-		}
+		GoogleApiClient apiClient = getGoogleApiClient();
+		if (apiClient == null) return;
 
 		try {
 
@@ -205,7 +196,7 @@ public class LocationRequestHandler {
 
 			Status status = pendingResult.await();
 			if (status.isSuccess()) {
-				logger.info("Successfully requested location updates.");
+				logger.info("Scheduled updates using FusedLocationApi");
 			} else {
 				String msg = "requestLocationUpdates unsuccessful: "
 						+ status.getStatusCode() + " " + status.getStatusMessage();
@@ -222,8 +213,25 @@ public class LocationRequestHandler {
 		}
 	}
 
+	@Nullable
+	private GoogleApiClient getGoogleApiClient() {
+		SignInManager authenticator = new SignInManager();
+		GoogleApiClient apiClient = authenticator.buildClient(context);
+
+		ConnectionResult connectionResult = apiClient.blockingConnect();
+		if (!connectionResult.isSuccess()) {
+			String msg = format("GoogleApiClient not connected: %s, %s",
+					connectionResult.getErrorCode(),
+					connectionResult.getErrorMessage());
+			FirebaseCrash.logcat(Log.WARN, logger.getName(), msg);
+			// TODO retry
+			return null;
+		}
+		return apiClient;
+	}
+
 	@NonNull
-	private Intent getLocationListenerIntent(LocationRequest2 gcmRequest) {
+	private Intent getLocationListenerIntent(LocationRequestFromServer gcmRequest) {
 		// We already received and parsed it so
 		try {
 			byte[] bytes = Application.getJsonMapper().writeValueAsBytes(gcmRequest);
@@ -237,14 +245,15 @@ public class LocationRequestHandler {
 	}
 
 	private void sendLastKnownLocation(
-			LocationRequest2 gcmRequest,
-			GoogleApiClient apiClient
-	) throws JsonProcessingException
-	{
+			LocationRequestFromServer gcmRequest
+	) {
 		if (!Application.hasLocationPermission()) {
 			FirebaseCrash.logcat(Log.WARN, logger.getName(), "No location permission");
 			return;
 		}
+
+		GoogleApiClient apiClient = getGoogleApiClient();
+
 		//noinspection MissingPermission
 		android.location.Location lastLocation = FusedLocationApi.getLastLocation(apiClient);
 		if (lastLocation != null) {
@@ -263,7 +272,6 @@ public class LocationRequestHandler {
 			String notificationTag,
 			Duration duration)
 	{
-
 		int minutes = (int) duration.getStandardMinutes();
 
 		String message = context.getString(R.string.tracking_you, person.displayName, minutes);

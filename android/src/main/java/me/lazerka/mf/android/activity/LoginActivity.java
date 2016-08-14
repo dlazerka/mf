@@ -29,6 +29,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.firebase.auth.FirebaseUser;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class LoginActivity extends GoogleApiActivity {
 
 	@Override
 	protected void onSignInFailed() {
-		buildEvent("LoginActivity.handleSignInFailed").send();
+		Application.getEventLogger("login_sign_in_failed").send();
 		showSignInButton();
 	}
 

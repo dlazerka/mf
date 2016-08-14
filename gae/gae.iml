@@ -43,69 +43,67 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="api" exported="" />
     <orderEntry type="library" exported="" name="objectify-5.1.9" level="project" />
-    <orderEntry type="library" exported="" name="gae-jersey-oauth2-1.0-beta2" level="project" />
+    <orderEntry type="library" exported="" name="gae-jersey-oauth2-2.3" level="project" />
     <orderEntry type="library" exported="" name="servlet-api-2.5" level="project" />
     <orderEntry type="library" exported="" name="jersey-server-1.19" level="project" />
     <orderEntry type="library" exported="" name="jersey-guice-1.19" level="project" />
-    <orderEntry type="library" exported="" name="jackson-jaxrs-json-provider-2.6.3" level="project" />
     <orderEntry type="library" exported="" name="guice-servlet-4.0" level="project" />
-    <orderEntry type="library" exported="" name="rxjava-1.0.16" level="project" />
     <orderEntry type="library" exported="" name="guice-4.0" level="project" />
     <orderEntry type="library" exported="" name="slf4j-api-1.7.13" level="project" />
     <orderEntry type="library" exported="" name="slf4j-jdk14-1.7.13" level="project" />
     <orderEntry type="library" exported="" name="guava-19.0" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.9.1" level="project" />
     <orderEntry type="library" exported="" name="commons-io-2.4" level="project" />
-    <orderEntry type="library" exported="" name="jackson-annotations-2.6.3" level="project" />
     <orderEntry type="library" exported="" name="jackson-datatype-joda-2.6.3" level="project" />
     <orderEntry type="library" exported="" name="jsr250-api-1.0" level="project" />
     <orderEntry type="library" exported="" name="google-api-client-appengine-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="google-api-services-oauth2-v2-rev98-1.21.0" level="project" />
+    <orderEntry type="library" exported="" name="guice-multibindings-4.0" level="project" />
     <orderEntry type="library" exported="" name="javax.inject-1" level="project" />
-    <orderEntry type="library" exported="" name="powermock-api-mockito-1.6.4" level="project" />
-    <orderEntry type="library" exported="" name="powermock-module-testng-1.6.4" level="project" />
     <orderEntry type="library" exported="" name="jersey-core-1.19" level="project" />
     <orderEntry type="library" exported="" name="jersey-servlet-1.19" level="project" />
-    <orderEntry type="library" exported="" name="jackson-jaxrs-base-2.6.3" level="project" />
-    <orderEntry type="library" exported="" name="jackson-core-2.6.3" level="project" />
-    <orderEntry type="library" exported="" name="jackson-databind-2.6.3" level="project" />
-    <orderEntry type="library" exported="" name="jackson-module-jaxb-annotations-2.6.3" level="project" />
     <orderEntry type="library" exported="" name="google-oauth-client-appengine-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="google-api-client-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="google-api-client-servlet-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="google-http-client-appengine-1.21.0" level="project" />
-    <orderEntry type="library" exported="" name="mockito-core-1.10.19" level="project" />
-    <orderEntry type="library" exported="" name="hamcrest-core-1.3" level="project" />
-    <orderEntry type="library" exported="" name="powermock-api-support-1.6.4" level="project" />
-    <orderEntry type="library" exported="" name="testng-6.8.21" level="project" />
-    <orderEntry type="library" exported="" name="powermock-core-1.6.4" level="project" />
-    <orderEntry type="library" exported="" name="powermock-module-testng-common-1.6.4" level="project" />
     <orderEntry type="library" exported="" name="jsr311-api-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="google-oauth-client-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="google-oauth-client-servlet-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="google-http-client-jackson2-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="jdo2-api-2.3-eb" level="project" />
     <orderEntry type="library" exported="" name="google-http-client-1.21.0" level="project" />
-    <orderEntry type="library" exported="" name="powermock-reflect-1.6.4" level="project" />
-    <orderEntry type="library" exported="" name="objenesis-2.1" level="project" />
-    <orderEntry type="library" exported="" name="bsh-2.0b4" level="project" />
-    <orderEntry type="library" exported="" name="jcommander-1.27" level="project" />
-    <orderEntry type="library" exported="" name="javassist-3.20.0-GA" level="project" />
     <orderEntry type="library" exported="" name="google-http-client-jdo-1.21.0" level="project" />
     <orderEntry type="library" exported="" name="transaction-api-1.1" level="project" />
     <orderEntry type="library" exported="" name="httpclient-4.0.1" level="project" />
     <orderEntry type="library" exported="" name="httpcore-4.0.1" level="project" />
     <orderEntry type="library" exported="" name="commons-logging-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="commons-codec-1.3" level="project" />
-    <orderEntry type="library" exported="" name="appengine-api-1.0-sdk-1.9.31" level="project" />
+    <orderEntry type="library" exported="" name="appengine-api-1.0-sdk-1.9.38" level="project" />
+    <orderEntry type="library" exported="" name="jackson-jaxrs-json-provider-2.7.4" level="project" />
+    <orderEntry type="library" exported="" name="jackson-jaxrs-base-2.7.4" level="project" />
+    <orderEntry type="library" exported="" name="jackson-module-jaxb-annotations-2.7.4" level="project" />
     <orderEntry type="library" exported="" name="jsr305-3.0.1" level="project" />
     <orderEntry type="library" exported="" name="aopalliance-1.0" level="project" />
+    <orderEntry type="library" exported="" name="jackson-core-2.7.4" level="project" />
+    <orderEntry type="library" exported="" name="jackson-databind-2.7.4" level="project" />
+    <orderEntry type="library" exported="" name="jackson-annotations-2.7.0" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="testng-6.9.10" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="hamcrest-all-1.3" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="mockito-all-1.10.19" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="powermock-api-mockito-1.6.4" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="powermock-module-testng-1.6.4" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="appengine-api-stubs-1.9.30" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="appengine-testing-1.9.30" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="appengine-tools-sdk-1.9.30" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="jcommander-1.48" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="bsh-2.0b4" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="mockito-core-1.10.19" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="hamcrest-core-1.3" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="powermock-api-support-1.6.4" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="powermock-core-1.6.4" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="powermock-module-testng-common-1.6.4" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="objenesis-2.1" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="powermock-reflect-1.6.4" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="javassist-3.20.0-GA" level="project" />
   </component>
 </module>

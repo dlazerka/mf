@@ -32,7 +32,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResolvingResultCallbacks;
@@ -42,9 +41,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.*;
 import com.google.firebase.crash.FirebaseCrash;
-import com.google.firebase.messaging.FirebaseMessaging;
+import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.background.gcm.GcmReceiveService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,8 +75,6 @@ public abstract class GoogleApiActivity extends Activity
 		                               .addOnConnectionFailedListener(this)
 		                               .addConnectionCallbacks(this)
 		                               .build();
-
-		firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 	}
 
 	public EventLogger buildEvent(String eventName) {
@@ -95,7 +91,7 @@ public abstract class GoogleApiActivity extends Activity
 		int errorCode = connectionResult.getErrorCode();
 		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
 
-		buildEvent("onConnectionFailed")
+		Application.getEventLogger("gapi_connection_failed")
 				.param("error_code", connectionResult.getErrorCode())
 				.param("error_message", connectionResult.getErrorMessage())
 				// If this is not null sometimes we could probably use it.
@@ -145,15 +141,12 @@ public abstract class GoogleApiActivity extends Activity
 	 * Does nothing. We shouldn't save the result and use it later -- it may expire.
 	 */
 	protected void onSignInSuccess(FirebaseUser user) {
-		buildEvent("GoogleApiActivity.onSignInSuccess")
+		Application.getEventLogger("gapi_signin_success")
 			// FirebaseCrash doesn't support user email, so in case an exception happens
 			// we had to match exception timing with this log event in order to contact the user.
 			.param("display_name", user.getDisplayName())
 			.param("email", user.getEmail())
 			.send();
-
-		String topicName = GcmReceiveService.getLocationRequestsTopic(user.getEmail());
-		FirebaseMessaging.getInstance().subscribeToTopic(topicName);
 	}
 
 	protected abstract void onSignInFailed();
@@ -201,7 +194,7 @@ public abstract class GoogleApiActivity extends Activity
 				}
 				break;
 			case RC_PLAY_ERROR_DIALOG:
-				buildEvent("GoogleApiActivity: RC_PLAY_ERROR_DIALOG").send();
+				Application.getEventLogger("gapi_connection_retry").send();
 				onSignInFailed();
 				break;
 			default:
@@ -226,12 +219,11 @@ public abstract class GoogleApiActivity extends Activity
 			            .addOnCompleteListener(GoogleApiActivity.this, new OnCompleteListener<AuthResult>() {
 				            @Override
 				            public void onComplete(@NonNull Task<AuthResult> task) {
-
 					            if (task.isSuccessful()) {
 						            AuthResult authResult = task.getResult();
 						            onSignInSuccess(authResult.getUser());
 					            } else {
-						            buildEvent("GoogleApiActivity: onComplete(Task<AuthResult>) not successful").send();
+						            Application.getEventLogger("firebase_auth_unsuccessful").send();
 						            onSignInFailed();
 					            }
 				            }
@@ -242,14 +234,14 @@ public abstract class GoogleApiActivity extends Activity
 		public void onUnresolvableFailure(@NonNull Status status) {
 			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
 
-			buildEvent("GoogleApiActivity: onUnresolvableFailure")
+			Application.getEventLogger("gapi_unresolvable_failure")
 					.param("status_code", status.getStatusCode())
 					.param("error_message", status.getStatusMessage())
 					// If this is not null sometimes we could probably use it.
 					.param("has_resolution", status.getResolution() != null)
 					.send();
 
-			if (status.getStatusCode() == CommonStatusCodes.SIGN_IN_REQUIRED) {
+			if (status.getStatusCode() == GoogleSignInStatusCodes.SIGN_IN_REQUIRED) {
 				launchSignInActivityForResult();
 				return;
 			}

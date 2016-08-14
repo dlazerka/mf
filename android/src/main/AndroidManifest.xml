@@ -115,6 +115,9 @@
 		<service android:name=".background.location.LocationStopListener"
 			android:exported="false"
 		/>
+		<service android:name=".background.gcm.SendTokenToServerService"
+			android:exported="false"
+		/>
 
 		<!-- Called by Android on device boot. -->
 		<receiver android:name=".background.BootReceiver">

@@ -40,7 +40,7 @@ public class LocationRequest2 implements ApiObject {
 	private String updatesTopic;
 
 	@JsonProperty
-	private PersonId to;
+	private UserFindId to;
 
 	/** For how long user wants to receive location updates from their friend. */
 	@JsonProperty
@@ -49,7 +49,7 @@ public class LocationRequest2 implements ApiObject {
 	// For Jackson.
 	public LocationRequest2() {}
 
-	public LocationRequest2(String updatesTopic, PersonId to, Duration duration) {
+	public LocationRequest2(String updatesTopic, UserFindId to, Duration duration) {
 		this.updatesTopic = checkNotNull(updatesTopic);
 		this.to = checkNotNull(to);
 		this.duration = checkNotNull(duration);
@@ -62,7 +62,7 @@ public class LocationRequest2 implements ApiObject {
 		return updatesTopic;
 	}
 
-	public PersonId getTo() {
+	public UserFindId getTo() {
 		return to;
 	}
 

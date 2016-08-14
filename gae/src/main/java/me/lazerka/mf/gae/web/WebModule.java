@@ -27,7 +27,9 @@ import com.googlecode.objectify.util.jackson.ObjectifyJacksonModule;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+import me.lazerka.gae.jersey.oauth2.AuthFilter;
 import me.lazerka.gae.jersey.oauth2.AuthFilterFactory;
+import me.lazerka.gae.jersey.oauth2.GaeOauthAuthFilter;
 import me.lazerka.gae.jersey.oauth2.OauthModule;
 import me.lazerka.mf.api.JsonMapper;
 import me.lazerka.mf.gae.gcm.GcmModule;
@@ -39,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -49,6 +52,10 @@ import java.util.Map;
 public class WebModule extends JerseyServletModule {
 	private static final Logger logger = LoggerFactory.getLogger(WebModule.class);
 
+	private static final String GOOGLE_CLIENT_ID_FILE_PATH = "WEB-INF/keys/google.signin.client_id.key";
+	private static final String FACEBOOK_APP_ID_FILE_PATH = "WEB-INF/keys/facebook.app_id.key";
+    private static final String FACEBOOK_APP_SECRET_FILE_PATH = "WEB-INF/keys/secret/facebook.app_secret.key";
+
 	@Override
 	protected void configureServlets() {
 		logger.trace("configureServlets");
@@ -56,7 +63,14 @@ public class WebModule extends JerseyServletModule {
 		// Map exceptions to fancy pages.
 		bind(UnhandledExceptionMapper.class);
 
-		install(new OauthModule());
+		install(new OauthModule(
+				new File(GOOGLE_CLIENT_ID_FILE_PATH),
+                new File(FACEBOOK_APP_ID_FILE_PATH),
+                new File(FACEBOOK_APP_SECRET_FILE_PATH)
+		));
+		bind(AuthFilter.class).to(GaeOauthAuthFilter.class);
+
+
 		install(new GcmModule());
 
 		// Objectify requires this while using Async+Caching

@@ -1,6 +1,6 @@
 /*
  *     Find Us: privacy oriented location tracker for your friends and family.
- *     Copyright (C) 2015 Dzmitry Lazerka dlazerka@gmail.com
+ *     Copyright (C) 2016 Dzmitry Lazerka dlazerka@gmail.com
  *
  *     This program is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -18,46 +18,34 @@
  *
  */
 
-package me.lazerka.mf.gae.user;
+package me.lazerka.mf.android.location;
 
-import javax.annotation.Nonnull;
-import java.util.Objects;
+import com.google.common.base.MoreObjects;
+import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.api.object.LocationResponse;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+public class FriendLocationResponse {
+	PersonInfo contact;
+	LocationResponse response;
 
-/**
- * See {@link UserService#normalizeEmail}.
- *
- * @author Dzmitry Lazerka
- */
-public class EmailNormalized {
-	@Nonnull
-	private final String email;
-
-	public EmailNormalized(@Nonnull String email) {
-		this.email = checkNotNull(email);
+	public FriendLocationResponse(PersonInfo contact, LocationResponse response) {
+		this.contact = contact;
+		this.response = response;
 	}
 
-	@Nonnull
-	public String getEmail() {
-		return email;
+	public PersonInfo getContact() {
+		return contact;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		EmailNormalized that = (EmailNormalized) o;
-		return Objects.equals(email, that.email);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(email);
+	public LocationResponse getResponse() {
+		return response;
 	}
 
 	@Override
 	public String toString() {
-		return email;
+		return MoreObjects.toStringHelper(this)
+				.add("contact", contact)
+				.add("response", response)
+				.toString();
 	}
 }
