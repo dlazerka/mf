@@ -47,6 +47,5 @@
     <orderEntry type="library" exported="" scope="TEST" name="hamcrest-core-1.1" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="javax.inject-1" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="aopalliance-1.0" level="project" />
-    <orderEntry type="library" exported="" name="api.api" level="project" />
   </component>
 </module>
