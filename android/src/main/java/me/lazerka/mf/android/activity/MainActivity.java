@@ -33,8 +33,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.common.collect.Range;
 import com.google.firebase.crash.FirebaseCrash;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
@@ -43,6 +41,8 @@ import me.lazerka.mf.android.background.gcm.SendTokenToServerService;
 import me.lazerka.mf.android.location.LocationService.NoEmailsException;
 import me.lazerka.mf.api.object.GcmResult;
 import me.lazerka.mf.api.object.LocationRequestResult;
+import okhttp3.Call;
+import okhttp3.Response;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,7 +233,7 @@ public class MainActivity extends GoogleApiActivity {
 
 		@UiThread
 		@Override
-		public void onNetworkException(Request request, IOException e) {
+		public void onNetworkException(Call call, IOException e) {
 			String msg;
 			if (e instanceof SocketTimeoutException) {
 				msg = getString(R.string.error_socket_timeout);

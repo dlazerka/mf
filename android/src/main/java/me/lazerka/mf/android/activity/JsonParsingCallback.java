@@ -21,14 +21,12 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
 import com.google.firebase.crash.FirebaseCrash;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 import me.lazerka.mf.android.Application;
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +53,7 @@ public abstract class JsonParsingCallback<R> implements Callback {
 
 	@WorkerThread
 	@Override
-	public void onResponse(final Response response) throws IOException {
+	public void onResponse(@NonNull Call call, @NonNull final Response response) throws IOException {
 		if (response.isSuccessful()) {
 			onSuccess(response.body());
 		}
@@ -113,16 +111,16 @@ public abstract class JsonParsingCallback<R> implements Callback {
 
 	@WorkerThread
 	@Override
-	public void onFailure(final Request request, final IOException e) {
+	public void onFailure(@NonNull Call call, @NonNull IOException e) {
 		activity.runOnUiThread(
 				new Runnable() {
 					@Override
 					public void run() {
-						onNetworkException(request, e);
+						onNetworkException(call, e);
 					}
 				});
 	}
 
 	@UiThread
-	protected abstract void onNetworkException(Request request, IOException e);
+	protected abstract void onNetworkException(@NonNull Call call, IOException e);
 }

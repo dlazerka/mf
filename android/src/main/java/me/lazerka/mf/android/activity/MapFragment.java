@@ -33,6 +33,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
 import com.google.firebase.crash.FirebaseCrash;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableObserver;
 import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
@@ -43,9 +45,6 @@ import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 
 import java.text.DateFormat;
 import java.util.Locale;
@@ -73,8 +72,7 @@ public class MapFragment extends Fragment {
 	private final Map<String, Item> items = Maps.newHashMap();
 	private MapView mapView;
 
-	private final FriendLocationObserver observer = new FriendLocationObserver();
-	private Subscription subscription = null;
+	private FriendLocationObserver observer;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -127,20 +125,20 @@ public class MapFragment extends Fragment {
 		super.onResume();
 		mapView.onResume();
 
-		subscription = Application.getLocationService()
+		observer = Application.getLocationService()
 			.getLocationUpdates()
 			.subscribeOn(AndroidSchedulers.mainThread())
 			.observeOn(AndroidSchedulers.mainThread())
-			.subscribe(observer);
+			.subscribeWith(new FriendLocationObserver());
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
 
-		if (subscription != null) {
-			subscription.unsubscribe();
-			subscription = null;
+		if (observer != null) {
+			observer.dispose();
+			observer = null;
 		}
 
 		mapView.onPause();
@@ -296,21 +294,23 @@ public class MapFragment extends Fragment {
 
 	}
 
-	private class FriendLocationObserver extends Subscriber<FriendLocationResponse> {
+	private class FriendLocationObserver extends DisposableObserver<FriendLocationResponse> {
+
 		@Override
 		public void onNext(FriendLocationResponse response) {
 			showLocation(response);
 		}
 
 		@Override
-		public void onCompleted() {
-			logger.error("onCompleted() aren't to be called.");
+		public void onComplete() {
+			logger.error("onComplete() aren't to be called.");
 		}
 
 		@Override
 		public void onError(Throwable e) {
 			logger.warn("onError {}", e.getMessage());
 		}
+
 	}
 
 	//private class MyLocationChangeListener implements OnMyLocationChangeListener {

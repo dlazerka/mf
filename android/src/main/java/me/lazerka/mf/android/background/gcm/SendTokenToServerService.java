@@ -26,13 +26,13 @@ import android.util.Log;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Response;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GoogleSignInException;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.api.object.GcmToken;
+import okhttp3.Call;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

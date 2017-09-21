@@ -22,14 +22,13 @@ package me.lazerka.mf.android.background;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Request.Builder;
-import com.squareup.okhttp.RequestBody;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.object.ApiObject;
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okio.BufferedSink;
 
 import javax.annotation.Nonnull;
@@ -50,7 +49,7 @@ public class ApiPost extends ApiRequest {
 	@Override
 	public Call newCall(@Nonnull GoogleSignInAccount account) {
 		String oauthToken = checkNotNull(account.getIdToken());
-		Request request = new Builder()
+		Request request = new Request.Builder()
 				.url(url(content))
 				.header("Authorization", "Bearer " + oauthToken)
 				.post(new JsonRequestBody<>(content))

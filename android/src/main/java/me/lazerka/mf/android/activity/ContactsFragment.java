@@ -34,14 +34,14 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
 import com.google.firebase.crash.FirebaseCrash;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableObserver;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -95,9 +95,10 @@ public class ContactsFragment extends Fragment {
 		Application.getFriendsManager()
 				.watchFriends()
 				.observeOn(AndroidSchedulers.mainThread())
-				.subscribe(new Subscriber<List<PersonInfo>>() {
+				.subscribe(new DisposableObserver<List<PersonInfo>>() {
+
 					@Override
-					public void onCompleted() {
+					public void onComplete() {
 						// Never happens.
 					}
 

@@ -35,15 +35,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.firebase.crash.FirebaseCrash;
+import io.reactivex.Observable;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -113,8 +113,7 @@ public class FriendsManager {
 
 	public Future<List<PersonInfo>> getFriends() {
 		return watchFriends()
-				.first()
-				.toBlocking()
+				.firstOrError()
 				.toFuture();
 	}
 
@@ -128,10 +127,10 @@ public class FriendsManager {
 	}
 
 	private Observable<List<String>> watchFriendKeys() {
-		return changes.asObservable()
-			.map(new Func1<Void, List<String>>() {
+		return changes
+			.map(new Function<Void, List<String>>() {
 				@Override
-				public List<String> call(Void aVoid) {
+				public List<String> apply(Void aVoid) throws Exception {
 					return getFriendsLookupKeys();
 				}
 			})
@@ -194,7 +193,7 @@ public class FriendsManager {
 
 	public PersonInfo getFriend(String lookupKey) {
 		List<PersonInfo> infos = new FetchContactInfo()
-				.call(ImmutableList.of(lookupKey));
+				.apply(ImmutableList.of(lookupKey));
 		if (infos == null || infos.isEmpty()) {
 			return null;
 		} else {
@@ -202,9 +201,9 @@ public class FriendsManager {
 		}
 	}
 
-	private class FetchContactInfo implements Func1<List<String>, List<PersonInfo>> {
+	private class FetchContactInfo implements Function<List<String>, List<PersonInfo>> {
 		@Override
-		public List<PersonInfo> call(List<String> lookupKeys) {
+		public List<PersonInfo> apply(List<String> lookupKeys) {
 			// No need to check for permission when it's empty. Useful on first ever start.
 			if (lookupKeys.isEmpty()) {
 				return Collections.emptyList();

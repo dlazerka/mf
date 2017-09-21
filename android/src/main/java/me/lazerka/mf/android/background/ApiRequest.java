@@ -21,11 +21,11 @@
 package me.lazerka.mf.android.background;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.OkHttpClient;
 import me.lazerka.mf.android.BuildConfig;
 import me.lazerka.mf.api.object.ApiObject;
+import okhttp3.Call;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 
 import java.net.URI;
 
@@ -39,7 +39,7 @@ abstract class ApiRequest {
 		if (httpClient == null) {
 			httpClient = new OkHttpClient();
 			// Don't follow from HTTPS to HTTP.
-			httpClient.setFollowSslRedirects(false);
+			//httpClient.followRedirects();
 
 			// We don't use authenticator, because it kicks in only on unsuccessful response,
 			// and currently only supports BASIC authentication.
