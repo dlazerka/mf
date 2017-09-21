@@ -112,15 +112,13 @@ public class MainActivity extends GoogleApiActivity {
 	// TODO implement settings
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		Intent intent;
 		switch (item.getItemId()) {
 			case R.id.action_logout:
-				//intent = new Intent(this, LoginActivity.class);
+				//Intent intent = new Intent(this, LoginActivity.class);
 				//startActivity(intent);
 				//finish();
 				break;
 			case R.id.clear_token:
-				//
 				//Application.gcmManager.clearGcmToken();
 				recreate();
 				break;
