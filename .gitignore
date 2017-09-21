@@ -3,6 +3,7 @@
 /.idea/workspace.xml
 /.idea/tasks.xml
 /.idea/dictionaries.xml
+/.idea/dictionaries/*
 /.idea/libraries
 .DS_Store
 build
