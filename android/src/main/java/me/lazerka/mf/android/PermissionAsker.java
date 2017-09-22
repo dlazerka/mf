@@ -23,10 +23,10 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +44,7 @@ import static java.lang.String.format;
  * @author Dzmitry Lazerka
  */
 public class PermissionAsker {
-	private static final Logger logger = LoggerFactory.getLogger(PermissionAsker.class);
+	private static final Logger logger = LogService.getLogger(PermissionAsker.class);
 
     private final Activity activity;
     private final Range<Integer> requestCodesPool;
@@ -71,7 +71,7 @@ public class PermissionAsker {
         Callback callback = tasks.remove(requestCode);
 
         if (callback == null) {
-            logger.debug("Callback for requestCode " + requestCode + " is null");
+            logger.debug("Callback for requestCode {} is null", requestCode);
             return false;
         }
 

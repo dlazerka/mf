@@ -26,7 +26,7 @@ package me.lazerka.mf.android.background.gcm;
  * @author Dzmitry Lazerka
  */
 //public class GcmRegisterIntentService extends IntentService {
-//	private static final Logger logger = LoggerFactory.getLogger(GcmRegisterIntentService.class);
+//	private static final Logger logger = LogService.getLogger(GcmRegisterIntentService.class);
 //
 //	public static final String GCM_REGISTRATION_COMPLETE = "GCM_REGISTRATION_COMPLETE";
 //

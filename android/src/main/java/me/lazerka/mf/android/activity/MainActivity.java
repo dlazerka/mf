@@ -23,10 +23,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.common.collect.Range;
@@ -42,8 +43,6 @@ import me.lazerka.mf.api.object.LocationRequestResult;
 import okhttp3.Call;
 import okhttp3.Response;
 import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -60,7 +59,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class MainActivity extends GoogleApiActivity {
-	private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
+	private static final Logger logger = LogService.getLogger(MainActivity.class);
 	private static final Duration LOCATION_REQUEST_TTL = Duration.standardHours(3);
 
 	public final PermissionAsker permissionAsker;
@@ -151,7 +150,7 @@ public class MainActivity extends GoogleApiActivity {
 
 
 				} catch (NoEmailsException e) {
-					FirebaseCrash.logcat(Log.INFO, logger.getName(), "Contact has no emails to request to");
+					logger.warn("A contact has no emails to request to");
 					String msg = getString(R.string.contact_no_emails, personInfo.displayName);
 					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
 					return;
@@ -178,9 +177,7 @@ public class MainActivity extends GoogleApiActivity {
 		protected void onResult(LocationRequestResult result) {
 			final List<GcmResult> gcmResults = result.getGcmResults();
 			if (gcmResults == null || gcmResults.isEmpty()) {
-				String msg = "Empty gcmResults list in LocationRequestResult " + gcmResults;
-				logger.warn(msg);
-				FirebaseCrash.report(new Exception(msg));
+				logger.warn("Empty gcmResults list in LocationRequestResult {}", gcmResults);
 				return;
 			}
 
@@ -203,7 +200,6 @@ public class MainActivity extends GoogleApiActivity {
 			} else {
 				String msg = getString(R.string.gcm_error, error);
 				logger.warn(msg);
-				FirebaseCrash.report(new Exception(msg));
 				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -244,7 +240,6 @@ public class MainActivity extends GoogleApiActivity {
 			}
 
 			logger.warn(msg, e);
-			FirebaseCrash.report(e);
 			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 		}
 	}

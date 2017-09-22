@@ -20,15 +20,11 @@ package me.lazerka.mf.android.background.gcm;
 
 import android.content.Intent;
 import com.google.firebase.iid.FirebaseInstanceIdService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Dzmitry Lazerka
  */
 public class InstanceIdService extends FirebaseInstanceIdService {
-	private static final Logger logger = LoggerFactory.getLogger(InstanceIdService.class);
-
 	/**
 	 * Called if InstanceID token is updated. This may occur if the security of
 	 * the previous token had been compromised. Note that this is also called

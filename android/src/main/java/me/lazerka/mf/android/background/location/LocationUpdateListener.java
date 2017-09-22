@@ -21,16 +21,15 @@ package me.lazerka.mf.android.background.location;
 import android.app.IntentService;
 import android.content.Intent;
 import android.location.LocationManager;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationResult;
-import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -43,7 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Is invoked on each location update.
  */
 public class LocationUpdateListener extends IntentService {
-	private static final Logger logger = LoggerFactory.getLogger(LocationUpdateListener.class);
+	private static final Logger logger = LogService.getLogger(LocationUpdateListener.class);
 
 	static final String EXTRA_GCM_REQUEST = "gcmRequest";
 
@@ -104,7 +103,6 @@ public class LocationUpdateListener extends IntentService {
 			} catch (IOException e) {
 				// Unrealistic, we already parsed it once in GcmReceiveService.
 				logger.error("Cannot parse", e);
-				FirebaseCrash.report(e);
 			}
 		}
 	}

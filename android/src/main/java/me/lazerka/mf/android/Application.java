@@ -27,6 +27,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -36,8 +38,6 @@ import me.lazerka.mf.android.activity.EventLogger;
 import me.lazerka.mf.android.contacts.FriendsManager;
 import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.JsonMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 
 public class Application extends MultiDexApplication {
-	private static final Logger logger = LoggerFactory.getLogger(Application.class);
+	private static final Logger logger = LogService.getLogger(Application.class);
 
 	/**
 	 * Shared static instance, as it's a little expensive to create a new one each time.

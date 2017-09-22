@@ -25,12 +25,11 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.LocationManager;
-import com.google.firebase.crash.FirebaseCrash;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -44,7 +43,7 @@ import static me.lazerka.mf.android.background.location.LocationUpdateListener.E
  * Also hides notification, and cancels later scheduled stop.
  */
 public class LocationStopListener extends IntentService {
-	private static final Logger logger = LoggerFactory.getLogger(LocationStopListener.class);
+	private static final Logger log = LogService.getLogger(LocationStopListener.class);
 
 	private static final String LISTENER_TO_STOP = "LISTENER_TO_STOP";
 	private static final String REQUESTER_CODE = "REQUESTER_CODE";
@@ -81,7 +80,7 @@ public class LocationStopListener extends IntentService {
 		checkArgument(notificationId != -1);
 		checkNotNull(notificationTag);
 
-		logger.info("Stopping location listener for requesterCode {}", requesterCode);
+		log.info("Stopping location listener for requesterCode {}", requesterCode);
 
 		// Stop location updates.
 		PendingIntent listenerPendingIntent =
@@ -102,7 +101,7 @@ public class LocationStopListener extends IntentService {
 		// Send requester final "complete" update.
 		byte[] json = listenerToStop.getByteArrayExtra(EXTRA_GCM_REQUEST);
 		if (json == null) {
-			FirebaseCrash.report(new IllegalStateException("Extra" + EXTRA_GCM_REQUEST + " is null"));
+			log.warn("Extra" + EXTRA_GCM_REQUEST + " is null");
 			return;
 		}
 
@@ -112,7 +111,7 @@ public class LocationStopListener extends IntentService {
 			Application.getLocationService()
 					.sendLocationUpdate(LocationResponse.complete(), originalRequest.getUpdatesTopic());
 		} catch (IOException e) {
-			FirebaseCrash.report(e);
+			log.error(e);
 		}
 	}
 }

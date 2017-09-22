@@ -21,15 +21,15 @@ package me.lazerka.mf.android;
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.support.annotation.WorkerThread;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Type-safe API for SharedPreferences, so that we have one place for them.
  */
 public class GcmManager {
-	private static final Logger logger = LoggerFactory.getLogger(GcmManager.class);
+	private static final Logger logger = LogService.getLogger(GcmManager.class);
 
 	private final String GCM_APP_VERSION = "gcm.app.version";
 	private final String GCM_TOKEN_SENT_AT = "gcm.token.sent";

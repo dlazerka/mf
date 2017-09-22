@@ -31,15 +31,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import com.google.firebase.crash.FirebaseCrash;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.PersonInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -51,7 +50,7 @@ import static android.Manifest.permission.READ_CONTACTS;
  * TODO: add null activity handling
  */
 public class ContactsFragment extends Fragment {
-	private static final Logger logger = LoggerFactory.getLogger(ContactsFragment.class);
+	private static final Logger logger = LogService.getLogger(ContactsFragment.class);
 
 	/** Result code of ContactPicker dialog. */
 	private final int RC_CONTACT_PICKER = 1;
@@ -102,7 +101,7 @@ public class ContactsFragment extends Fragment {
 
 					@Override
 					public void onError(Throwable e) {
-						FirebaseCrash.report(e);
+						logger.error(e);
 
 						Toast.makeText(getActivity(),
 								getResources().getString(R.string.error_fetching_friends, e.getMessage()),
@@ -179,7 +178,7 @@ public class ContactsFragment extends Fragment {
 					new Runnable() {
 						@Override
 						public void run() {
-							FirebaseCrash.log("ContactsFragment: addFriend READ_CONTACTS permission declined");
+							logger.warn("ContactsFragment: addFriend READ_CONTACTS permission declined");
 							Application.getEventLogger("READ_CONTACTS_declined").send();
 						}
 					}

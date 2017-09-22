@@ -16,46 +16,14 @@
  *
  */
 
-package com.baraded
+package com.baraded.mf.logging
 
-import com.google.common.base.Stopwatch
-import java.util.concurrent.TimeUnit
+/**
+ * Logs messages/errors to LogCat and FirebaseCrash.
+ */
+object LogService {
 
-class Sw {
-	private val stopwatch = Stopwatch.createStarted()
+	@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.name)
 
-	fun h() = stopwatch.elapsed(TimeUnit.HOURS)
-
-	fun m() = stopwatch.elapsed(TimeUnit.MINUTES)
-
-	fun s() = stopwatch.elapsed(TimeUnit.SECONDS)
-
-	fun ms() = stopwatch.elapsed(TimeUnit.MILLISECONDS)
-
-	fun mk() = stopwatch.elapsed(TimeUnit.MICROSECONDS)
-
-	fun ns() = stopwatch.elapsed(TimeUnit.NANOSECONDS)
-
-	fun start(): Sw {
-		stopwatch.start()
-		return this
-	}
-
-	fun stop(): Sw {
-		stopwatch.stop()
-		return this
-	}
-
-	fun reset(): Sw {
-		stopwatch.reset()
-		return this
-	}
-
-	fun restart(): Sw {
-		stopwatch.reset()
-		stopwatch.start()
-		return this
-	}
-
-
+	@JvmStatic fun getLogger(name: String) = Logger(name)
 }

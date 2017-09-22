@@ -22,11 +22,13 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
-import com.google.firebase.crash.FirebaseCrash;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.Application;
-import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import java.io.IOException;
 
@@ -39,7 +41,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
  * @param <R> type of response to parse.
  */
 public abstract class JsonParsingCallback<R> implements Callback {
-	private static final Logger logger = LoggerFactory.getLogger(JsonParsingCallback.class);
+	private static final Logger logger = LogService.getLogger(JsonParsingCallback.class);
 
 	private final Activity activity;
 	private final Class<R> responseType;
@@ -69,9 +71,7 @@ public abstract class JsonParsingCallback<R> implements Callback {
 	@WorkerThread
 	protected void onSuccess(ResponseBody body) throws IOException {
 		if (body == null || body.contentLength() == 0) {
-			String msg = "Empty body for " + responseType.getSimpleName();
-			logger.warn(msg);
-			FirebaseCrash.report(new Exception(msg));
+			logger.warn("Empty body for {}", responseType.getSimpleName());
 			return;
 		}
 

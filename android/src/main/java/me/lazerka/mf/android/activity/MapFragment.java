@@ -23,17 +23,16 @@ import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.*;
+import com.baraded.mf.Sw;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
-import com.google.firebase.crash.FirebaseCrash;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
-import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.PersonInfo;
@@ -41,18 +40,15 @@ import me.lazerka.mf.android.location.FriendLocationResponse;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.util.Locale;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class MapFragment extends Fragment {
-	private static final Logger logger = LoggerFactory.getLogger(MapFragment.class);
+	private static final Logger log = LogService.getLogger(MapFragment.class);
 
 	public static final String CAMERA_POSITION = "cameraPosition";
 
@@ -87,14 +83,16 @@ public class MapFragment extends Fragment {
 		mapView.onCreate(savedInstanceState);
 
 		// Gets to GoogleMap from the MapView and does initialization stuff
-		final Stopwatch mapReadyStopwatch = AndroidTicker.started();
+		final Sw uptimeSw = Sw.uptime();
 		//noinspection Convert2Lambda lint doesn't get it.
 		mapView.getMapAsync(new OnMapReadyCallback() {
 			@SuppressLint("MissingPermission")
 			@Override
 			public void onMapReady(GoogleMap googleMap) {
-				String msg = "map ready in " + mapReadyStopwatch.elapsed(MILLISECONDS) + "ms";
-				FirebaseCrash.logcat(Log.DEBUG, logger.getName(), msg);
+				log.info("map ready in {}ms", uptimeSw.ms());
+				Application.getEventLogger("mapReady")
+					.param("ms", uptimeSw.ms())
+					.send();
 
 				map = googleMap;
 				map.getUiSettings().setMyLocationButtonEnabled(true);
@@ -188,7 +186,7 @@ public class MapFragment extends Fragment {
 
 	private void drawLocation(FriendLocationResponse locationResponse) throws ActivityIsNullException {
 		if (map == null) {
-			FirebaseCrash.report(new IllegalStateException("map is null"));
+			log.error("map is null");
 			return;
 		}
 
@@ -287,7 +285,7 @@ public class MapFragment extends Fragment {
 		try {
 			drawLocation(friendLocationResponse);
 		} catch (ActivityIsNullException e) {
-			logger.warn("showLocation: activity is null");
+			log.warn("showLocation: activity is null");
 		}
 
 	}
@@ -301,12 +299,12 @@ public class MapFragment extends Fragment {
 
 		@Override
 		public void onComplete() {
-			logger.error("onComplete() aren't to be called.");
+			log.error("onComplete() aren't to be called.");
 		}
 
 		@Override
 		public void onError(Throwable e) {
-			logger.warn("onError {}", e.getMessage());
+			log.warn("onError {}", e.getMessage());
 		}
 
 	}
@@ -328,7 +326,7 @@ public class MapFragment extends Fragment {
 	//			map.moveCamera(cameraUpdate);
 	//			map.setOnMyLocationChangeListener(null);
 	//		} catch (ActivityIsNullException e) {
-	//			logger.info("onMyLocationChange: activity is null, doing nothing.");
+	//			log.info("onMyLocationChange: activity is null, doing nothing.");
 	//		}
 	//	}
 	//}

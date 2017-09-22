@@ -143,7 +143,6 @@
     <orderEntry type="library" name="support-core-utils-25.4.0" level="project" />
     <orderEntry type="library" name="support-fragment-25.4.0" level="project" />
     <orderEntry type="library" name="play-services-location-11.4.0" level="project" />
-    <orderEntry type="library" name="slf4j-android-1.7.25" level="project" />
     <orderEntry type="library" name="reactive-streams-1.0.1" level="project" />
     <orderEntry type="library" name="okhttp-3.9.0" level="project" />
     <orderEntry type="library" name="recyclerview-v7-25.4.0" level="project" />

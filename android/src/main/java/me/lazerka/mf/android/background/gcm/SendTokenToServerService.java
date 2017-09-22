@@ -20,7 +20,8 @@ package me.lazerka.mf.android.background.gcm;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.util.Log;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -31,8 +32,6 @@ import me.lazerka.mf.android.background.ApiPost;
 import me.lazerka.mf.api.object.GcmToken;
 import okhttp3.Call;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -48,7 +47,7 @@ import static com.google.android.gms.common.api.CommonStatusCodes.SIGN_IN_REQUIR
  * @author Dzmitry Lazerka
  */
 public class SendTokenToServerService extends IntentService {
-	private static final Logger logger = LoggerFactory.getLogger(SendTokenToServerService.class);
+	private static final Logger log = LogService.getLogger(SendTokenToServerService.class);
 
 	public SendTokenToServerService() {
 		super(SendTokenToServerService.class.getSimpleName());
@@ -62,7 +61,7 @@ public class SendTokenToServerService extends IntentService {
 			String gcmToken = FirebaseInstanceId.getInstance().getToken();
 
 			if (gcmToken == null) {
-				FirebaseCrash.logcat(Log.WARN, logger.getName(), "token is null");
+				log.warn("token is null");
 				return;
 			}
 
@@ -72,21 +71,18 @@ public class SendTokenToServerService extends IntentService {
 			Response response = call.execute();
 
 			if (response.code() != HttpURLConnection.HTTP_OK) {
-				String msg = "Unsuccessful sending GCM token: " + response.code() + " " + response.message();
-				FirebaseCrash.report(new IOException(msg));
+				log.error("Unsuccessful sending GCM token: {} {}", response.code(), response.message());
 			}
 
 		} catch (GoogleSignInException e) {
 			if (e.getStatus().getStatusCode() == SIGN_IN_REQUIRED) {
 				// Always happens on the very first start, when user is still selecting account.
-				FirebaseCrash.logcat(Log.INFO, logger.getName(), "Not signed in, not sending token to server.");
+				log.warn("Not signed in, not sending token to server.");
 			} else {
-				FirebaseCrash.report(e);
-				logger.error(e.getMessage(), e);
+				log.error(e);
 			}
 		} catch (IOException e) {
-			FirebaseCrash.report(e);
-			logger.error(e.getMessage(), e);
+			log.error(e);
 		}
 	}
 }

@@ -23,14 +23,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.View.OnClickListener;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.firebase.auth.FirebaseUser;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Obtains {@link GoogleSignInAccount}, which is usually valid for 60 minutes.
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * @author Dzmitry Lazerka
  */
 public class LoginActivity extends GoogleApiActivity {
-	private static final Logger logger = LoggerFactory.getLogger(LoginActivity.class);
+	private static final Logger logger = LogService.getLogger(LoginActivity.class);
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

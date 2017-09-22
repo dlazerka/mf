@@ -28,11 +28,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
-import android.util.Log;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.common.collect.ImmutableMap;
-import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.messaging.RemoteMessage.Builder;
@@ -54,8 +54,6 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -72,7 +70,7 @@ import static android.content.Context.MODE_PRIVATE;
  * @author Dzmitry Lazerka
  */
 public class LocationService {
-	private static final Logger logger = LoggerFactory.getLogger(LocationService.class);
+	private static final Logger log = LogService.getLogger(LocationService.class);
 	private static final String TOPICS_SUBSCRIBED = "topicsSubscribed";
 
 	public static final int TRACKING_NOTIFICATION_ID = 4321;
@@ -119,7 +117,7 @@ public class LocationService {
 		firebaseMessaging.subscribeToTopic(topic);
 
 		// DEBUG
-		//logger.info("Subscribing to {}", topic);
+		//log.info("Subscribing to {}", topic);
 
 		saveToSharedPreferences(topic);
 	}
@@ -149,13 +147,12 @@ public class LocationService {
 	) {
 		if (!gcmMessageFrom.equals(getDefaultSenderId())) {
 			String msg = "GCM message from unknown sender rejected: " + gcmMessageFrom;
-			logger.error(msg);
-			FirebaseCrash.report(new IllegalArgumentException(msg));
+			log.error(msg);
 			return;
 		}
 
 		String requesterEmail = locationRequest.getRequesterEmail();
-		logger.info("Received location request from " + requesterEmail);
+		log.info("Received location request from " + requesterEmail);
 
 		// Authorize request.
 		PersonInfo friend = authorizeRequest(requesterEmail);
@@ -185,7 +182,7 @@ public class LocationService {
 
 			friends = future.get();
 		} catch (InterruptedException | ExecutionException e) {
-			FirebaseCrash.report(e);
+			log.error(e);
 			return null;
 		}
 
@@ -202,8 +199,7 @@ public class LocationService {
 			}
 		}
 
-		FirebaseCrash.logcat(
-				Log.WARN, logger.getName(), "Requester not in friends list, rejecting " + requesterEmail);
+		log.warn("Requester not in friends list, rejecting " + requesterEmail);
 
 		return null;
 	}
@@ -239,7 +235,7 @@ public class LocationService {
 		try {
 			json = Application.getJsonMapper().writeValueAsString(locationResponse);
 		} catch (JsonProcessingException e) {
-			FirebaseCrash.report(e);
+			log.error(e);
 			return;
 		}
 
@@ -251,8 +247,8 @@ public class LocationService {
 				.setData(data)
 				.build();
 		// DEBUG
-		//logger.info("Sending location update to {}", topic);
-		logger.info("Sending location update", topic);
+		//log.info("Sending location update to {}", topic);
+		log.info("Sending location update", topic);
 		firebaseMessaging.send(gcmMessage);
 	}
 
@@ -262,12 +258,12 @@ public class LocationService {
 	public void handleLocationResponse(LocationResponse response, String topicFrom) {
 
 		if (response.isComplete()) {
-			logger.info("Finished location session {}, unsubscribing.", topicFrom);
+			log.info("Finished location session {}, unsubscribing.", topicFrom);
 			firebaseMessaging.unsubscribeFromTopic(topicFrom);
 		}
 
 		if (!response.isSuccessful()) {
-			logger.warn("LocationResponse unsuccessful: {}, unsubscribing from {}.", response.getError(), topicFrom);
+			log.warn("LocationResponse unsuccessful: {}, unsubscribing from {}.", response.getError(), topicFrom);
 			firebaseMessaging.unsubscribeFromTopic(topicFrom);
 		}
 
@@ -289,7 +285,7 @@ public class LocationService {
 
 			boolean changed = set.add(topic);
 			if (!changed) {
-				FirebaseCrash.logcat(Log.WARN, logger.getName(), "Already subscribed to topic");
+				log.warn("Already subscribed to topic");
 				return true;
 			}
 			preferences.edit()
@@ -307,7 +303,7 @@ public class LocationService {
 
 			boolean changed = set.remove(topic);
 			if (!changed) {
-				FirebaseCrash.logcat(Log.WARN, logger.getName(), "Already unsubscribed from topic");
+				log.warn("Already unsubscribed from topic");
 				return true;
 			}
 			preferences.edit()

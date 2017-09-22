@@ -27,8 +27,10 @@ import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.NonNull;
+import com.baraded.mf.Sw;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
@@ -37,11 +39,8 @@ import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
-import me.lazerka.mf.android.AndroidTicker;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.adapter.PersonInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -49,7 +48,6 @@ import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Friend list manager.
@@ -61,7 +59,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * The last path part (983) is unstable row id which we don't use.
  */
 public class FriendsManager {
-	private static final Logger logger = LoggerFactory.getLogger(FriendsManager.class);
+	private static final Logger logger = LogService.getLogger(FriendsManager.class);
 
 	private static final String KEY = "mf.friends";
 	private final SharedPreferences preferences;
@@ -208,12 +206,11 @@ public class FriendsManager {
 			}
 
 			if (!PermissionAsker.hasPermission(Manifest.permission.READ_CONTACTS, context)) {
-				FirebaseCrash.report(new IllegalStateException("No READ_CONTACTS perm while loading contacts"));
 				logger.error("No READ_CONTACTS perm while loading contacts");
 				return Collections.emptyList();
 			}
 
-			Stopwatch stopwatch = AndroidTicker.started();
+			Sw sw = Sw.realtime();
 
 			ContentResolver contentResolver = context.getContentResolver();
 
@@ -265,8 +262,7 @@ public class FriendsManager {
 				}
 			}
 
-			logger.info("Fetched {} contacts for {} keys in {}ms",
-					result.size(), lookupKeys.size(), stopwatch.elapsed(MILLISECONDS));
+			logger.info("Fetched {} contacts for {} keys in {}ms", result.size(), lookupKeys.size(), sw.ms());
 
 			return result;
 		}

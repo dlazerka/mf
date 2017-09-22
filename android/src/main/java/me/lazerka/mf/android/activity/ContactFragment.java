@@ -33,13 +33,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static android.provider.ContactsContract.QuickContact.MODE_LARGE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkState;
  * TODO: add null activity handling
  */
 public class ContactFragment extends Fragment {
-	private static final Logger logger = LoggerFactory.getLogger(ContactFragment.class);
+	private static final Logger logger = LogService.getLogger(ContactFragment.class);
 
 	private static final String PERSON_INFO = "PERSON_INFO";
 

@@ -22,9 +22,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.WakefulBroadcastReceiver;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.background.location.LocationRequestHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author Dzmitry Lazerka
  */
 public class BootReceiver extends WakefulBroadcastReceiver {
-	private static final Logger logger = LoggerFactory.getLogger(BootReceiver.class);
+	private static final Logger logger = LogService.getLogger(BootReceiver.class);
 
 	@Override
 	public void onReceive(Context context, Intent intent) {

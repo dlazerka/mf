@@ -23,8 +23,9 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.widget.Toast;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
@@ -38,11 +39,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.*;
-import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.SignInManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -53,7 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class GoogleApiActivity extends Activity
 		implements OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks
 {
-	private static final Logger logger = LoggerFactory.getLogger(GoogleApiActivity.class);
+	private static final Logger logger = LogService.getLogger(GoogleApiActivity.class);
 
 	private static final int RC_SIGN_IN = 9001;
 	private static final int RC_RESOLUTION = 9002;
@@ -77,8 +75,7 @@ public abstract class GoogleApiActivity extends Activity
 
 	public EventLogger buildEvent(String eventName) {
 		if (firebaseAnalytics == null) {
-			FirebaseCrash.logcat(Log.WARN, logger.getName(), "firebaseAnalytics is null");
-			FirebaseCrash.report(new NullPointerException("firebaseAnalytics is null"));
+			logger.warn("firebaseAnalytics is null");
 			return new EventLogger(eventName, null);
 		}
 		return new EventLogger(eventName, firebaseAnalytics);
@@ -187,7 +184,6 @@ public abstract class GoogleApiActivity extends Activity
 				} else {
 					String msg = "Resolution " + RC_RESOLUTION + " resultCode: " + resultCode;
 					logger.warn(msg);
-					FirebaseCrash.report(new Exception(msg));
 					onSignInFailed();
 				}
 				break;

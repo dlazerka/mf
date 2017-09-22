@@ -34,6 +34,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
 import android.util.Log;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -47,8 +49,6 @@ import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
 import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,7 +70,7 @@ import static java.lang.String.format;
  * @author Dzmitry Lazerka
  */
 public class LocationRequestHandler {
-	private static final Logger logger = LoggerFactory.getLogger(LocationRequestHandler.class);
+	private static final Logger log = LogService.getLogger(LocationRequestHandler.class);
 
 	/**
 	 * We want to merge notifications/updates etc per requester.
@@ -150,7 +150,7 @@ public class LocationRequestHandler {
 			AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 			long stopAtUptime = locationRequest.getExpirationTime();
 			alarmManager.set(AlarmManager.ELAPSED_REALTIME, stopAtUptime, stopListener);
-			logger.info("Scheduled updates to stop at {}ms uptime, now: {}",
+			log.info("Scheduled updates to stop at {}ms uptime, now: {}",
 					stopAtUptime, SystemClock.elapsedRealtime());
 
 			// Too bad it's @SystemApi.
@@ -161,10 +161,9 @@ public class LocationRequestHandler {
 					locationRequest.getInterval(),
 					locationRequest.getSmallestDisplacement(),
 					updateListener);
-			logger.info("Scheduled updates using LocationManager");
+			log.info("Scheduled updates using LocationManager");
 		} catch (SecurityException e) {
-			logger.error("No location permissions", e);
-			FirebaseCrash.report(e);
+			log.error("No location permissions", e);
 		}
 	}
 
@@ -183,7 +182,7 @@ public class LocationRequestHandler {
 		try {
 
 			if (!Application.hasLocationPermission()) {
-				FirebaseCrash.logcat(Log.WARN, logger.getName(), "No location permission");
+				log.warn("No location permission");
 				return;
 			}
 			//noinspection MissingPermission
@@ -194,18 +193,15 @@ public class LocationRequestHandler {
 
 			Status status = pendingResult.await();
 			if (status.isSuccess()) {
-				logger.info("Scheduled updates using FusedLocationApi");
+				log.info("Scheduled updates using FusedLocationApi");
 			} else {
-				String msg = "requestLocationUpdates unsuccessful: "
-						+ status.getStatusCode() + " " + status.getStatusMessage();
-				logger.warn(msg);
-				FirebaseCrash.report(new Exception(msg));
+				log.warn("requestLocationUpdates unsuccessful: {} {}",
+				status.getStatusCode(), status.getStatusMessage());
 
 				// We could also send response back to server and requester.
 			}
 		} catch (Exception e) {
-			logger.error("Unable to schedule location updates", e);
-			FirebaseCrash.report(e);
+			log.error("Unable to schedule location updates", e);
 		} finally {
 			apiClient.disconnect();
 		}
@@ -221,7 +217,7 @@ public class LocationRequestHandler {
 			String msg = format("GoogleApiClient not connected: %s, %s",
 					connectionResult.getErrorCode(),
 					connectionResult.getErrorMessage());
-			FirebaseCrash.logcat(Log.WARN, logger.getName(), msg);
+			log.warn(msg);
 			// TODO retry
 			return null;
 		}
@@ -246,7 +242,7 @@ public class LocationRequestHandler {
 			LocationRequestFromServer gcmRequest
 	) {
 		if (!Application.hasLocationPermission()) {
-			FirebaseCrash.logcat(Log.WARN, logger.getName(), "No location permission");
+			log.warn("No location permission");
 			return;
 		}
 
@@ -259,7 +255,7 @@ public class LocationRequestHandler {
 			intent.putExtra("com.google.android.gms.location.EXTRA_LOCATION_RESULT", lastLocation);
 			context.startService(intent);
 		} else {
-			logger.info("No lastLocation");
+			log.info("No lastLocation");
 		}
 	}
 

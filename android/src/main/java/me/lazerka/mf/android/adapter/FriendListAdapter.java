@@ -24,10 +24,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import com.google.firebase.crash.FirebaseCrash;
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.R;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -40,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Dzmitry Lazerka
  */
 public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
-	private static final Logger logger = LoggerFactory.getLogger(FriendListAdapter.class);
+	private static final Logger logger = LogService.getLogger(FriendListAdapter.class);
 
 	private final List<PersonInfo> data = new ArrayList<>();
 	private final OnFriendClickListener onFriendClickListener;
@@ -62,9 +61,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 		} else if (data.size() == position) {
 			return R.layout.view_add_contact;
 		} else {
-			String msg = "Illegal item position: " + position + " vs " + getItemCount();
-			logger.error(msg);
-			FirebaseCrash.report(new IndexOutOfBoundsException(msg));
+			logger.error("Illegal item position: {} vs {}", position, getItemCount());
 			return 0;
 		}
 	}
@@ -87,9 +84,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 			try {
 				friendViewHolder = (FriendViewHolder) holder;
 			} catch (ClassCastException e) {
-				String msg = "Holder is not of type FriendViewHolder for position " + position;
-				logger.error(msg);
-				FirebaseCrash.report(new IllegalStateException(msg, e));
+				logger.error("Holder is not of type FriendViewHolder for position {}", position);
 				return;
 			}
 
@@ -99,9 +94,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 			// This is add button.
 			((AddFriendViewHolder) holder).bind(onAddFriendClickListener);
 		} else {
-			String msg = "Illegal item position: " + position + " vs " + getItemCount();
-			logger.error(msg);
-			FirebaseCrash.report(new IllegalStateException(msg));
+			logger.error("Illegal item position: {} vs {}", position, getItemCount());
 		}
 	}
 
