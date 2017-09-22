@@ -228,7 +228,7 @@ public class MapFragment extends Fragment {
 		}
 
 		//noinspection deprecation the recommended fix doesn't work for API < 24.
-		Locale locale = Application.context.getResources().getConfiguration().locale;
+		Locale locale = Application.getConfiguration().locale;
 		DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM, locale);
 
 		DateTime when = location.getWhen();

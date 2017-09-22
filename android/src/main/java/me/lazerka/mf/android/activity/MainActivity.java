@@ -18,50 +18,23 @@
 
 package me.lazerka.mf.android.activity;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.UiThread;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
-import com.baraded.mf.logging.LogService;
-import com.baraded.mf.logging.Logger;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.common.collect.Range;
-import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.background.gcm.SendTokenToServerService;
-import me.lazerka.mf.android.location.LocationService.NoEmailsException;
-import me.lazerka.mf.api.object.GcmResult;
-import me.lazerka.mf.api.object.LocationRequestResult;
-import okhttp3.Call;
-import okhttp3.Response;
-import org.joda.time.Duration;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Extends FragmentActivity only for GoogleApiClient.
  *
  * @author Dzmitry Lazerka
  */
-public class MainActivity extends GoogleApiActivity {
-	private static final Logger logger = LogService.getLogger(MainActivity.class);
-	private static final Duration LOCATION_REQUEST_TTL = Duration.standardHours(3);
-
+public class MainActivity extends Activity {
 	public final PermissionAsker permissionAsker;
 
 	public MainActivity() {
@@ -92,15 +65,6 @@ public class MainActivity extends GoogleApiActivity {
 	}
 
 	@Override
-	protected void onSignInFailed() {
-		Application.getEventLogger("main_sign_in_failed").send();
-
-		Intent intent = new Intent(this, LoginActivity.class);
-		startActivity(intent);
-		finish();
-	}
-
-	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
@@ -125,122 +89,5 @@ public class MainActivity extends GoogleApiActivity {
 				break;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-
-	public void requestLocationUpdates(@Nonnull final PersonInfo personInfo, @Nonnull final Duration duration) {
-		checkArgument(!personInfo.emails.isEmpty());
-		checkNotNull(duration);
-
-		Application.getEventLogger("request_location")
-				.param("duration", duration.getStandardSeconds())
-				.send();
-
-
-		runWithAccount(new SignInCallbacks() {
-			@Override
-			public void onSuccess(@NonNull GoogleSignInResult result) {
-				GoogleSignInAccount account = checkNotNull(result.getSignInAccount());
-
-				try {
-					Application.getLocationService().requestLocationUpdates(
-							account,
-							personInfo,
-							duration,
-							new LocationRequestCallback(personInfo));
-
-
-				} catch (NoEmailsException e) {
-					logger.warn("A contact has no emails to request to");
-					String msg = getString(R.string.contact_no_emails, personInfo.displayName);
-					Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-					return;
-				}
-
-				// Todo change to UI text instead of a Toast.
-				String text = getString(R.string.sending_location_request, personInfo.displayName);
-				Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
-			}
-		});
-	}
-
-	private class LocationRequestCallback extends JsonParsingCallback<LocationRequestResult> {
-		private final Context context = MainActivity.this;
-		private final PersonInfo personInfo;
-
-		public LocationRequestCallback(PersonInfo personInfo) {
-			super(MainActivity.this, LocationRequestResult.class);
-			this.personInfo = personInfo;
-		}
-
-		@UiThread
-		@Override
-		protected void onResult(LocationRequestResult result) {
-			final List<GcmResult> gcmResults = result.getGcmResults();
-			if (gcmResults == null || gcmResults.isEmpty()) {
-				logger.warn("Empty gcmResults list in LocationRequestResult {}", gcmResults);
-				return;
-			}
-
-			// If at least one result is successful -- show it, otherwise show the first error.
-			// TODO we can handle some of GCM error responses, like GcmConstants.ERROR_UNAVAILABLE
-			GcmResult oneResult = gcmResults.get(0);
-			for(GcmResult gcmResult : gcmResults) {
-				if (gcmResult.getError() == null) {
-					oneResult = gcmResult;
-					break;
-				}
-			}
-			String error = oneResult.getError();
-			if (error == null) {
-				String msg = getString(
-						R.string.sent_location_request,
-						result.getEmail());
-				logger.info(msg);
-				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-			} else {
-				String msg = getString(R.string.gcm_error, error);
-				logger.warn(msg);
-				Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-			}
-		}
-
-		@UiThread
-		@Override
-		protected void onNotFound() {
-			// TODO: show dialog suggesting to send a message to friend.
-			String msg = getString(R.string.contact_havent_installed_app, personInfo.displayName);
-			logger.warn(msg);
-			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-		}
-
-		@UiThread
-		@Override
-		protected void onUnknownErrorResponse(Response response) {
-			String msg = getString(
-					R.string.error_relaying_request,
-					response.code(),
-					response.message());
-			logger.error(msg);
-			FirebaseCrash.report(new Exception(logger.getName() + ": " + msg));
-			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-		}
-
-		@UiThread
-		@Override
-		public void onNetworkException(Call call, IOException e) {
-			String msg;
-			if (e instanceof SocketTimeoutException) {
-				msg = getString(R.string.error_socket_timeout);
-			} else if (e instanceof ConnectException) {
-				msg = getString(R.string.error_connection_exception);
-			} else if (e.getMessage() != null) {
-				msg = getString(R.string.error_sending_request, e.getMessage());
-			} else {
-				msg = getString(R.string.error_sending_request, e.getClass().getSimpleName());
-			}
-
-			logger.warn(msg, e);
-			Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-		}
 	}
 }

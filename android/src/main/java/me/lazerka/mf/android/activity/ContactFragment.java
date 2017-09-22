@@ -32,7 +32,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.Application;
@@ -127,17 +126,17 @@ public class ContactFragment extends Fragment {
 				new OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						MainActivity activity = (MainActivity) getActivity();
-						if (!personInfo.emails.isEmpty()) {
-
-							Duration duration = getSelectedDuration();
-							activity.requestLocationUpdates(personInfo, duration);
-						} else {
-							// TODO disable FAB at all and show red warning instead
-							String msg = getString(R.string.contact_no_emails, personInfo.displayName);
-							Toast.makeText(activity, msg, Toast.LENGTH_LONG)
-									.show();
-						}
+						//MainActivity activity = (MainActivity) getActivity();
+						//if (!personInfo.emails.isEmpty()) {
+						//
+						//	Duration duration = getSelectedDuration();
+						//	activity.requestLocationUpdates(personInfo, duration);
+						//} else {
+						//	// TODO disable FAB at all and show red warning instead
+						//	String msg = getString(R.string.contact_no_emails, personInfo.displayName);
+						//	Toast.makeText(activity, msg, Toast.LENGTH_LONG)
+						//			.show();
+						//}
 					}
 				});
 

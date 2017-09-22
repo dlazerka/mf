@@ -18,12 +18,12 @@
 
 package me.lazerka.mf.android;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
@@ -60,7 +60,8 @@ public class Application extends MultiDexApplication {
 	private static JsonMapper jsonMapper;
 
 	public static GcmManager gcmManager;
-	public static Context context;
+
+	private static Application context;
 
 	private static SharedPreferences friendsSharedPreferences;
 	private static FriendsManager friendsManager;
@@ -71,12 +72,16 @@ public class Application extends MultiDexApplication {
 	public void onCreate() {
 		super.onCreate();
 
-		context = getApplicationContext();
+		context = this;
 
 		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
 		gcmManager = new GcmManager(getSharedPreferences(preferencesFileGcm, MODE_PRIVATE));
 
 		friendsSharedPreferences = getSharedPreferences(getString(R.string.preferences_file_friends), MODE_PRIVATE);
+	}
+
+	public static Configuration getConfiguration() {
+		return context.getResources().getConfiguration();
 	}
 
 	private static void checkContext() {
@@ -154,8 +159,8 @@ public class Application extends MultiDexApplication {
 	 * @return Application's version code from the {@code PackageManager}.
 	 */
 	public static int getVersion() {
-		String packageName = Application.context.getPackageName();
-		PackageManager packageManager = Application.context.getPackageManager();
+		String packageName = context.getPackageName();
+		PackageManager packageManager = context.getPackageManager();
 		try {
 			PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
 			return packageInfo.versionCode;

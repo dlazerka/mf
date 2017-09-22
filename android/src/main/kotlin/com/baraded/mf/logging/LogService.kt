@@ -23,7 +23,14 @@ package com.baraded.mf.logging
  */
 object LogService {
 
-	@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.name)
+	@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.simpleName)
 
-	@JvmStatic fun getLogger(name: String) = Logger(name)
+	@JvmStatic fun getLogger(name: String): Logger {
+		if (name.length <= 23) {
+			return Logger(name)
+		} else {
+			// throw IllegalArgumentException("Log tag $name exceeds limit of 23 characters");
+			return Logger(name.substring(0, 23))
+		}
+	}
 }

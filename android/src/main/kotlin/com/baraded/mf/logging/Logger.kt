@@ -24,6 +24,7 @@ import com.google.firebase.crash.FirebaseCrash
 import org.slf4j.helpers.MessageFormatter
 
 class Logger(val name: String) {
+
 	fun trace(format: String, vararg args: Any) = formatAndLog(Log.VERBOSE, format, *args)
 
 	fun debug(format: String, vararg args: Any) = formatAndLog(Log.DEBUG, format, *args)
