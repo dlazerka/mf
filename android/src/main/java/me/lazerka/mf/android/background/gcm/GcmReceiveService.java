@@ -25,11 +25,12 @@ import com.baraded.mf.logging.Logger;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.di.Injector;
+import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.gcm.GcmPayload;
-import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
-import org.joda.time.DateTime;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
 
@@ -45,6 +46,13 @@ import java.util.Map;
  */
 public class GcmReceiveService extends FirebaseMessagingService {
 	private static final Logger log = LogService.getLogger(GcmReceiveService.class);
+
+	@Inject
+	LocationService locationService;
+
+	public GcmReceiveService() {
+		Injector.applicationComponent().inject(this);
+	}
 
 	@WorkerThread
 	@Override
@@ -72,21 +80,21 @@ public class GcmReceiveService extends FirebaseMessagingService {
 				case LocationResponse.TYPE:
 					LocationResponse payload = Application.getJsonMapper().readValue(json, LocationResponse.class);
 					log.info("Parsed LocationResponse in {}ms", sw.ms());
-					Application.getLocationService()
+					locationService
 							.handleLocationResponse(payload, from);
 					break;
-				case LocationRequestFromServer.TYPE:
-					LocationRequestFromServer locationRequest =
-							Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
-					log.info("Parsed LocationResponse in {}ms", sw.ms());
-
-					Application.getLocationService()
-							.handleRequest(
-									locationRequest,
-									from,
-									new DateTime(message.getSentTime())
-							);
-					break;
+				//case LocationRequestFromServer.TYPE:
+				//	LocationRequestFromServer locationRequest =
+				//			Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
+				//	log.info("Parsed LocationResponse in {}ms", sw.ms());
+				//
+				//	locationService
+				//			.handleRequest(
+				//					locationRequest,
+				//					from,
+				//					new DateTime(message.getSentTime())
+				//			);
+				//	break;
 				default:
 					log.error("Unknown message type: " + type);
 			}

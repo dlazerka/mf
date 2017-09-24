@@ -18,19 +18,40 @@
 
 package com.baraded.mf.logging
 
+import com.google.firebase.analytics.FirebaseAnalytics
+import me.lazerka.mf.android.activity.EventLogger
+import me.lazerka.mf.android.di.Injector
+import javax.inject.Inject
+
 /**
  * Logs messages/errors to LogCat and FirebaseCrash.
  */
-object LogService {
+class LogService {
 
-	@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.simpleName)
+	companion object {
+		@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.simpleName)
 
-	@JvmStatic fun getLogger(name: String): Logger {
-		if (name.length <= 23) {
-			return Logger(name)
-		} else {
-			// throw IllegalArgumentException("Log tag $name exceeds limit of 23 characters");
-			return Logger(name.substring(0, 23))
+		@JvmStatic fun getLogger(name: String): Logger {
+			if (name.length <= 23) {
+				return Logger(name)
+			} else {
+				// throw IllegalArgumentException("Log tag $name exceeds limit of 23 characters");
+				return Logger(name.substring(0, 23))
+			}
 		}
 	}
+
+	@Inject
+	constructor(firebaseAnalytics: FirebaseAnalytics) {
+		Injector.applicationComponent().inject(this)
+		this.firebaseAnalytics = firebaseAnalytics;
+	}
+
+//	@Inject
+	private val firebaseAnalytics: FirebaseAnalytics;
+
+	fun getEventLogger(eventName: String): EventLogger {
+		return EventLogger(eventName, firebaseAnalytics)
+	}
+
 }

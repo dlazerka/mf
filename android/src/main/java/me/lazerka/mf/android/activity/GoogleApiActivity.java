@@ -37,10 +37,10 @@ import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.*;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.SignInManager;
+
+import javax.inject.Inject;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -61,7 +61,9 @@ public abstract class GoogleApiActivity extends Activity
 
 	private GoogleApiClient googleApiClient;
 	private final SignInCallbacks signInCallbacks = new SignInCallbacks();
-	private FirebaseAnalytics firebaseAnalytics;
+
+	@Inject
+	LogService logService;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -73,20 +75,12 @@ public abstract class GoogleApiActivity extends Activity
 		                               .build();
 	}
 
-	public EventLogger buildEvent(String eventName) {
-		if (firebaseAnalytics == null) {
-			logger.warn("firebaseAnalytics is null");
-			return new EventLogger(eventName, null);
-		}
-		return new EventLogger(eventName, firebaseAnalytics);
-	}
-
 	@Override
 	public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 		int errorCode = connectionResult.getErrorCode();
 		logger.info("onConnectionFailed: {} {}", errorCode, connectionResult.getErrorMessage());
 
-		Application.getEventLogger("gapi_connection_failed")
+		logService.getEventLogger("gapi_connection_failed")
 				.param("error_code", connectionResult.getErrorCode())
 				.param("error_message", connectionResult.getErrorMessage())
 				// If this is not null sometimes we could probably use it.
@@ -136,7 +130,7 @@ public abstract class GoogleApiActivity extends Activity
 	 * Does nothing. We shouldn't save the result and use it later -- it may expire.
 	 */
 	protected void onSignInSuccess(FirebaseUser user) {
-		Application.getEventLogger("gapi_signin_success")
+		logService.getEventLogger("gapi_signin_success")
 			// FirebaseCrash doesn't support user email, so in case an exception happens
 			// we had to match exception timing with this log event in order to contact the user.
 			.param("display_name", user.getDisplayName())
@@ -188,7 +182,7 @@ public abstract class GoogleApiActivity extends Activity
 				}
 				break;
 			case RC_PLAY_ERROR_DIALOG:
-				Application.getEventLogger("gapi_connection_retry").send();
+				logService.getEventLogger("gapi_connection_retry").send();
 				onSignInFailed();
 				break;
 			default:
@@ -217,7 +211,7 @@ public abstract class GoogleApiActivity extends Activity
 						            AuthResult authResult = task.getResult();
 						            onSignInSuccess(authResult.getUser());
 					            } else {
-						            Application.getEventLogger("firebase_auth_unsuccessful").send();
+						            logService.getEventLogger("firebase_auth_unsuccessful").send();
 						            onSignInFailed();
 					            }
 				            }
@@ -228,7 +222,7 @@ public abstract class GoogleApiActivity extends Activity
 		public void onUnresolvableFailure(@NonNull Status status) {
 			logger.info("SignIn unsuccessful: {} {}", status.getStatusCode(), status.getStatusMessage());
 
-			Application.getEventLogger("gapi_unresolvable_failure")
+			logService.getEventLogger("gapi_unresolvable_failure")
 					.param("status_code", status.getStatusCode())
 					.param("error_message", status.getStatusMessage())
 					// If this is not null sometimes we could probably use it.

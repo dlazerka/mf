@@ -19,15 +19,16 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.baraded.mf.logging.LogService;
 import com.google.common.collect.Range;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.background.gcm.SendTokenToServerService;
+import me.lazerka.mf.android.di.Injector;
+
+import javax.inject.Inject;
 
 /**
  * Extends FragmentActivity only for GoogleApiClient.
@@ -37,7 +38,12 @@ import me.lazerka.mf.android.background.gcm.SendTokenToServerService;
 public class MainActivity extends Activity {
 	public final PermissionAsker permissionAsker;
 
+	@Inject
+	LogService logService;
+
 	public MainActivity() {
+		Injector.applicationComponent().inject(this);
+
 		this.permissionAsker = new PermissionAsker(Range.closedOpen(400, 500), this);
 	}
 
@@ -46,7 +52,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		Application.getEventLogger("app_launched").send();
+		logService.getEventLogger("app_launched").send();
 
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
@@ -61,7 +67,7 @@ public class MainActivity extends Activity {
 		super.onStart();
 
 		// Make sure server knows our GCM token.
-		startService(new Intent(this, SendTokenToServerService.class));
+		//startService(new Intent(this, SendTokenToServerService.class));
 	}
 
 	@Override
@@ -84,7 +90,7 @@ public class MainActivity extends Activity {
 				recreate();
 				break;
 			case R.id.action_quit:
-				Application.getEventLogger("app_quit").send();
+				logService.getEventLogger("app_quit").send();
 				this.finish();
 				break;
 		}

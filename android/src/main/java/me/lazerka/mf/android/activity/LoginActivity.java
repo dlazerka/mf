@@ -29,8 +29,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.firebase.auth.FirebaseUser;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
+import me.lazerka.mf.android.di.Injector;
+
+import javax.inject.Inject;
 
 /**
  * Obtains {@link GoogleSignInAccount}, which is usually valid for 60 minutes.
@@ -40,9 +42,15 @@ import me.lazerka.mf.android.R;
 public class LoginActivity extends GoogleApiActivity {
 	private static final Logger logger = LogService.getLogger(LoginActivity.class);
 
+	@Inject
+	LogService logService;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		Injector.applicationComponent().inject(this);
+
 		setContentView(R.layout.activity_signing_progress);
 	}
 
@@ -54,7 +62,7 @@ public class LoginActivity extends GoogleApiActivity {
 
 	@Override
 	protected void onSignInFailed() {
-		Application.getEventLogger("login_sign_in_failed").send();
+		logService.getEventLogger("login_sign_in_failed").send();
 		showSignInButton();
 	}
 

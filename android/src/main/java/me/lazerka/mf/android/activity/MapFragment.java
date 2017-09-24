@@ -19,7 +19,7 @@
 package me.lazerka.mf.android.activity;
 
 import android.annotation.SuppressLint;
-import android.app.Fragment;
+import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -36,18 +36,21 @@ import io.reactivex.observers.DisposableObserver;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.android.location.FriendLocationResponse;
+import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.text.DateFormat;
-import java.util.Locale;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class MapFragment extends Fragment {
+public class MapFragment extends InjectedFragment {
 	private static final Logger log = LogService.getLogger(MapFragment.class);
 
 	public static final String CAMERA_POSITION = "cameraPosition";
@@ -66,12 +69,21 @@ public class MapFragment extends Fragment {
 	private final Map<String, Item> items = Maps.newHashMap();
 	private MapView mapView;
 
+	@Inject
+	LocationService locationService;
+
+	@Inject
+	LogService logService;
+
+	@Nullable
 	private FriendLocationObserver observer;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRetainInstance(true);
+
+		Injector.applicationComponent().inject(this);
 	}
 
 	@Override
@@ -90,17 +102,20 @@ public class MapFragment extends Fragment {
 			@Override
 			public void onMapReady(GoogleMap googleMap) {
 				log.info("map ready in {}ms", uptimeSw.ms());
-				Application.getEventLogger("mapReady")
+				logService.getEventLogger("mapReady")
 					.param("ms", uptimeSw.ms())
 					.send();
 
 				map = googleMap;
 				map.getUiSettings().setMyLocationButtonEnabled(true);
 
-				if (Application.hasLocationPermission()) {
-					//noinspection MissingPermission
-					map.setMyLocationEnabled(true);
-					//map.setOnMyLocationChangeListener(new MyLocationChangeListener());
+				Activity activity = getActivity();
+				if (activity != null) {
+					if (Application.hasLocationPermission(activity)) {
+						//noinspection MissingPermission
+						map.setMyLocationEnabled(true);
+						//map.setOnMyLocationChangeListener(new MyLocationChangeListener());
+					}
 				}
 			}
 		});
@@ -121,7 +136,7 @@ public class MapFragment extends Fragment {
 		super.onResume();
 		mapView.onResume();
 
-		observer = Application.getLocationService()
+		observer = locationService
 			.getLocationUpdates()
 			.subscribeOn(AndroidSchedulers.mainThread())
 			.observeOn(AndroidSchedulers.mainThread())
@@ -227,9 +242,7 @@ public class MapFragment extends Fragment {
 			item.circle.setRadius(location.getAcc());
 		}
 
-		//noinspection deprecation the recommended fix doesn't work for API < 24.
-		Locale locale = Application.getConfiguration().locale;
-		DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM, locale);
+		DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM, Application.getLocale());
 
 		DateTime when = location.getWhen();
 		String timeFormatted = timeFormat.format(when.toDate());

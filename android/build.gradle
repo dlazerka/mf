@@ -253,8 +253,18 @@ android {
 
 dependencies {
     def playServicesVersion = '11.4.0'
+    def daggerVersion = '2.11'
 
     compile project(':api')
+
+    compile "com.google.dagger:dagger:$daggerVersion"
+    annotationProcessor "com.google.dagger:dagger-compiler:2.11"
+    provided 'javax.annotation:jsr250-api:1.0'
+//  If you're using classes in dagger.android you'll also want to include:
+    compile "com.google.dagger:dagger-android:$daggerVersion"
+//    compile "com.google.dagger:dagger-android-support:$daggerVersion" // if you use the support libraries
+    annotationProcessor "com.google.dagger:dagger-android-processor:$daggerVersion"
+
     compile "com.google.firebase:firebase-auth:$playServicesVersion"
     compile "com.google.android.gms:play-services-auth:$playServicesVersion"
     compile "com.google.firebase:firebase-messaging:$playServicesVersion"

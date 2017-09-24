@@ -16,29 +16,24 @@
  *
  */
 
-package me.lazerka.mf.android.background;
+package me.lazerka.mf.android.di;
 
-/**
- * @author Dzmitry Lazerka
- */
-/*
-public class BootReceiver extends WakefulBroadcastReceiver {
-	private static final Logger logger = LogService.getLogger(BootReceiver.class);
+import me.lazerka.mf.android.Application;
 
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		logger.info("onReceive");
+public class Injector {
 
-		checkArgument(intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED));
+	private static ApplicationComponent applicationComponent;
 
-		// Renew GCM token.
-		//intent.setComponent(new ComponentName(context, GcmRegisterIntentService.class));
-		//startWakefulService(context, intent);
+	public static void initialize(Application application) {
+		applicationComponent = DaggerApplicationComponent.builder()
+				.applicationModule(new ApplicationModule(application))
+				.build();
+	}
 
-		//Intent locationRequestHandler = new Intent(context, LocationRequestHandler.class);
-		//context.startService(locationRequestHandler);
+	public static ApplicationComponent applicationComponent() {
+		return applicationComponent;
+	}
 
-		setResultCode(Activity.RESULT_OK);
+	private Injector() {
 	}
 }
-*/

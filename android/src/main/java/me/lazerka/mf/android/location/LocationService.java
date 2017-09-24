@@ -18,20 +18,9 @@
 
 package me.lazerka.mf.android.location;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.BigTextStyle;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.common.collect.ImmutableMap;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
@@ -39,30 +28,16 @@ import com.google.firebase.messaging.RemoteMessage.Builder;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
 import me.lazerka.mf.android.Application;
-import me.lazerka.mf.android.R;
-import me.lazerka.mf.android.activity.MainActivity;
 import me.lazerka.mf.android.adapter.PersonInfo;
-import me.lazerka.mf.android.background.ApiPost;
-import me.lazerka.mf.android.background.location.LocationRequestHandler;
-import me.lazerka.mf.api.EmailNormalized;
+import me.lazerka.mf.android.contacts.FriendsManager;
+import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.object.LocationRequest2;
-import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
 import me.lazerka.mf.api.object.UserFindId;
-import okhttp3.Call;
-import okhttp3.Callback;
-import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
-import static android.content.Context.MODE_PRIVATE;
+import javax.inject.Inject;
 
 /**
  * Handles location-related things.
@@ -71,56 +46,56 @@ import static android.content.Context.MODE_PRIVATE;
  */
 public class LocationService {
 	private static final Logger log = LogService.getLogger(LocationService.class);
-	private static final String TOPICS_SUBSCRIBED = "topicsSubscribed";
 
 	public static final int TRACKING_NOTIFICATION_ID = 4321;
 	public static final int FORBIDDEN_NOTIFICATION_ID = 4322;
 
-	private final Context context;
-	private final SharedPreferences preferences;
-	private final LocationRequestHandler locationRequestHandler;
+	//private final LocationRequestHandler locationRequestHandler;
 
 	private final BehaviorSubject<FriendLocationResponse> locationUpdates = BehaviorSubject.create();
 	private final FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
 
-	public LocationService(Context context) {
-		this.context = context;
-		this.preferences = context.getSharedPreferences(context.getString(R.string.preferences_file_friends),
-				MODE_PRIVATE);
-		this.locationRequestHandler = new LocationRequestHandler(context);
+	@Inject
+	FriendsManager friendsManager;
+
+	public LocationService() {
+
+		Injector.applicationComponent().inject(this);
+
+		//this.locationRequestHandler = new LocationRequestHandler(context);
 	}
 
 	/**
 	 * @return "769083712074"
 	 */
-	String getDefaultSenderId() {
-		return context.getString(R.string.gcm_defaultSenderId);
-	}
+	//String getDefaultSenderId() {
+		//return context.getString(R.string.gcm_defaultSenderId);
+	//}
 
 	public Observable<FriendLocationResponse> getLocationUpdates() {
 		return locationUpdates;
 	}
 
-	public void requestLocationUpdates(
-			GoogleSignInAccount account,
-			PersonInfo to,
-			Duration duration,
-			Callback locationRequestCallback
-	) throws NoEmailsException
-	{
-		LocationRequest2 locationRequest = buildLocationRequest(to, duration);
-
-		Call call = new ApiPost(locationRequest).newCall(account);
-		call.enqueue(locationRequestCallback);
-
-		String topic = locationRequest.getUpdatesTopic();
-		firebaseMessaging.subscribeToTopic(topic);
-
-		// DEBUG
-		//log.info("Subscribing to {}", topic);
-
-		saveToSharedPreferences(topic);
-	}
+	//public void requestLocationUpdates(
+	//		GoogleSignInAccount account,
+	//		PersonInfo to,
+	//		Duration duration,
+	//		Callback locationRequestCallback
+	//) throws NoEmailsException
+	//{
+	//	LocationRequest2 locationRequest = buildLocationRequest(to, duration);
+	//
+	//	Call call = new ApiPost(locationRequest).newCall(account);
+	//	call.enqueue(locationRequestCallback);
+	//
+	//	String topic = locationRequest.getUpdatesTopic();
+	//	firebaseMessaging.subscribeToTopic(topic);
+	//
+	//	// DEBUG
+	//	//log.info("Subscribing to {}", topic);
+	//
+	//	saveToSharedPreferences(topic);
+	//}
 
 	LocationRequest2 buildLocationRequest(
 			PersonInfo to,
@@ -140,95 +115,94 @@ public class LocationService {
 				duration);
 	}
 
-	public void handleRequest(
-			LocationRequestFromServer locationRequest,
-			String gcmMessageFrom,
-			DateTime gcmSentAt
-	) {
-		if (!gcmMessageFrom.equals(getDefaultSenderId())) {
-			String msg = "GCM message from unknown sender rejected: " + gcmMessageFrom;
-			log.error(msg);
-			return;
-		}
+	//public void handleRequest(
+	//		LocationRequestFromServer locationRequest,
+	//		String gcmMessageFrom,
+	//		DateTime gcmSentAt
+	//) {
+	//	if (!gcmMessageFrom.equals(getDefaultSenderId())) {
+	//		String msg = "GCM message from unknown sender rejected: " + gcmMessageFrom;
+	//		log.error(msg);
+	//		return;
+	//	}
+	//
+	//	String requesterEmail = locationRequest.getRequesterEmail();
+	//	log.info("Received location request from " + requesterEmail);
+	//
+	//	// Authorize request.
+	//	PersonInfo friend = authorizeRequest(requesterEmail);
+	//
+	//	// TODO: if no such user in friends, we may still want to show a confirmation popup to user,
+	//	// so they could authorize a verified email even if it's not friended yet.
+	//
+	//	if (friend != null) {
+	//		locationRequestHandler.processAuthorizedRequest(locationRequest, friend);
+	//	} else {
+	//
+	//		LocationResponse locationResponse = LocationResponse.denied();
+	//
+	//		sendLocationUpdate(locationResponse, locationRequest.getUpdatesTopic());
+	//
+	//		// TODO add setting "Ignore requests from non-friends to prevent spamming".
+	//		showForbiddenNotification(requesterEmail);
+	//	}
+	//}
 
-		String requesterEmail = locationRequest.getRequesterEmail();
-		log.info("Received location request from " + requesterEmail);
+	//private PersonInfo authorizeRequest(String requesterEmail) {
+	//	List<PersonInfo> friends;
+	//
+	//	try {
+	//		Future<List<PersonInfo>> future = friendsManager.getFriends();
+	//
+	//		friends = future.get();
+	//	} catch (InterruptedException | ExecutionException e) {
+	//		log.error(e);
+	//		return null;
+	//	}
+	//
+	//	for(PersonInfo friend : friends) {
+	//		if (friend.emails.contains(requesterEmail)) {
+	//			return friend;
+	//		}
+	//
+	//		for(String friendEmail : friend.emails) {
+	//			EmailNormalized normalized = EmailNormalized.normalizeEmail(friendEmail);
+	//			if (normalized.getEmail().equals(requesterEmail)) {
+	//				return friend;
+	//			}
+	//		}
+	//	}
+	//
+	//	log.warn("Requester not in friends list, rejecting " + requesterEmail);
+	//
+	//	return null;
+	//}
+	//
+	//private void showForbiddenNotification(String requesterEmail) {
+	//	String message = context.getString(R.string.requester_not_in_friends, requesterEmail);
+	//	Notification notification = getNotificationBuilder(message)
+	//			.setAutoCancel(true)
+	//			.build();
+	//
+	//	NotificationManager notificationManager =
+	//			(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+	//	notificationManager.notify(requesterEmail, FORBIDDEN_NOTIFICATION_ID, notification);
+	//}
 
-		// Authorize request.
-		PersonInfo friend = authorizeRequest(requesterEmail);
-
-		// TODO: if no such user in friends, we may still want to show a confirmation popup to user,
-		// so they could authorize a verified email even if it's not friended yet.
-
-		if (friend != null) {
-			locationRequestHandler.processAuthorizedRequest(locationRequest, friend);
-		} else {
-
-			LocationResponse locationResponse = LocationResponse.denied();
-
-			sendLocationUpdate(locationResponse, locationRequest.getUpdatesTopic());
-
-			// TODO add setting "Ignore requests from non-friends to prevent spamming".
-			showForbiddenNotification(requesterEmail);
-		}
-	}
-
-	private PersonInfo authorizeRequest(String requesterEmail) {
-		List<PersonInfo> friends;
-
-		try {
-			Future<List<PersonInfo>> future =
-					Application.getFriendsManager().getFriends();
-
-			friends = future.get();
-		} catch (InterruptedException | ExecutionException e) {
-			log.error(e);
-			return null;
-		}
-
-		for(PersonInfo friend : friends) {
-			if (friend.emails.contains(requesterEmail)) {
-				return friend;
-			}
-
-			for(String friendEmail : friend.emails) {
-				EmailNormalized normalized = EmailNormalized.normalizeEmail(friendEmail);
-				if (normalized.getEmail().equals(requesterEmail)) {
-					return friend;
-				}
-			}
-		}
-
-		log.warn("Requester not in friends list, rejecting " + requesterEmail);
-
-		return null;
-	}
-
-	private void showForbiddenNotification(String requesterEmail) {
-		String message = context.getString(R.string.requester_not_in_friends, requesterEmail);
-		Notification notification = getNotificationBuilder(message)
-				.setAutoCancel(true)
-				.build();
-
-		NotificationManager notificationManager =
-				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.notify(requesterEmail, FORBIDDEN_NOTIFICATION_ID, notification);
-	}
-
-	private NotificationCompat.Builder getNotificationBuilder(String message) {
-		Intent intent = new Intent(context, MainActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-
-		Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-		return new NotificationCompat.Builder(context)
-				.setSmallIcon(R.mipmap.ic_launcher)
-				.setContentTitle(context.getString(R.string.app_name))
-				.setStyle(new BigTextStyle().bigText(message))
-				.setSound(defaultSoundUri)
-				.setContentText(message)
-				.setContentIntent(pendingIntent);
-	}
+	//private NotificationCompat.Builder getNotificationBuilder(String message) {
+	//	Intent intent = new Intent(context, MainActivity.class);
+	//	intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+	//	PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+	//
+	//	Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+	//	return new NotificationCompat.Builder(context)
+	//			.setSmallIcon(R.mipmap.ic_launcher)
+	//			.setContentTitle(context.getString(R.string.app_name))
+	//			.setStyle(new BigTextStyle().bigText(message))
+	//			.setSound(defaultSoundUri)
+	//			.setContentText(message)
+	//			.setContentIntent(pendingIntent);
+	//}
 
 	public void sendLocationUpdate(LocationResponse locationResponse, String topic) {
 		String json;
@@ -270,49 +244,12 @@ public class LocationService {
 		if (response.getLocation() != null) {
 			TopicName topicName = TopicName.parse(topicFrom);
 
-			PersonInfo senderContact = Application.getFriendsManager().getFriend(topicName.getFriendLookupKey());
+			PersonInfo senderContact = friendsManager.getFriend(topicName.getFriendLookupKey());
 
 			FriendLocationResponse friendLocationResponse = new FriendLocationResponse(senderContact, response);
 			locationUpdates.onNext(friendLocationResponse);
 		}
 	}
-
-	private boolean saveToSharedPreferences(String topic) {
-		// Remember all the topics we listen to, to clean up later.
-		synchronized (preferences) {
-			// Clone, otherwise value won't be set.
-			Set<String> set = new LinkedHashSet<>(preferences.getStringSet(TOPICS_SUBSCRIBED, new HashSet<>(1)));
-
-			boolean changed = set.add(topic);
-			if (!changed) {
-				log.warn("Already subscribed to topic");
-				return true;
-			}
-			preferences.edit()
-					.putStringSet(TOPICS_SUBSCRIBED, set)
-					.apply();
-		}
-		return false;
-	}
-
-	private boolean removeFromSharedPreferences(String topic) {
-		// Remember all the topics we listen to, to clean up later.
-		synchronized (preferences) {
-			// Clone, otherwise value won't be set.
-			Set<String> set = new LinkedHashSet<>(preferences.getStringSet(TOPICS_SUBSCRIBED, new HashSet<>(0)));
-
-			boolean changed = set.remove(topic);
-			if (!changed) {
-				log.warn("Already unsubscribed from topic");
-				return true;
-			}
-			preferences.edit()
-					.putStringSet(TOPICS_SUBSCRIBED, set)
-					.apply();
-		}
-		return false;
-	}
-
 
 	public static class NoEmailsException extends Exception {
 	}

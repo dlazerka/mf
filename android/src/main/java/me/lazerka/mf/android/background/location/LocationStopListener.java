@@ -28,9 +28,12 @@ import android.location.LocationManager;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.di.Injector;
+import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
@@ -50,6 +53,9 @@ public class LocationStopListener extends IntentService {
 	private static final String NOTIFICATION_ID = "NOTIFICATION_ID";
 	private static final String NOTIFICATION_TAG = "NOTIFICATION_TAG";
 
+	@Inject
+	LocationService locationService;
+
 	public static Intent makeIntent(
 			Context context,
 			Intent listenerToStop,
@@ -67,6 +73,7 @@ public class LocationStopListener extends IntentService {
 
 	public LocationStopListener() {
 		super(LocationStopListener.class.getSimpleName());
+		Injector.applicationComponent().inject(this);
 	}
 
 	@Override
@@ -108,7 +115,7 @@ public class LocationStopListener extends IntentService {
 		try {
 			LocationRequestFromServer originalRequest =
 					Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
-			Application.getLocationService()
+			locationService
 					.sendLocationUpdate(LocationResponse.complete(), originalRequest.getUpdatesTopic());
 		} catch (IOException e) {
 			log.error(e);

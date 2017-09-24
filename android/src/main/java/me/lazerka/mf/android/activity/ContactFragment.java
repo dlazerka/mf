@@ -19,7 +19,6 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -32,13 +31,13 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
-import com.baraded.mf.logging.LogService;
-import com.baraded.mf.logging.Logger;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendViewHolder;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.contacts.FriendsManager;
 import org.joda.time.Duration;
+
+import javax.inject.Inject;
 
 import static android.provider.ContactsContract.QuickContact.MODE_LARGE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -48,10 +47,15 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Dzmitry Lazerka
  * TODO: add null activity handling
  */
-public class ContactFragment extends Fragment {
-	private static final Logger logger = LogService.getLogger(ContactFragment.class);
+public class ContactFragment extends InjectedFragment {
 
 	private static final String PERSON_INFO = "PERSON_INFO";
+
+	//@Inject
+	//DispatchingAndroidInjector<Fragment> fragmentInjector;
+
+	@Inject
+	FriendsManager friendsManager;
 
 	private PersonInfo personInfo;
 	private int[] durationValues;
@@ -100,7 +104,7 @@ public class ContactFragment extends Fragment {
 						.setPositiveButton(R.string.remove, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								Application.getFriendsManager().removeFriend(personInfo.lookupUri);
+								friendsManager.removeFriend(personInfo.lookupUri);
 								getFragmentManager().popBackStack();
 							}
 						})

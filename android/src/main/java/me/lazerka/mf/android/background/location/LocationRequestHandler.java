@@ -33,7 +33,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
-import android.util.Log;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,7 +40,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
-import com.google.firebase.crash.FirebaseCrash;
 import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.activity.MainActivity;
@@ -181,7 +179,7 @@ public class LocationRequestHandler {
 
 		try {
 
-			if (!Application.hasLocationPermission()) {
+			if (!Application.hasLocationPermission(context)) {
 				log.warn("No location permission");
 				return;
 			}
@@ -241,7 +239,7 @@ public class LocationRequestHandler {
 	private void sendLastKnownLocation(
 			LocationRequestFromServer gcmRequest
 	) {
-		if (!Application.hasLocationPermission()) {
+		if (!Application.hasLocationPermission(context)) {
 			log.warn("No location permission");
 			return;
 		}
@@ -249,6 +247,7 @@ public class LocationRequestHandler {
 		GoogleApiClient apiClient = getGoogleApiClient();
 
 		//noinspection MissingPermission
+		@SuppressLint("MissingPermission")
 		android.location.Location lastLocation = FusedLocationApi.getLastLocation(apiClient);
 		if (lastLocation != null) {
 			Intent intent = getLocationListenerIntent(gcmRequest);

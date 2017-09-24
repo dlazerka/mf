@@ -18,12 +18,8 @@
 
 package me.lazerka.mf.android;
 
-import android.content.SharedPreferences;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Debug;
 import android.support.multidex.MultiDexApplication;
@@ -33,17 +29,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.google.firebase.analytics.FirebaseAnalytics;
-import me.lazerka.mf.android.activity.EventLogger;
-import me.lazerka.mf.android.contacts.FriendsManager;
-import me.lazerka.mf.android.location.LocationService;
+import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.api.JsonMapper;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-import static com.google.common.base.Preconditions.checkState;
 
 /**b
  * Extension of {@link android.app.Application}.
@@ -52,7 +45,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 
 public class Application extends MultiDexApplication {
-	private static final Logger logger = LogService.getLogger(Application.class);
+	private static final Logger log = LogService.getLogger(Application.class);
 
 	/**
 	 * Shared static instance, as it's a little expensive to create a new one each time.
@@ -61,53 +54,44 @@ public class Application extends MultiDexApplication {
 
 	public static GcmManager gcmManager;
 
-	private static Application context;
-
-	private static SharedPreferences friendsSharedPreferences;
-	private static FriendsManager friendsManager;
-
-	private static LocationService locationService;
+	private static Locale locale;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		context = this;
+		//context = this;
+
+		injectDependencies();
 
 		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
 		gcmManager = new GcmManager(getSharedPreferences(preferencesFileGcm, MODE_PRIVATE));
 
-		friendsSharedPreferences = getSharedPreferences(getString(R.string.preferences_file_friends), MODE_PRIVATE);
+		locale = getResources().getConfiguration().locale;
+		//friendsSharedPreferences = getSharedPreferences(getString(R.string.preferences_file_friends), MODE_PRIVATE);
 	}
 
-	public static Configuration getConfiguration() {
-		return context.getResources().getConfiguration();
+	public static Locale getLocale() {
+		return locale;
 	}
 
-	private static void checkContext() {
-		checkState(context != null, "app not created yet");
-	}
+	private void injectDependencies() {
+		Injector.initialize(this);
+		Injector.applicationComponent().inject(this);
+    }
 
-	public static FriendsManager getFriendsManager() {
-		if (friendsManager == null) {
-			checkContext();
-			if (friendsSharedPreferences == null) {
-				throw new IllegalStateException("app not created yet");
-			}
-
-			friendsManager = new FriendsManager(friendsSharedPreferences, context);
-		}
-
-		return friendsManager;
-	}
-
-	public static FirebaseAnalytics getFirebaseAnalytics() {
-		return FirebaseAnalytics.getInstance(context);
-	}
-
-	public static EventLogger getEventLogger(String eventName) {
-		return new EventLogger(eventName, getFirebaseAnalytics());
-	}
+	//public static FriendsManager getFriendsManager() {
+	//	if (friendsManager == null) {
+	//		checkContext();
+	//		if (friendsSharedPreferences == null) {
+	//			throw new IllegalStateException("app not created yet");
+	//		}
+	//
+	//		friendsManager = new FriendsManager(friendsSharedPreferences, context);
+	//	}
+	//
+	//	return friendsManager;
+	//}
 
 	private static boolean isInsideEmulator() {
 		return Build.DEVICE.startsWith("generic");
@@ -128,7 +112,7 @@ public class Application extends MultiDexApplication {
 				) throws IOException
 				{
 					String msg = "Unknown property `" + propertyName + "` in " + beanOrClass;
-					logger.warn(msg);
+					log.warn(msg);
 					jsonParser.skipChildren();
 					return true;
 				}
@@ -139,14 +123,6 @@ public class Application extends MultiDexApplication {
 		return jsonMapper;
 	}
 
-	public static LocationService getLocationService() {
-		if (locationService == null) {
-			checkContext();
-			locationService = new LocationService(context);
-		}
-		return locationService;
-	}
-
 	private boolean isDebugRun() {
 		return Debug.isDebuggerConnected();
 	}
@@ -155,22 +131,8 @@ public class Application extends MultiDexApplication {
 		return ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) > 0);
 	}
 
-	/**
-	 * @return Application's version code from the {@code PackageManager}.
-	 */
-	public static int getVersion() {
-		String packageName = context.getPackageName();
-		PackageManager packageManager = context.getPackageManager();
-		try {
-			PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-			return packageInfo.versionCode;
-		} catch (NameNotFoundException e) {
-			// should never happen
-			throw new RuntimeException("Could not get package name: " + e);
-		}
-	}
 
-	public static boolean hasLocationPermission() {
+	public static boolean hasLocationPermission(Context context) {
 		return PermissionAsker.hasPermission(ACCESS_FINE_LOCATION, context)
 				|| PermissionAsker.hasPermission(ACCESS_COARSE_LOCATION, context);
 	}

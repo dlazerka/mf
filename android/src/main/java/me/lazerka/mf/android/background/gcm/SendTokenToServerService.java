@@ -20,19 +20,20 @@ package me.lazerka.mf.android.background.gcm;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.iid.FirebaseInstanceId;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.auth.GoogleSignInException;
 import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.api.object.GcmToken;
 import okhttp3.Call;
 import okhttp3.Response;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
@@ -49,8 +50,12 @@ import static com.google.android.gms.common.api.CommonStatusCodes.SIGN_IN_REQUIR
 public class SendTokenToServerService extends IntentService {
 	private static final Logger log = LogService.getLogger(SendTokenToServerService.class);
 
+	@Inject
+	PackageInfo packageInfo;
+
 	public SendTokenToServerService() {
 		super(SendTokenToServerService.class.getSimpleName());
+		Injector.applicationComponent().inject(this);
 	}
 
 	@Override
@@ -65,7 +70,7 @@ public class SendTokenToServerService extends IntentService {
 				return;
 			}
 
-			GcmToken content = new GcmToken(gcmToken, Application.getVersion());
+			GcmToken content = new GcmToken(gcmToken, packageInfo.versionCode);
 			ApiPost apiPost = new ApiPost(content);
 			Call call = apiPost.newCall(signInAccount);
 			Response response = call.execute();

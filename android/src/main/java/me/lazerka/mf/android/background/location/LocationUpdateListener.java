@@ -26,11 +26,14 @@ import com.baraded.mf.logging.Logger;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationResult;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.di.Injector;
+import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.object.Location;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
 import me.lazerka.mf.api.object.LocationResponse;
 import org.joda.time.DateTime;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -46,8 +49,13 @@ public class LocationUpdateListener extends IntentService {
 
 	static final String EXTRA_GCM_REQUEST = "gcmRequest";
 
+	@Inject
+	LocationService locationService;
+
 	public LocationUpdateListener() {
 		super(LocationUpdateListener.class.getSimpleName());
+
+		Injector.applicationComponent().inject(this);
 	}
 
 	@Override
@@ -95,7 +103,7 @@ public class LocationUpdateListener extends IntentService {
 				);
 
 				LocationResponse locationResponse = new LocationResponse(locationBean, gcmRequest.getDuration());
-				Application.getLocationService().sendLocationUpdate(
+				locationService.sendLocationUpdate(
 						locationResponse,
 						gcmRequest.getUpdatesTopic()
 				);

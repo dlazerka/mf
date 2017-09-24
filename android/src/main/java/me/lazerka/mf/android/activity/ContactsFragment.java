@@ -19,7 +19,6 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,12 +34,14 @@ import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.PersonInfo;
+import me.lazerka.mf.android.contacts.FriendsManager;
+import me.lazerka.mf.android.di.Injector;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -49,11 +50,17 @@ import static android.Manifest.permission.READ_CONTACTS;
  * @author Dzmitry Lazerka
  * TODO: add null activity handling
  */
-public class ContactsFragment extends Fragment {
+public class ContactsFragment extends InjectedFragment {
 	private static final Logger logger = LogService.getLogger(ContactsFragment.class);
 
 	/** Result code of ContactPicker dialog. */
-	private final int RC_CONTACT_PICKER = 1;
+	private static final int RC_CONTACT_PICKER = 1;
+
+	@Inject
+	FriendsManager friendsManager;
+
+	@Inject
+	LogService logService;
 
 	private FriendListAdapter friendListAdapter;
 
@@ -61,9 +68,12 @@ public class ContactsFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		Injector.applicationComponent().inject(this);
+
 		friendListAdapter = new FriendListAdapter(
 				new OnItemClickListener(),
 				new OnAddFriendClickListener());
+
 	}
 
 	@Nullable
@@ -89,7 +99,7 @@ public class ContactsFragment extends Fragment {
 		recyclerView.setHasFixedSize(true);
 		recyclerView.setAdapter(friendListAdapter);
 
-		Application.getFriendsManager()
+		friendsManager
 				.watchFriends()
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(new DisposableObserver<List<PersonInfo>>() {
@@ -150,10 +160,10 @@ public class ContactsFragment extends Fragment {
 			Uri contactUri = data.getData();
 			logger.info("Adding friend: " + contactUri);
 
-			Application.getFriendsManager()
+			friendsManager
 				.addFriend(contactUri);
 
-			Application.getEventLogger("friend_added").send();
+			logService.getEventLogger("friend_added").send();
 		}
 	}
 
@@ -164,7 +174,7 @@ public class ContactsFragment extends Fragment {
 	private class OnAddFriendClickListener implements OnClickListener {
 		@Override
 		public void onClick(View v) {
-			Application.getEventLogger("friend_add_clicked").send();
+			logService.getEventLogger("friend_add_clicked").send();
 
 			getMainActivity().permissionAsker.checkAndRun(
 					READ_CONTACTS,
@@ -179,7 +189,7 @@ public class ContactsFragment extends Fragment {
 						@Override
 						public void run() {
 							logger.warn("ContactsFragment: addFriend READ_CONTACTS permission declined");
-							Application.getEventLogger("READ_CONTACTS_declined").send();
+							logService.getEventLogger("READ_CONTACTS_declined").send();
 						}
 					}
 			);

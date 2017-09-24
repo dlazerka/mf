@@ -20,9 +20,13 @@ package me.lazerka.mf.android;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.support.annotation.WorkerThread;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
+import me.lazerka.mf.android.di.Injector;
+
+import javax.inject.Inject;
 
 
 /**
@@ -36,9 +40,14 @@ public class GcmManager {
 
 	private final SharedPreferences sharedPreferences;
 
+	@Inject
+	PackageInfo packageInfo;
+
 	public GcmManager(SharedPreferences sharedPreferences) {
 		// Same file name as RoboGuice default.
 		this.sharedPreferences = sharedPreferences;
+
+		Injector.applicationComponent().inject(this);
 	}
 
 	/**
@@ -51,7 +60,7 @@ public class GcmManager {
 		logger.info("setGcmTokenSent()");
 		sharedPreferences.edit()
 				.putLong(GCM_TOKEN_SENT_AT, System.currentTimeMillis())
-				.putInt(GCM_APP_VERSION, Application.getVersion())
+				.putInt(GCM_APP_VERSION, packageInfo.versionCode)
 				.apply();
 	}
 
