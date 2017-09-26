@@ -27,14 +27,13 @@ import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.NonNull;
-import com.baraded.mf.Sw;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
+import com.baraded.mf.Sw;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
-import com.google.firebase.crash.FirebaseCrash;
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -145,7 +144,7 @@ public class FriendsManager {
 		logger.info("addFriend {}", id);
 		synchronized (this) {
 			// Clone, otherwise value won't be set.
-			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<>(1)));
+			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<String>(1)));
 
 			boolean changed = friends.add(id);
 			if (!changed) {
@@ -171,7 +170,7 @@ public class FriendsManager {
 		logger.info("removeFriend {}", id);
 		synchronized (this) {
 			// Clone, otherwise value won't be set.
-			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<>(0)));
+			Set<String> friends = new LinkedHashSet<>(preferences.getStringSet(KEY, new HashSet<String>(0)));
 			boolean changed = friends.remove(id);
 			if (!changed) {
 				logger.warn("Trying to remove nonexistent friend {}", id);

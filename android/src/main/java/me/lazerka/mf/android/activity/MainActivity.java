@@ -56,7 +56,7 @@ public class MainActivity extends Activity {
 
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
-					// replace(), not add, because this is called
+					// replace(), not add, because this is called multiple times
 					.replace(R.id.bottom_fragment_container, new ContactsFragment())
 					.commit();
 		}

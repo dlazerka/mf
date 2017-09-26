@@ -43,27 +43,24 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 
 	private final List<PersonInfo> data = new ArrayList<>();
 	private final OnFriendClickListener onFriendClickListener;
-	private final OnClickListener onAddFriendClickListener;
 
 	public FriendListAdapter(
-			OnFriendClickListener onFriendClickListener,
-			OnClickListener onAddFriendClickListener
+			OnFriendClickListener onFriendClickListener
 	) {
 		super();
 		this.onFriendClickListener = checkNotNull(onFriendClickListener);
-		this.onAddFriendClickListener = checkNotNull(onAddFriendClickListener);
 	}
 
 	@Override
 	public int getItemViewType(int position) {
-		if (data.size() > position) {
+		//if (data.size() > position) {
 			return R.layout.view_contact;
-		} else if (data.size() == position) {
-			return R.layout.view_add_contact;
-		} else {
-			logger.error("Illegal item position: {} vs {}", position, getItemCount());
-			return 0;
-		}
+		//} else if (data.size() == position) {
+		//	return R.layout.view_add_contact;
+		//} else {
+		//	logger.error("Illegal item position: {} vs {}", position, getItemCount());
+		//	return 0;
+		//}
 	}
 
 	@Override
@@ -79,7 +76,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 
 	@Override
 	public void onBindViewHolder(ViewHolder holder, int position) {
-		if (data.size() > position) {
+		//if (data.size() > position) {
 			FriendViewHolder friendViewHolder;
 			try {
 				friendViewHolder = (FriendViewHolder) holder;
@@ -90,12 +87,12 @@ public class FriendListAdapter extends RecyclerView.Adapter<ViewHolder> {
 
 			PersonInfo personInfo = data.get(position);
 			friendViewHolder.bindFriend(personInfo, new OnItemClickListener(personInfo));
-		} else if (data.size() == position) {
-			// This is add button.
-			((AddFriendViewHolder) holder).bind(onAddFriendClickListener);
-		} else {
-			logger.error("Illegal item position: {} vs {}", position, getItemCount());
-		}
+		//} else if (data.size() == position) {
+		//	 This is add button.
+			//((AddFriendViewHolder) holder).bind(onAddFriendClickListener);
+		//} else {
+		//	logger.error("Illegal item position: {} vs {}", position, getItemCount());
+		//}
 	}
 
 	@Override

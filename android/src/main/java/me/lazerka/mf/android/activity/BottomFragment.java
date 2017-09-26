@@ -18,12 +18,18 @@
 
 package me.lazerka.mf.android.activity;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract.Contacts;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
@@ -39,14 +45,14 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * @author Dzmitry Lazerka
  * TODO: add null activity handling
  */
-public class ContactsFragment extends InjectedFragment {
-	private static final Logger logger = LogService.getLogger(ContactsFragment.class);
+public class BottomFragment extends InjectedFragment {
+	private static final Logger logger = LogService.getLogger(BottomFragment.class);
 
 	/** Result code of ContactPicker dialog. */
 	private static final int RC_CONTACT_PICKER = 1;
@@ -57,6 +63,9 @@ public class ContactsFragment extends InjectedFragment {
 	@Inject
 	LogService logService;
 
+	private final OnClickListener onFriendAddClickListener = new OnAddFriendClickListener();
+	private final OnFriendClickListener onFriendClickListener = new OnFriendClickListener();
+
 	private FriendListAdapter friendListAdapter;
 
 	@Override
@@ -65,11 +74,7 @@ public class ContactsFragment extends InjectedFragment {
 
 		Injector.applicationComponent().inject(this);
 
-		friendListAdapter = new FriendListAdapter(
-				new OnItemClickListener()
-				//new OnAddFriendClickListener()
-				);
-
+		friendListAdapter = new FriendListAdapter(onFriendClickListener);
 	}
 
 	@Nullable
@@ -77,7 +82,10 @@ public class ContactsFragment extends InjectedFragment {
 	public View onCreateView(
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
 	) {
-		View view = inflater.inflate(R.layout.fragment_contacts, container, false);
+		View view = inflater.inflate(R.layout.fragment_bottom, container, false);
+		Button addFriendButton = (Button) view.findViewById(R.id.fab_add);
+
+		addFriendButton.setOnClickListener(onFriendAddClickListener);
 
 		initList(view);
 
@@ -85,7 +93,7 @@ public class ContactsFragment extends InjectedFragment {
 	}
 
 	private void initList(View view) {
-		RecyclerView recyclerView = (RecyclerView) checkNotNull(view.findViewById(R.id.contacts_list));
+		RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.contacts_list);
 
 		LinearLayoutManager layoutManager
 			= new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
@@ -127,7 +135,7 @@ public class ContactsFragment extends InjectedFragment {
 		friendListAdapter.notifyDataSetChanged();
 	}
 
-	private class OnItemClickListener implements FriendListAdapter.OnFriendClickListener {
+	private class OnFriendClickListener implements FriendListAdapter.OnFriendClickListener {
 		@Override
 		public void onClick(PersonInfo personInfo) {
 			ContactFragment fragment = new ContactFragment();
@@ -142,6 +150,53 @@ public class ContactsFragment extends InjectedFragment {
 					.replace(R.id.bottom_fragment_container, fragment)
 					.addToBackStack("ContactsFragment")
 					.commit();
+		}
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode != RC_CONTACT_PICKER) {
+			logger.warn("Unknown request code: " + requestCode);
+			super.onActivityResult(requestCode, resultCode, data);
+		}
+
+		if (resultCode == Activity.RESULT_OK) {
+			Uri contactUri = data.getData();
+			logger.info("Adding friend: " + contactUri);
+
+			friendsManager
+				.addFriend(contactUri);
+
+			logService.getEventLogger("friend_added").send();
+		}
+	}
+
+	public MainActivity getMainActivity() {
+		return (MainActivity) getActivity();
+	}
+
+	private class OnAddFriendClickListener implements OnClickListener {
+		@Override
+		public void onClick(View v) {
+			logService.getEventLogger("friend_add_clicked").send();
+
+			getMainActivity().permissionAsker.checkAndRun(
+					READ_CONTACTS,
+					new Runnable() {
+						@Override
+						public void run() {
+							Intent contactPickerIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+							startActivityForResult(contactPickerIntent, RC_CONTACT_PICKER);
+						}
+					},
+					new Runnable() {
+						@Override
+						public void run() {
+							logger.warn("ContactsFragment: addFriend READ_CONTACTS permission declined");
+							logService.getEventLogger("READ_CONTACTS_declined").send();
+						}
+					}
+			);
 		}
 	}
 }

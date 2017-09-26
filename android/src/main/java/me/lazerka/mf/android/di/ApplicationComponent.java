@@ -40,6 +40,7 @@ public interface ApplicationComponent {
     void inject(MainActivity obj);
 	void inject(LoginActivity loginActivity);
     void inject(ContactsFragment obj);
+    void inject(BottomFragment obj);
     void inject(ContactFragment obj);
     void inject(MapFragment obj);
 	void inject(GcmReceiveService obj);

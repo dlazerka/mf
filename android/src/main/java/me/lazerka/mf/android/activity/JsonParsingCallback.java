@@ -109,7 +109,7 @@ public abstract class JsonParsingCallback<R> implements Callback {
 
 	@WorkerThread
 	@Override
-	public void onFailure(@NonNull Call call, @NonNull IOException e) {
+	public void onFailure(@NonNull final Call call, @NonNull final IOException e) {
 		activity.runOnUiThread(
 				new Runnable() {
 					@Override
