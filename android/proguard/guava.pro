@@ -25,3 +25,13 @@
 -keep class com.google.common.cache.LocalCache$ReferenceEntry
 
 -dontwarn sun.misc.Unsafe
+
+# http://stackoverflow.com/questions/9120338/proguard-configuration-for-guava-with-obfuscation-and-optimization
+-dontwarn javax.annotation.**
+-dontwarn javax.inject.**
+-dontwarn sun.misc.Unsafe
+
+# Guava 19.0
+-dontwarn java.lang.ClassValue
+-dontwarn com.google.j2objc.annotations.Weak
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
