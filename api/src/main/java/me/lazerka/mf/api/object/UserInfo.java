@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.api.Util.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka

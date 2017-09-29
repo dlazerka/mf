@@ -22,14 +22,15 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
+import com.baraded.mf.io.JsonMapper;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
-import me.lazerka.mf.android.Application;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -45,6 +46,9 @@ public abstract class JsonParsingCallback<R> implements Callback {
 
 	private final Activity activity;
 	private final Class<R> responseType;
+
+	@Inject
+	JsonMapper jsonMapper;
 
 	public JsonParsingCallback(Activity activity, Class<R> responseType) {
 		this.activity = activity;
@@ -75,7 +79,7 @@ public abstract class JsonParsingCallback<R> implements Callback {
 			return;
 		}
 
-		final R result = Application.getJsonMapper().readValue(
+		final R result = jsonMapper.readValue(
 				body.string(),
 				responseType);
 

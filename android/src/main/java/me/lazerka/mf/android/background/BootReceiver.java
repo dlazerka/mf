@@ -18,18 +18,24 @@
 
 package me.lazerka.mf.android.background;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.WakefulBroadcastReceiver;
+
+import com.baraded.mf.logging.LogService;
+import com.baraded.mf.logging.Logger;
+
+
 /**
  * @author Dzmitry Lazerka
  */
-/*
 public class BootReceiver extends WakefulBroadcastReceiver {
 	private static final Logger logger = LogService.getLogger(BootReceiver.class);
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		logger.info("onReceive");
-
-		checkArgument(intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED));
+		logger.info("onReceive, action: {}", intent.getAction());
 
 		// Renew GCM token.
 		//intent.setComponent(new ComponentName(context, GcmRegisterIntentService.class));
@@ -41,4 +47,3 @@ public class BootReceiver extends WakefulBroadcastReceiver {
 		setResultCode(Activity.RESULT_OK);
 	}
 }
-*/

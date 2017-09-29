@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import com.baraded.mf.logging.LogService;
-import com.google.common.collect.Range;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.di.Injector;
@@ -44,7 +43,7 @@ public class MainActivity extends Activity {
 	public MainActivity() {
 		Injector.applicationComponent().inject(this);
 
-		this.permissionAsker = new PermissionAsker(Range.closedOpen(400, 500), this);
+		this.permissionAsker = new PermissionAsker(400, 499, this);
 	}
 
 	@Override

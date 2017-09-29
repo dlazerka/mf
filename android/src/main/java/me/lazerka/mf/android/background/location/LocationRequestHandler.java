@@ -33,6 +33,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.support.v4.app.NotificationCompat.Builder;
+import com.baraded.mf.io.JsonMapper;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -48,6 +49,7 @@ import me.lazerka.mf.android.auth.SignInManager;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
 import org.joda.time.Duration;
 
+import javax.inject.Inject;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -85,9 +87,12 @@ public class LocationRequestHandler {
 	private static final Duration TRACKING_INTERVAL_FASTEST = Duration.standardSeconds(1);
 
 	private final Context context;
+	private final JsonMapper jsonMapper;
 
-	public LocationRequestHandler(Context context) {
-		this.context = context;
+	@Inject
+	public LocationRequestHandler(Application application, JsonMapper jsonMapper) {
+		this.context = application.getApplicationContext();
+		this.jsonMapper = jsonMapper;
 	}
 
 	public void processAuthorizedRequest(LocationRequestFromServer gcmRequest, PersonInfo requester) {
@@ -226,7 +231,7 @@ public class LocationRequestHandler {
 	private Intent getLocationListenerIntent(LocationRequestFromServer gcmRequest) {
 		// We already received and parsed it so
 		try {
-			byte[] bytes = Application.getJsonMapper().writeValueAsBytes(gcmRequest);
+			byte[] bytes = jsonMapper.writeValueAsBytes(gcmRequest);
 			Intent intent = new Intent(context, LocationUpdateListener.class);
 			intent.putExtra(LocationUpdateListener.EXTRA_GCM_REQUEST, bytes);
 			return intent;

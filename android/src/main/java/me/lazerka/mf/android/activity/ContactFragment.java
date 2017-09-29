@@ -40,8 +40,8 @@ import org.joda.time.Duration;
 import javax.inject.Inject;
 
 import static android.provider.ContactsContract.QuickContact.MODE_LARGE;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static me.lazerka.mf.android.Util.checkNotNull;
+import static me.lazerka.mf.android.Util.checkState;
 
 /**
  * @author Dzmitry Lazerka

@@ -23,14 +23,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableSet;
-
-import java.util.Collection;
-
 import javax.annotation.Nonnull;
+import java.util.*;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkNotNull;
 
 /**
  * Bean for holding emails together with contact info.
@@ -54,7 +50,7 @@ public class PersonInfo implements Parcelable {
 	@Nullable
 	public final String photoUri;
 
-	public final ImmutableSet<String> emails;
+	public final Set<String> emails;
 
 	public PersonInfo(
 			long id,
@@ -69,7 +65,7 @@ public class PersonInfo implements Parcelable {
 		this.lookupUri = checkNotNull(lookupUri);
 		this.displayName = checkNotNull(displayName);
 		this.photoUri = photoUri;
-		this.emails = ImmutableSet.copyOf(emails);
+		this.emails = Collections.unmodifiableSet(new LinkedHashSet<>(emails));
 	}
 
 	@Override
@@ -87,11 +83,11 @@ public class PersonInfo implements Parcelable {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("id", id)
-				.add("displayName", displayName)
-				.add("emails", emails)
-				.toString();
+		return "PersonInfo{" +
+				"id=" + id +
+				", displayName='" + displayName + '\'' +
+				", emails=" + emails +
+				'}';
 	}
 
 	//////
@@ -104,7 +100,8 @@ public class PersonInfo implements Parcelable {
 		lookupUri = in.readParcelable(Uri.class.getClassLoader());
 		displayName = in.readString();
 		photoUri = in.readString();
-		emails = ImmutableSet.copyOf(in.createStringArray());
+
+		emails = Collections.unmodifiableSet(new LinkedHashSet<>(Arrays.asList(in.createStringArray())));
 	}
 
 	public static final Creator<PersonInfo> CREATOR = new Creator<PersonInfo>() {

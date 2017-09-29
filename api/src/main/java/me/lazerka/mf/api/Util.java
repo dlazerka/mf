@@ -16,30 +16,28 @@
  *
  */
 
-apply plugin: 'java'
+package me.lazerka.mf.api;
 
-repositories {
-    jcenter()
-}
+import javax.annotation.Nonnull;
 
-dependencies {
-    compile 'com.google.code.findbugs:jsr305:3.0.1'
+public class Util {
+	@Nonnull
+	public static <T> T checkNotNull(T obj) {
+		if (obj == null) {
+			throw new NullPointerException();
+		}
+		return obj;
+	}
 
-//    compile 'com.google.guava:guava:22.0'
-    compile 'joda-time:joda-time:2.9.9'
-    compile 'commons-io:commons-io:2.4'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.3'
-    compile ('com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.3') {
-        exclude module: 'jackson-annotations'
-        exclude module: 'joda-time'
-    }
+	public static void checkArgument(boolean expr) {
+		if (!expr) {
+			throw new IllegalArgumentException();
+		}
+	}
 
-    testCompile 'org.testng:testng:6.11'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-    // We're not supposed to have non-pure methods in API package.
-    // testCompile 'org.mockito:mockito-all:1.10.19'
-}
-
-test {
-    useTestNG()
+	public static void checkState(boolean expression) {
+		if (!expression) {
+			throw new IllegalStateException();
+		}
+	}
 }

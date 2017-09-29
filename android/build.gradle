@@ -197,7 +197,7 @@ android {
                     // Cannot put this file into proguard folder as well, because gradle build would fail.
                     'project.pro',
                     'proguard/jackson.pro',
-                    'proguard/guava.pro',
+//                    'proguard/guava.pro',
                     'proguard/rx-java.pro',
                     'proguard/square-okhttp.pro',
                     'proguard/square-okio.pro',
@@ -280,7 +280,7 @@ dependencies {
 
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
 
-    // See ApiRequest on why we don't use Retrofit
+    // See RequestFactory on why we don't use Retrofit
 //    compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
 //    compile 'com.squareup.retrofit:converter-jackson:2.0.0-beta2'
 //    compile 'com.squareup.retrofit:adapter-rxjava:2.0.0-beta2'

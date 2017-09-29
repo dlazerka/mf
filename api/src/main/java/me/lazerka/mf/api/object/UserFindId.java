@@ -22,8 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.api.Util.checkArgument;
+import static me.lazerka.mf.api.Util.checkNotNull;
 
 /**
  * Used to identify app users.

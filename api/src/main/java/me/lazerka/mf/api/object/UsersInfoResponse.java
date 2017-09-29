@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.api.Util.checkNotNull;
 
 /**
  * @see UsersInfoRequest

@@ -21,7 +21,9 @@ package me.lazerka.mf.android;
 import android.app.backup.BackupAgentHelper;
 import android.app.backup.BackupDataOutput;
 import android.os.ParcelFileDescriptor;
+import me.lazerka.mf.android.di.Injector;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
 /**
@@ -29,12 +31,19 @@ import java.io.IOException;
  *
  * @author Dzmitry Lazerka
  */
-public class BackupAgent
-		extends BackupAgentHelper {
+public class BackupAgent extends BackupAgentHelper {
+
+	@Inject
+	GcmManager gcmManager;
+
+	public BackupAgent() {
+		Injector.applicationComponent().inject(this);
+	}
+
 	@Override
 	public void onBackup(ParcelFileDescriptor oldState, BackupDataOutput data, ParcelFileDescriptor newState)
 			throws IOException {
-		Application.gcmManager.onBeforeBackup();
+		gcmManager.onBeforeBackup();
 		super.onBackup(oldState, data, newState);
 	}
 }

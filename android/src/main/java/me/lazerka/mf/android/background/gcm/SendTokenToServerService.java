@@ -27,7 +27,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.iid.FirebaseInstanceId;
 import me.lazerka.mf.android.auth.GoogleSignInException;
 import me.lazerka.mf.android.auth.SignInManager;
-import me.lazerka.mf.android.background.ApiPost;
+import me.lazerka.mf.android.background.RequestFactory;
 import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.api.object.GcmToken;
 import okhttp3.Call;
@@ -53,6 +53,9 @@ public class SendTokenToServerService extends IntentService {
 	@Inject
 	PackageInfo packageInfo;
 
+	@Inject
+	RequestFactory requestFactory;
+
 	public SendTokenToServerService() {
 		super(SendTokenToServerService.class.getSimpleName());
 		Injector.applicationComponent().inject(this);
@@ -71,8 +74,7 @@ public class SendTokenToServerService extends IntentService {
 			}
 
 			GcmToken content = new GcmToken(gcmToken, packageInfo.versionCode);
-			ApiPost apiPost = new ApiPost(content);
-			Call call = apiPost.newCall(signInAccount);
+			Call call = requestFactory.newPost(content);
 			Response response = call.execute();
 
 			if (response.code() != HttpURLConnection.HTTP_OK) {

@@ -21,11 +21,11 @@ package me.lazerka.mf.android.background.location;
 import android.app.IntentService;
 import android.content.Intent;
 import android.location.LocationManager;
+import com.baraded.mf.io.JsonMapper;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationResult;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.object.Location;
@@ -36,7 +36,7 @@ import org.joda.time.DateTime;
 import javax.inject.Inject;
 import java.io.IOException;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkNotNull;
 
 /**
  * Receives location updates that were scheduled in {@link LocationRequestHandler},
@@ -51,6 +51,9 @@ public class LocationUpdateListener extends IntentService {
 
 	@Inject
 	LocationService locationService;
+
+	@Inject
+	JsonMapper jsonMapper;
 
 	public LocationUpdateListener() {
 		super(LocationUpdateListener.class.getSimpleName());
@@ -92,8 +95,7 @@ public class LocationUpdateListener extends IntentService {
 		if (location != null) {
 			try {
 				byte[] json = checkNotNull(intent.getByteArrayExtra(EXTRA_GCM_REQUEST));
-				LocationRequestFromServer gcmRequest = Application.getJsonMapper()
-						.readValue(json, LocationRequestFromServer.class);
+				LocationRequestFromServer gcmRequest = jsonMapper.readValue(json, LocationRequestFromServer.class);
 
 				Location locationBean = new Location(
 						new DateTime(location.getTime()),

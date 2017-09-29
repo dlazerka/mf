@@ -19,65 +19,102 @@
 package com.baraded.mf
 
 import android.os.SystemClock
-import com.google.common.base.Stopwatch
-import com.google.common.base.Ticker
+import me.lazerka.mf.android.Util.checkState
 import java.util.concurrent.TimeUnit
 
 /**
  * Stopwatch that counts realtime (including time spent in deep sleep).
  */
-class Sw(ticker: Ticker) {
+class Sw private constructor(private val ticker: Ticker) {
 
-	companion object {
-		@JvmStatic fun realtime() = Sw(RealtimeTicker)
-		@JvmStatic fun uptime() = Sw(UptimeTicker)
-		@JvmStatic fun thread() = Sw(CurrentThreadTicker)
-	}
+    companion object {
+        @JvmStatic
+        fun realtime() = Sw(RealtimeTicker)
 
-	private object RealtimeTicker : Ticker() {
-		override fun read() = SystemClock.elapsedRealtimeNanos()
-	}
+        @JvmStatic
+        fun uptime() = Sw(UptimeTicker)
 
-	private object UptimeTicker : Ticker() {
-		override fun read() = SystemClock.uptimeMillis() * 1000_000
-	}
+        @JvmStatic
+        fun thread() = Sw(CurrentThreadTicker)
 
-	private object CurrentThreadTicker : Ticker() {
-		override fun read() = SystemClock.currentThreadTimeMillis() * 1000_000
-	}
+        @JvmStatic
+        fun system() = Sw(SystemTicker)
+    }
 
-	private val stopwatch = Stopwatch.createStarted(ticker)
+    private interface Ticker {
+        fun read(): Long
+    }
 
-	fun h() = stopwatch.elapsed(TimeUnit.HOURS)
+    private object RealtimeTicker : Ticker {
+        override fun read() = SystemClock.elapsedRealtimeNanos()
+    }
 
-	fun m() = stopwatch.elapsed(TimeUnit.MINUTES)
+    private object UptimeTicker : Ticker {
+        override fun read() = SystemClock.uptimeMillis() * 1000_000
+    }
 
-	fun s() = stopwatch.elapsed(TimeUnit.SECONDS)
+    private object CurrentThreadTicker : Ticker {
+        override fun read() = SystemClock.currentThreadTimeMillis() * 1000_000
+    }
 
-	fun ms() = stopwatch.elapsed(TimeUnit.MILLISECONDS)
+    private object SystemTicker : Ticker {
+        override fun read(): Long {
+            return System.nanoTime();
+        }
+    }
 
-	fun mk() = stopwatch.elapsed(TimeUnit.MICROSECONDS)
+    private var isRunning: Boolean = false
+    private var elapsedNanos: Long = 0
+    private var startTick: Long = 0
 
-	fun ns() = stopwatch.elapsed(TimeUnit.NANOSECONDS)
+    private fun elapsed(timeUnit: TimeUnit): Long {
+        return timeUnit.convert(elapsedNanos(), TimeUnit.NANOSECONDS);
+    }
 
-	fun start(): Sw {
-		stopwatch.start()
-		return this
-	}
+    private fun elapsedNanos(): Long {
+        if (isRunning) {
+            return ticker.read() - startTick + elapsedNanos
+        } else {
+            return elapsedNanos
+        }
+    }
 
-	fun stop(): Sw {
-		stopwatch.stop()
-		return this
-	}
+    fun h() = elapsed(TimeUnit.HOURS)
 
-	fun reset(): Sw {
-		stopwatch.reset()
-		return this
-	}
+    fun m() = elapsed(TimeUnit.MINUTES)
 
-	fun restart(): Sw {
-		stopwatch.reset()
-		stopwatch.start()
-		return this
-	}
+    fun s() = elapsed(TimeUnit.SECONDS)
+
+    fun ms() = elapsed(TimeUnit.MILLISECONDS)
+
+    fun mk() = elapsed(TimeUnit.MICROSECONDS)
+
+    fun ns() = elapsed(TimeUnit.NANOSECONDS)
+
+    fun start(): Sw {
+        checkState(!isRunning, "This stopwatch is already running.");
+        isRunning = true;
+        startTick = ticker.read();
+        return this
+    }
+
+    fun stop(): Sw {
+        val tick = ticker.read()
+        checkState(isRunning, "This stopwatch is already stopped.")
+        isRunning = false
+        elapsedNanos += tick - startTick
+        return this
+    }
+
+    fun reset(): Sw {
+        elapsedNanos = 0;
+        isRunning = false;
+        return this
+    }
+
+    fun restart(): Sw {
+        reset()
+        start()
+        return this
+    }
 }

@@ -18,7 +18,6 @@
 
 package me.lazerka.mf.android.location;
 
-import com.google.common.base.MoreObjects;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.api.object.LocationResponse;
 
@@ -41,9 +40,9 @@ public class FriendLocationResponse {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("contact", contact)
-				.add("response", response)
-				.toString();
+		return "FriendLocationResponse{" +
+				"contact=" + contact +
+				", response=" + response +
+				'}';
 	}
 }

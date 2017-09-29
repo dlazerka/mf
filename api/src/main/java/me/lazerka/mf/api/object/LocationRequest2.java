@@ -19,10 +19,9 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 import org.joda.time.Duration;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.api.Util.checkNotNull;
 
 /**
  * A request for location updates that one user sends to backend server.
@@ -75,10 +74,10 @@ public class LocationRequest2 implements ApiObject {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("updatesTopic", updatesTopic)
-				.add("to", to)
-				.add("duration", duration)
-				.toString();
+		return "LocationRequest2{" +
+				"updatesTopic='" + updatesTopic + '\'' +
+				", to=" + to +
+				", duration=" + duration +
+				'}';
 	}
 }

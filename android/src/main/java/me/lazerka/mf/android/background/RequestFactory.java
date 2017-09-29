@@ -18,38 +18,63 @@
 
 package me.lazerka.mf.android.background;
 
+import com.baraded.mf.Util;
+import com.baraded.mf.io.JsonMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.BuildConfig;
 import me.lazerka.mf.api.ApiConstants;
 import me.lazerka.mf.api.object.ApiObject;
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
+import okhttp3.Request.Builder;
 import okio.BufferedSink;
 
 import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import javax.inject.Provider;
 import java.io.IOException;
+import java.net.URI;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkNotNull;
+
 
 /**
  * @author Dzmitry Lazerka
  */
-public class ApiPost extends ApiRequest {
-	private final ApiObject content;
+public class RequestFactory {
+	private final OkHttpClient httpClient;
+	private Provider<GoogleSignInAccount> accountProvider;
+	private final HttpUrl rootHttpUrl;
 
-	public ApiPost(ApiObject content) {
-		this.content = content;
+	@Inject
+	public RequestFactory(OkHttpClient httpClient, @Nonnull Provider<GoogleSignInAccount> accountProvider) {
+		this.httpClient = httpClient;
+		this.accountProvider = accountProvider;
+		rootHttpUrl = checkNotNull(HttpUrl.get(URI.create(BuildConfig.BACKEND_ROOT)));
 	}
 
-	@Override
-	public Call newCall(@Nonnull GoogleSignInAccount account) {
-		String oauthToken = checkNotNull(account.getIdToken());
-		Request request = new Request.Builder()
-				.url(url(content))
-				.header("Authorization", "Bearer " + oauthToken)
+	protected HttpUrl url(String path) {
+		return rootHttpUrl.resolve(path);
+	}
+
+	private Builder newCallBuilder(String path) {
+		GoogleSignInAccount account = accountProvider.get();
+		String oauthToken = Util.INSTANCE.checkNotNull(account.getIdToken());
+		return new Request.Builder()
+				.url(url(path))
+				.header("Authorization", "Bearer " + oauthToken);
+	}
+
+	public Call newGet(ApiObject content) {
+		Request request = newCallBuilder(content.getPath())
+				.get()
+				.build();
+
+		return httpClient.newCall(request);
+	}
+
+	public Call newPost(ApiObject content) {
+		Request request = newCallBuilder(content.getPath())
 				.post(new JsonRequestBody<>(content))
 				.build();
 
@@ -73,7 +98,7 @@ public class ApiPost extends ApiRequest {
 
 		private byte[] getBytes() throws JsonProcessingException {
 			if (bytes == null) {
-				bytes = Application.getJsonMapper().writeValueAsBytes(object);
+				bytes = JsonMapper.INSTANCE.writeValueAsBytes(object);
 			}
 			return bytes;
 		}
@@ -84,8 +109,9 @@ public class ApiPost extends ApiRequest {
 		}
 
 		@Override
-		public void writeTo(BufferedSink sink) throws IOException {
+		public void writeTo(@Nonnull BufferedSink sink) throws IOException {
 			sink.write(getBytes());
 		}
 	}
+
 }

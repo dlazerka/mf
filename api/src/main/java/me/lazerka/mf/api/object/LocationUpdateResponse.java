@@ -19,7 +19,6 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 
 import java.util.List;
 
@@ -71,9 +70,9 @@ public class LocationUpdateResponse {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-		                  .add("locationUpdate", locationUpdate)
-		                  .add("gcmResults", gcmResults)
-		                  .toString();
+		return "LocationUpdateResponse{" +
+				"locationUpdate=" + locationUpdate +
+				", gcmResults=" + gcmResults +
+				'}';
 	}
 }

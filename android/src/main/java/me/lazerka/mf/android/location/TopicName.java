@@ -18,20 +18,20 @@
 
 package me.lazerka.mf.android.location;
 
-import com.google.common.base.Splitter;
-
 import java.security.SecureRandom;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TODO: "/topics/" ?
- *
+ * <p>
  * Topic name must match [a-zA-Z0-9-_.~%]{1,900} .
  *
  * @author Dzmitry Lazerka
  */
 public class TopicName {
 	private static final char SEPARATOR = '-';
+	private static final Pattern REGEX = Pattern.compile("([a-z0-9]+)" + SEPARATOR + "([a-z0-9]+)");
 
 	private static final SecureRandom rng = new SecureRandom();
 
@@ -39,12 +39,11 @@ public class TopicName {
 	private final String friendLookupKey;
 
 	public static TopicName parse(String topicName) {
-		List<String> list = Splitter.on(SEPARATOR).splitToList(topicName);
-		if (list.size() != 2) {
+		Matcher matcher = REGEX.matcher(topicName);
+		if (!matcher.find()) {
 			throw new IllegalArgumentException(topicName);
 		}
-
-		return new TopicName(list.get(0), list.get(1));
+		return new TopicName(matcher.group(1), matcher.group(2));
 	}
 
 	private TopicName(String secretRandom, String friendLookupKey) {

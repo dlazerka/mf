@@ -24,8 +24,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * See {@link #normalizeEmail}.
  *
@@ -81,7 +79,7 @@ public class EmailNormalized {
 	}
 
 	public EmailNormalized(@Nonnull String email) {
-		this.email = checkNotNull(email);
+		this.email = Util.checkNotNull(email);
 	}
 
 	@Nonnull

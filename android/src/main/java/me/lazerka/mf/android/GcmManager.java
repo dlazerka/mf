@@ -39,15 +39,12 @@ public class GcmManager {
 	private final String GCM_TOKEN_SENT_AT = "gcm.token.sent";
 
 	private final SharedPreferences sharedPreferences;
+	private final PackageInfo packageInfo;
 
-	@Inject
-	PackageInfo packageInfo;
-
-	public GcmManager(SharedPreferences sharedPreferences) {
+	public GcmManager(PackageInfo packageInfo, SharedPreferences sharedPreferences) {
+		this.packageInfo = packageInfo;
 		// Same file name as RoboGuice default.
 		this.sharedPreferences = sharedPreferences;
-
-		Injector.applicationComponent().inject(this);
 	}
 
 	/**

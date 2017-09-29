@@ -25,9 +25,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.location.LocationManager;
+import com.baraded.mf.io.JsonMapper;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.object.LocationRequestFromServer;
@@ -37,8 +37,8 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkArgument;
+import static me.lazerka.mf.android.Util.checkNotNull;
 import static me.lazerka.mf.android.background.location.LocationUpdateListener.EXTRA_GCM_REQUEST;
 
 /**
@@ -55,6 +55,9 @@ public class LocationStopListener extends IntentService {
 
 	@Inject
 	LocationService locationService;
+
+	@Inject
+	JsonMapper jsonMapper;
 
 	public static Intent makeIntent(
 			Context context,
@@ -114,7 +117,7 @@ public class LocationStopListener extends IntentService {
 
 		try {
 			LocationRequestFromServer originalRequest =
-					Application.getJsonMapper().readValue(json, LocationRequestFromServer.class);
+					jsonMapper.readValue(json, LocationRequestFromServer.class);
 			locationService
 					.sendLocationUpdate(LocationResponse.complete(), originalRequest.getUpdatesTopic());
 		} catch (IOException e) {

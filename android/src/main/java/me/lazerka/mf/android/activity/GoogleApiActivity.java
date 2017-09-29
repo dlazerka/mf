@@ -43,7 +43,7 @@ import me.lazerka.mf.android.auth.SignInManager;
 import javax.inject.Inject;
 
 import static com.google.android.gms.auth.api.Auth.GoogleSignInApi;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkNotNull;
 
 /**
  * @author Dzmitry Lazerka

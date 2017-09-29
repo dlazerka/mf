@@ -19,12 +19,11 @@
 package me.lazerka.mf.api.object;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 
 import javax.annotation.Nullable;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.api.Util.checkNotNull;
 
 /**
  * To know if the users have ever installed the app.
@@ -56,8 +55,8 @@ public class UsersInfoRequest implements ApiObject {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("emails", emails)
-				.toString();
+		return "UsersInfoRequest{" +
+				"emails=" + emails +
+				'}';
 	}
 }

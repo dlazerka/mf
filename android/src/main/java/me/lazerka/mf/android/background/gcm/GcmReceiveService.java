@@ -19,12 +19,12 @@
 package me.lazerka.mf.android.background.gcm;
 
 import android.support.annotation.WorkerThread;
+import com.baraded.mf.io.JsonMapper;
 import com.baraded.mf.Sw;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.android.location.LocationService;
 import me.lazerka.mf.api.gcm.GcmPayload;
@@ -49,6 +49,9 @@ public class GcmReceiveService extends FirebaseMessagingService {
 
 	@Inject
 	LocationService locationService;
+
+	@Inject
+	JsonMapper jsonMapper;
 
 	public GcmReceiveService() {
 		Injector.applicationComponent().inject(this);
@@ -78,7 +81,7 @@ public class GcmReceiveService extends FirebaseMessagingService {
 			Sw sw = Sw.realtime();
 			switch (type) {
 				case LocationResponse.TYPE:
-					LocationResponse payload = Application.getJsonMapper().readValue(json, LocationResponse.class);
+					LocationResponse payload = jsonMapper.readValue(json, LocationResponse.class);
 					log.info("Parsed LocationResponse in {}ms", sw.ms());
 					locationService
 							.handleLocationResponse(payload, from);

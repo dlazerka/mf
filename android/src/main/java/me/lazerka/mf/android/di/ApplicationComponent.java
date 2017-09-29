@@ -21,6 +21,7 @@ package me.lazerka.mf.android.di;
 import com.baraded.mf.logging.LogService;
 import dagger.Component;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.BackupAgent;
 import me.lazerka.mf.android.GcmManager;
 import me.lazerka.mf.android.activity.*;
 import me.lazerka.mf.android.background.gcm.GcmReceiveService;
@@ -44,6 +45,7 @@ public interface ApplicationComponent {
     void inject(MapFragment obj);
 	void inject(GcmReceiveService obj);
 	void inject(LocationUpdateListener obj);
+	void inject(BackupAgent obj);
 
 	// Own
     void inject(LocationService obj);
@@ -51,4 +53,8 @@ public interface ApplicationComponent {
 	void inject(GcmManager obj);
 	void inject(SendTokenToServerService obj);
 	void inject(LocationStopListener obj);
+
+	LogService getLogService();
+
+	LocationService getLocationService();
 }

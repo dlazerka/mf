@@ -21,22 +21,24 @@ package me.lazerka.mf.android.di;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import com.baraded.mf.logging.LogService;
+import com.baraded.mf.io.JsonMapper;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import dagger.Module;
 import dagger.Provides;
 import me.lazerka.mf.android.Application;
+import me.lazerka.mf.android.GcmManager;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.contacts.FriendsManager;
 import me.lazerka.mf.android.location.LocationService;
+import okhttp3.OkHttpClient;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static android.content.Context.MODE_PRIVATE;
 
 @Module
-public class ApplicationModule {
+class ApplicationModule {
 
 	private final Application application;
 
@@ -52,22 +54,12 @@ public class ApplicationModule {
 
 	@Provides
 	@Singleton
-	@Inject
-	public LogService provideLogService(Application application) {
-		FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.getInstance(application);
-		return new LogService(firebaseAnalytics);
-	}
-
-	@Provides
-	@Singleton
-	@Inject
 	public FirebaseAnalytics provideFirebaseAnalytics(Application application) {
 		return FirebaseAnalytics.getInstance(application);
 	}
 
 	@Provides
 	@Singleton
-	@Inject
 	public FriendsManager provideFriendsManager(Application application) {
 		String fileName = application.getString(R.string.preferences_file_friends);
 		SharedPreferences sharedPreferences = application.getSharedPreferences(fileName, MODE_PRIVATE);
@@ -76,16 +68,28 @@ public class ApplicationModule {
 
 	@Provides
 	@Singleton
-	@Inject
+	public GcmManager provideGcmManager(PackageInfo packageInfo) {
+		String fileName = application.getString(R.string.preferences_file_gcm);
+		SharedPreferences sharedPreferences = application.getSharedPreferences(fileName, MODE_PRIVATE);
+		return new GcmManager(packageInfo, sharedPreferences);
+	}
+
+	@Provides
+	@Singleton
 	public LocationService provideLocationService() {
 		return new LocationService();
+	}
+
+	@Provides
+	@Singleton
+	public JsonMapper provideJsonMapper() {
+		return JsonMapper.INSTANCE;
 	}
 
 	/**
 	 * @return Application's version code from the `PackageManager`.
 	 */
 	@Provides
-	@Inject
 	PackageInfo providePackageInfo(Application context) {
 		String packageName = context.getPackageName();
 		PackageManager packageManager = context.getPackageManager();
@@ -95,6 +99,33 @@ public class ApplicationModule {
 			// should never happen
 			throw new RuntimeException("Could not get package info: ", e);
 		}
+	}
 
+	@Provides
+	@Singleton
+	OkHttpClient provideOkHttp() {
+		return new OkHttpClient.Builder()
+				// Don't follow from HTTPS to HTTP.
+				.followRedirects(false)
+
+				// We don't use authenticator, because it kicks in only on unsuccessful response,
+				// and currently only supports BASIC authentication.
+				// But we must provide OAuth token in each single request.
+				//.authenticator(new GoogleSignInAuthenticator() {})
+
+				// Nor we use interceptors for authentication, because SignIn authentication
+				// requires GoogleApiClient, which requires Context,
+				// so it must be provided by calling Activity/Service.
+				// .interceptors().add();
+
+				// Same reason we don't use Retrofit -- unable to make Authorization header right.
+				.build();
+
+	}
+
+	@Provides
+	GoogleSignInAccount provideAccount() {
+		// TODO
+		return null;
 	}
 }

@@ -66,8 +66,7 @@
     <orderEntry type="library" scope="PROVIDED" name="google-http-client-jdo-1.21.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="google-http-client-1.21.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jsr305-3.0.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="guava-19.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="joda-time-2.9.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="joda-time-2.9.9" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="commons-io-2.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jackson-module-jaxb-annotations-2.7.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jackson-datatype-joda-2.6.3" level="project" />
@@ -75,6 +74,7 @@
     <orderEntry type="library" scope="PROVIDED" name="jackson-databind-2.7.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jackson-annotations-2.7.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jsr250-api-1.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="guava-19.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="javax.inject-1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jersey-core-1.19" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="jackson-core-2.7.4" level="project" />

@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import org.joda.time.Duration;
 
@@ -112,10 +111,10 @@ public class LocationResponse implements GcmPayload {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("location", location)
-				.add("duration", duration)
-				.add("error", error)
-				.toString();
+		return "LocationResponse{" +
+				"location=" + location +
+				", duration=" + duration +
+				", error=" + error +
+				'}';
 	}
 }

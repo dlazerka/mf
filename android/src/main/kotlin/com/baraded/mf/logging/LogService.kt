@@ -43,12 +43,11 @@ class LogService {
 
 	@Inject
 	constructor(firebaseAnalytics: FirebaseAnalytics) {
-		Injector.applicationComponent().inject(this)
+//		Injector.applicationComponent().inject(this)
 		this.firebaseAnalytics = firebaseAnalytics;
 	}
 
-//	@Inject
-	private val firebaseAnalytics: FirebaseAnalytics;
+	val firebaseAnalytics: FirebaseAnalytics
 
 	fun getEventLogger(eventName: String): EventLogger {
 		return EventLogger(eventName, firebaseAnalytics)

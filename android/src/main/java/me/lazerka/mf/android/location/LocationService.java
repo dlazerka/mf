@@ -18,19 +18,17 @@
 
 package me.lazerka.mf.android.location;
 
+import com.baraded.mf.io.JsonMapper;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableMap;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.firebase.messaging.RemoteMessage.Builder;
 import io.reactivex.Observable;
 import io.reactivex.subjects.BehaviorSubject;
-import me.lazerka.mf.android.Application;
 import me.lazerka.mf.android.adapter.PersonInfo;
 import me.lazerka.mf.android.contacts.FriendsManager;
-import me.lazerka.mf.android.di.Injector;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import me.lazerka.mf.api.object.LocationRequest2;
 import me.lazerka.mf.api.object.LocationResponse;
@@ -38,6 +36,9 @@ import me.lazerka.mf.api.object.UserFindId;
 import org.joda.time.Duration;
 
 import javax.inject.Inject;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Handles location-related things.
@@ -58,12 +59,8 @@ public class LocationService {
 	@Inject
 	FriendsManager friendsManager;
 
-	public LocationService() {
-
-		Injector.applicationComponent().inject(this);
-
-		//this.locationRequestHandler = new LocationRequestHandler(context);
-	}
+	@Inject
+	JsonMapper jsonMapper;
 
 	/**
 	 * @return "769083712074"
@@ -85,7 +82,7 @@ public class LocationService {
 	//{
 	//	LocationRequest2 locationRequest = buildLocationRequest(to, duration);
 	//
-	//	Call call = new ApiPost(locationRequest).newCall(account);
+	//	Call call = requestFactory.newPost(locationRequest);
 	//	call.enqueue(locationRequestCallback);
 	//
 	//	String topic = locationRequest.getUpdatesTopic();
@@ -207,16 +204,17 @@ public class LocationService {
 	public void sendLocationUpdate(LocationResponse locationResponse, String topic) {
 		String json;
 		try {
-			json = Application.getJsonMapper().writeValueAsString(locationResponse);
+			json = jsonMapper.writeValueAsString(locationResponse);
 		} catch (JsonProcessingException e) {
 			log.error(e);
 			return;
 		}
 
-		ImmutableMap<String, String> data = ImmutableMap.of(
-				GcmPayload.TYPE_FIELD, LocationResponse.TYPE,
-				GcmPayload.PAYLOAD_FIELD, json
-		);
+		Map<String, String> data = new LinkedHashMap<>();
+		data.put(GcmPayload.TYPE_FIELD, LocationResponse.TYPE);
+		data.put(GcmPayload.PAYLOAD_FIELD, json);
+		data = Collections.unmodifiableMap(data);
+
 		RemoteMessage gcmMessage = new Builder("/topics/" + topic) // Should be prefixed with "/topics/"?
 				.setData(data)
 				.build();

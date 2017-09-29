@@ -85,8 +85,7 @@ package me.lazerka.mf.android.background.gcm;
 //				.getAccountBlocking(this);
 //
 //		GcmToken content = new GcmToken(gcmToken, Application.getVersion());
-//		ApiPost apiPost = new ApiPost(content);
-//		Call call = apiPost.newCall(signInAccount);
+//		Call call = requestFactory.newPost(content);
 //		Response response = call.execute();
 //
 //		if (response.code() != HttpURLConnection.HTTP_OK) {

@@ -26,7 +26,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.api.Util.checkNotNull;
+
 
 /**
  * GCM message that is sent to GCM.

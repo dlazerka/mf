@@ -52,8 +52,6 @@ public class Application extends MultiDexApplication {
 	 */
 	private static JsonMapper jsonMapper;
 
-	public static GcmManager gcmManager;
-
 	private static Locale locale;
 
 	@Override
@@ -63,9 +61,6 @@ public class Application extends MultiDexApplication {
 		//context = this;
 
 		injectDependencies();
-
-		String preferencesFileGcm = getString(R.string.preferences_file_gcm);
-		gcmManager = new GcmManager(getSharedPreferences(preferencesFileGcm, MODE_PRIVATE));
 
 		locale = getResources().getConfiguration().locale;
 		//friendsSharedPreferences = getSharedPreferences(getString(R.string.preferences_file_friends), MODE_PRIVATE);
@@ -97,31 +92,6 @@ public class Application extends MultiDexApplication {
 		return Build.DEVICE.startsWith("generic");
 	}
 
-	public static JsonMapper getJsonMapper() {
-		if (jsonMapper == null) {
-			JsonMapper result = new JsonMapper();
-			// Warn, but don't fail on unknown property.
-			result.addHandler(new DeserializationProblemHandler() {
-				@Override
-				public boolean handleUnknownProperty(
-						DeserializationContext deserializationContext,
-						JsonParser jsonParser,
-						JsonDeserializer<?> deserializer,
-						Object beanOrClass,
-						String propertyName
-				) throws IOException
-				{
-					String msg = "Unknown property `" + propertyName + "` in " + beanOrClass;
-					log.warn(msg);
-					jsonParser.skipChildren();
-					return true;
-				}
-			});
-			jsonMapper = result;
-		}
-
-		return jsonMapper;
-	}
 
 	private boolean isDebugRun() {
 		return Debug.isDebuggerConnected();

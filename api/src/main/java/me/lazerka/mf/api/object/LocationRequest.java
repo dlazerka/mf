@@ -21,7 +21,6 @@ package me.lazerka.mf.api.object;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.MoreObjects;
 import me.lazerka.mf.api.gcm.GcmPayload;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -120,12 +119,12 @@ public class LocationRequest implements ApiObject, GcmPayload {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("requestId", requestId)
-				.add("requesterEmail", requesterEmail)
-				.add("emails", emails)
-				.add("sentAt", sentAt)
-				.add("duration", duration)
-				.toString();
+		return "LocationRequest{" +
+				"requestId='" + requestId + '\'' +
+				", requesterEmail='" + requesterEmail + '\'' +
+				", emails=" + emails +
+				", sentAt=" + sentAt +
+				", duration=" + duration +
+				'}';
 	}
 }

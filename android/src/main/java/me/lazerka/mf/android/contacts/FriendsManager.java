@@ -31,10 +31,8 @@ import com.baraded.mf.Sw;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
-import com.google.firebase.crash.FirebaseCrash;
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -46,8 +44,8 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.Future;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkArgument;
+import static me.lazerka.mf.android.Util.checkNotNull;
 
 /**
  * Friend list manager.
@@ -88,7 +86,7 @@ public class FriendsManager {
 		for (Uri uri : friends) {
 			result.add(toLookupKey(uri));
 		}
-		return ImmutableList.copyOf(result);
+		return Collections.unmodifiableList(new ArrayList<>(result));
 	}
 
 	/**
@@ -189,7 +187,7 @@ public class FriendsManager {
 
 	public PersonInfo getFriend(String lookupKey) {
 		List<PersonInfo> infos = new FetchContactInfo()
-				.apply(ImmutableList.of(lookupKey));
+				.apply(Collections.singletonList(lookupKey));
 		if (infos == null || infos.isEmpty()) {
 			return null;
 		} else {
@@ -274,7 +272,7 @@ public class FriendsManager {
 				String[] selectionArgs)
 		{
 			// lookupKey -> email
-			SetMultimap<String, String> allEmails = LinkedHashMultimap.create();
+			Map<String, Set<String>> allEmails = new LinkedHashMap<>();
 			{
 				Cursor emailsCursor = contentResolver.query(
 						Email.CONTENT_URI,

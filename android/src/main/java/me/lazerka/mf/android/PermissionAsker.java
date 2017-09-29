@@ -25,15 +25,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static me.lazerka.mf.android.Util.checkNotNull;
 
 /**
  * Helper to reduce spagettification of Activity working with runtime Android permissions.
@@ -47,16 +46,18 @@ public class PermissionAsker {
 	private static final Logger logger = LogService.getLogger(PermissionAsker.class);
 
     private final Activity activity;
-    private final Range<Integer> requestCodesPool;
 
     private final ConcurrentHashMap<Integer, Callback> tasks = new ConcurrentHashMap<>(1);
+	private final int requestCodesStart;
+	private final int requestCodesEnd;
 
-    /**
-     * @param requestCodesPool From which range to get request codes.
+	/**
+     * @param requestCodesStart From which range to get request codes.
      *                         Should not intersect with other requestCodes for activity.
      */
-    public PermissionAsker(Range<Integer> requestCodesPool, Activity activity) {
-        this.requestCodesPool = requestCodesPool;
+    public PermissionAsker(int requestCodesStart, int requestCodesEnd, Activity activity) {
+        this.requestCodesStart = requestCodesStart;
+        this.requestCodesEnd = requestCodesEnd;
         this.activity = activity;
     }
 
@@ -76,10 +77,10 @@ public class PermissionAsker {
         }
 
         if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-            logger.debug("Permissions {} GRANTED on {}", Lists.newArrayList(permissions), requestCode);
+            logger.debug("Permissions {} GRANTED on {}", Arrays.asList(permissions), requestCode);
             callback.onGranted.run();
         } else {
-            logger.debug("Permissions {} DECLINED on {}", Lists.newArrayList(permissions), requestCode);
+            logger.debug("Permissions {} DECLINED on {}", Arrays.asList(permissions), requestCode);
             if (callback.onDeclined != null) {
                 callback.onDeclined.run();
             }
@@ -89,15 +90,15 @@ public class PermissionAsker {
     }
 
     private int getNextRequestCode(Callback callback) {
-        for (int requestCode = requestCodesPool.lowerEndpoint(); requestCodesPool.contains(requestCode); requestCode++) {
+        for (int requestCode = requestCodesStart; requestCode <= requestCodesEnd; requestCode++) {
             Callback existingCallback = tasks.putIfAbsent(requestCode, callback);
             if (existingCallback == null) {
                 return requestCode;
             }
         }
 
-        throw new IllegalStateException(
-                format("All request codes in range %s are occupied. Try larger range?", requestCodesPool));
+	    String fmt = "All request codes in range %s-%s are occupied. Try larger range?";
+	    throw new IllegalStateException(format(fmt, requestCodesStart, requestCodesEnd));
     }
 
 	public static boolean hasPermission(String permission, Context context) {
