@@ -28,6 +28,13 @@ public class Util {
 		return obj;
 	}
 
+	public static <T> T checkNotNull(T obj, String msg) {
+		if (obj == null) {
+			throw new NullPointerException(msg);
+		}
+		return obj;
+	}
+
 	public static void checkArgument(boolean expr) {
 		if (!expr) {
 			throw new IllegalArgumentException();

@@ -33,6 +33,8 @@
 -printmapping ./build/proguard_mapping.txt
 
 -dontwarn org.joda.convert.**
+-dontwarn org.slf4j.**
+-dontwarn com.google.android.gms.internal.**
 
 
 ## --------------- Start Project specifics --------------- ##

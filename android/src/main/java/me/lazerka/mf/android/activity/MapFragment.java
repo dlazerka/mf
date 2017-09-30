@@ -29,8 +29,6 @@ import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
 import me.lazerka.mf.android.Application;
@@ -46,9 +44,11 @@ import org.joda.time.DateTime;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.text.DateFormat;
+import java.util.HashMap;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static me.lazerka.mf.android.Util.checkNotNull;
+
 
 public class MapFragment extends InjectedFragment {
 	private static final Logger log = LogService.getLogger(MapFragment.class);
@@ -63,10 +63,9 @@ public class MapFragment extends InjectedFragment {
 	// 1 -- world
 	// 10 -- bay area
 	// 14 -- max
-	@VisibleForTesting
 	GoogleMap map;
 
-	private final Map<String, Item> items = Maps.newHashMap();
+	private final Map<String, Item> items = new HashMap<>();
 	private MapView mapView;
 
 	@Inject
