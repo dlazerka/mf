@@ -197,7 +197,7 @@ android {
                     // Cannot put this file into proguard folder as well, because gradle build would fail.
                     'project.pro',
                     'proguard/jackson.pro',
-//                    'proguard/guava.pro',
+                    'proguard/guava.pro',
                     'proguard/rx-java.pro',
                     'proguard/square-okhttp.pro',
                     'proguard/square-okio.pro',
@@ -272,6 +272,7 @@ dependencies {
     compile "com.google.android.gms:play-services-location:$playServicesVersion"
     compile "com.google.android.gms:play-services-maps:$playServicesVersion"
     compile "com.google.firebase:firebase-crash:$playServicesVersion"
+    compile 'com.google.guava:guava:20.0' // 21+ is for Java 8 and doesn't work with ProGuard.
 //    compile "com.google.firebase:firebase-database:$playServicesVersion"
 
     compile 'com.android.support:appcompat-v7:25.4.0'

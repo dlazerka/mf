@@ -27,11 +27,12 @@ import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.support.annotation.NonNull;
-import com.baraded.mf.SetMultimap;
 import com.baraded.mf.Sw;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.common.base.Joiner;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.SetMultimap;
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -42,7 +43,6 @@ import me.lazerka.mf.android.adapter.PersonInfo;
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 import static me.lazerka.mf.android.Util.checkArgument;
 import static me.lazerka.mf.android.Util.checkNotNull;
@@ -272,7 +272,7 @@ public class FriendsManager {
 				String[] selectionArgs)
 		{
 			// lookupKey -> email
-			SetMultimap<String, String> allEmails = new SetMultimap<>();
+			SetMultimap<String, String> allEmails = LinkedHashMultimap.create();
 
 			{
 				Cursor emailsCursor = contentResolver.query(

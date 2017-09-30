@@ -1,2 +1,3 @@
 # Android signing keys.
 /keystore.properties
+/local.properties
