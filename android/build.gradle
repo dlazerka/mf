@@ -266,12 +266,18 @@ dependencies {
 //    compile "com.google.dagger:dagger-android-support:$daggerVersion" // if you use the support libraries
     annotationProcessor "com.google.dagger:dagger-android-processor:$daggerVersion"
 
-    compile "com.google.firebase:firebase-auth:$playServicesVersion"
     compile "com.google.android.gms:play-services-auth:$playServicesVersion"
-    compile "com.google.firebase:firebase-messaging:$playServicesVersion"
     compile "com.google.android.gms:play-services-location:$playServicesVersion"
     compile "com.google.android.gms:play-services-maps:$playServicesVersion"
+
+    compile "com.google.firebase:firebase-auth:$playServicesVersion"
+    compile "com.google.firebase:firebase-messaging:$playServicesVersion"
     compile "com.google.firebase:firebase-crash:$playServicesVersion"
+
+    compile 'com.android.support:design:25.4.0'
+
+
+
     compile 'com.google.guava:guava:20.0' // 21+ is for Java 8 and doesn't work with ProGuard.
 //    compile "com.google.firebase:firebase-database:$playServicesVersion"
 

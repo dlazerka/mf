@@ -22,6 +22,10 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.ImageButton;
 import com.baraded.mf.logging.LogService;
 import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
@@ -52,6 +56,10 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		logService.getEventLogger("app_launched").send();
+
+		ImageButton sendButton = (ImageButton) findViewById(R.id.fab_send_my);
+
+		sendButton.setOnClickListener(new SendClickListener());
 
 		//if (savedInstanceState == null) {
 		//	getFragmentManager().beginTransaction()
@@ -94,5 +102,12 @@ public class MainActivity extends Activity {
 				break;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	private class SendClickListener implements OnClickListener {
+		@Override
+		public void onClick(View v) {
+			logService.getEventLogger("send_my_clicked").send();
+		}
 	}
 }

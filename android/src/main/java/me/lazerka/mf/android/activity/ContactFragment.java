@@ -19,6 +19,7 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.AlertDialog;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -47,7 +48,7 @@ import static me.lazerka.mf.android.Util.checkState;
  * @author Dzmitry Lazerka
  * TODO: add null activity handling
  */
-public class ContactFragment extends InjectedFragment {
+public class ContactFragment extends Fragment {
 
 	private static final String PERSON_INFO = "PERSON_INFO";
 

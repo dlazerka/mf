@@ -23,7 +23,7 @@
 		android:layout_gravity="right"
 		>
 		<ImageButton
-			android:id="@+id/fab_locate"
+			android:id="@+id/fab_send_my"
 			style="?android:attr/buttonStyleSmall"
 			android:layout_width="56dp"
 			android:layout_height="56dp"
@@ -38,7 +38,7 @@
 			android:layout_gravity="center"
 			android:scaleType="fitXY"
 		    android:layout_marginTop="16dp"
-		    android:layout_marginRight="20dp"
+		    android:layout_marginRight="32dp"
 		    android:layout_marginBottom="16dp"
 		    android:layout_marginLeft="20dp"
 			/>

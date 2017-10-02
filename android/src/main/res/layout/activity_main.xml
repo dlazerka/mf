@@ -18,9 +18,11 @@
 	<FrameLayout
 		android:id="@+id/bottom_frame"
 		android:layout_width="match_parent"
-		android:layout_height="@dimen/bottom_menu_height">
+		android:layout_height="@dimen/bottom_menu_height"
+	    android:layout_gravity="bottom"
+		>
 
-		<include layout="@layout/view_send"/>
+		<include layout="@layout/view_send2"/>
 	</FrameLayout>
 
 </LinearLayout>

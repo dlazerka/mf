@@ -20,6 +20,7 @@ package me.lazerka.mf.android.activity;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -50,7 +51,7 @@ import java.util.Map;
 import static me.lazerka.mf.android.Util.checkNotNull;
 
 
-public class MapFragment extends InjectedFragment {
+public class MapFragment extends Fragment {
 	private static final Logger log = LogService.getLogger(MapFragment.class);
 
 	public static final String CAMERA_POSITION = "cameraPosition";

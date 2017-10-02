@@ -19,6 +19,7 @@
 package me.lazerka.mf.android.activity;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -50,7 +51,7 @@ import static android.Manifest.permission.READ_CONTACTS;
  * @author Dzmitry Lazerka
  * TODO: add null activity handling
  */
-public class ContactsFragment extends InjectedFragment {
+public class ContactsFragment extends Fragment {
 	private static final Logger logger = LogService.getLogger(ContactsFragment.class);
 
 	/** Result code of ContactPicker dialog. */
@@ -138,14 +139,14 @@ public class ContactsFragment extends InjectedFragment {
 			Bundle arguments = ContactFragment.makeArguments(personInfo);
 			fragment.setArguments(arguments);
 
-			getFragmentManager().beginTransaction()
-					.setCustomAnimations(
-							R.animator.slide_from_below, R.animator.slide_to_above,
-							R.animator.slide_from_above, R.animator.slide_to_below
-					)
-					.replace(R.id.bottom_frame, fragment)
-					.addToBackStack("ContactsFragment")
-					.commit();
+			//getFragmentManager().beginTransaction()
+			//		.setCustomAnimations(
+			//				R.animator.slide_from_below, R.animator.slide_to_above,
+			//				R.animator.slide_from_above, R.animator.slide_to_below
+			//		)
+			//		.replace(R.id.bottom_frame, fragment)
+			//		.addToBackStack("ContactsFragment")
+			//		.commit();
 		}
 	}
 
