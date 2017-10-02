@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.*;
 import com.baraded.mf.Sw;
+import com.baraded.mf.android.MainActivity;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import com.google.android.gms.maps.*;

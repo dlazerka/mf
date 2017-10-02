@@ -14,7 +14,7 @@
 	<dimen name="actionbar_dimen">56dp</dimen>
 
 	<!--<dimen name="bottom_menu_height">116dp</dimen>-->
-	<dimen name="bottom_menu_height">96dp</dimen>
+	<dimen name="bottom_menu_height">90dp</dimen>
 	<dimen name="contact_cell_size">96dp</dimen>
 
 	<dimen name="contact_column_width">138dp</dimen>

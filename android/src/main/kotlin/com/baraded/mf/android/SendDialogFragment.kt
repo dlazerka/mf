@@ -18,26 +18,25 @@
 
 package com.baraded.mf.android
 
-import android.app.Dialog
 import android.app.DialogFragment
 import android.app.Fragment
-import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
-import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.gms.common.GooglePlayServicesUtil
 import me.lazerka.mf.android.R
 
-class SendDialogFragment : Fragment() {
-    override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_select_send_way, container, false)
+class SendDialogFragment : DialogFragment() {
 
-        return view
+    companion object {
+        fun create() : SendDialogFragment {
+            return SendDialogFragment()
+        }
+    }
+
+    override fun onCreateView(
+            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.view_select_send_way, container, false)
     }
 }

@@ -19,14 +19,15 @@
 package com.baraded.mf.logging
 
 import com.google.firebase.analytics.FirebaseAnalytics
-import me.lazerka.mf.android.activity.EventLogger
-import me.lazerka.mf.android.di.Injector
 import javax.inject.Inject
 
 /**
  * Logs messages/errors to LogCat and FirebaseCrash.
  */
-class LogService {
+class LogService
+
+@Inject
+constructor(val firebaseAnalytics: FirebaseAnalytics) {
 
 	companion object {
 		@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.simpleName)
@@ -41,16 +42,7 @@ class LogService {
 		}
 	}
 
-	@Inject
-	constructor(firebaseAnalytics: FirebaseAnalytics) {
-//		Injector.applicationComponent().inject(this)
-		this.firebaseAnalytics = firebaseAnalytics;
-	}
-
-	val firebaseAnalytics: FirebaseAnalytics
-
-	fun getEventLogger(eventName: String): EventLogger {
+    fun getEventLogger(eventName: String): EventLogger {
 		return EventLogger(eventName, firebaseAnalytics)
 	}
-
 }

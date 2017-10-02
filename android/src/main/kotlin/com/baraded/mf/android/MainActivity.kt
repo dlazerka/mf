@@ -19,6 +19,7 @@
 package com.baraded.mf.android
 
 import android.app.Activity
+import android.app.DialogFragment
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -53,8 +54,9 @@ import javax.inject.Inject
  *
  * @author Dzmitry Lazerka
  */
-class MainActivity : Activity() {
-    private val permissionAsker: PermissionAsker
+public class MainActivity : Activity() {
+    @JvmField
+    val permissionAsker: PermissionAsker
 
     @Inject
     lateinit var logService: LogService
@@ -72,7 +74,7 @@ class MainActivity : Activity() {
         logService.getEventLogger("app_launched").send()
 
         val sendButton = findViewById(R.id.send_my_button)
-//        val sendButton = findViewById(R.id.send_my_button) as ImageButton
+        //        val sendButton = findViewById(R.id.send_my_button) as ImageButton
 
         sendButton.setOnClickListener(SendClickListener())
 
@@ -99,16 +101,18 @@ class MainActivity : Activity() {
     // TODO implement settings
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_logout -> {
-            }
-            R.id.clear_token ->
+            R.id.action_logout -> {}
+            R.id.clear_token -> {
                 //Application.gcmManager.clearGcmToken();
                 recreate()
+            }
             R.id.action_quit -> {
                 logService.getEventLogger("app_quit").send()
                 this.finish()
             }
-        } //Intent intent = new Intent(this, LoginActivity.class);
+        }
+
+        //Intent intent = new Intent(this, LoginActivity.class);
         //startActivity(intent);
         //finish();
         return super.onOptionsItemSelected(item)
@@ -117,6 +121,9 @@ class MainActivity : Activity() {
     private inner class SendClickListener : View.OnClickListener {
         override fun onClick(v: View) {
             logService.getEventLogger("send_my_clicked").send()
+
+            val dialogFragment = SendDialogFragment.create()
+            dialogFragment.show(fragmentManager, "send")
         }
     }
 }

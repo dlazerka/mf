@@ -31,10 +31,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import com.baraded.mf.android.MainActivity;
 import com.baraded.mf.logging.LogService;
 import com.baraded.mf.logging.Logger;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
+import me.lazerka.mf.android.PermissionAsker;
 import me.lazerka.mf.android.R;
 import me.lazerka.mf.android.adapter.FriendListAdapter;
 import me.lazerka.mf.android.adapter.PersonInfo;
@@ -177,7 +179,8 @@ public class ContactsFragment extends Fragment {
 		public void onClick(View v) {
 			logService.getEventLogger("friend_add_clicked").send();
 
-			getMainActivity().permissionAsker.checkAndRun(
+			PermissionAsker permissionAsker = getMainActivity().permissionAsker;
+			permissionAsker.checkAndRun(
 					READ_CONTACTS,
 					new Runnable() {
 						@Override

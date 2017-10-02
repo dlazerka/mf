@@ -18,11 +18,26 @@
 
 package com.baraded.mf
 
+import android.os.Bundle
+
 object Util {
     fun <T> checkNotNull(obj: T?): T {
         if (obj == null) {
             throw NullPointerException();
         }
         return obj
+    }
+
+    fun bundleString(b: Bundle): String {
+        val sb = StringBuilder()
+        sb.append("[\n")
+        for (key in b.keySet()) {
+            sb.append(key)
+                    .append(": ")
+                    .append(b[key])
+                    .append(",\n")
+        }
+        sb.set(sb.length - 2, ']')
+        return sb.toString()
     }
 }
