@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="horizontal"
+	>
+
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:text="@string/send_my"
+	    android:layout_gravity="left"
+	    android:gravity="center_vertical|right"
+	    android:layout_weight="1"
+	    android:textSize="20sp"
+		/>
+
+	<FrameLayout
+		android:id="@+id/locate"
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_gravity="right"
+		>
+		<ImageButton
+			android:id="@+id/fab_locate"
+			style="?android:attr/buttonStyleSmall"
+			android:layout_width="56dp"
+			android:layout_height="56dp"
+			android:src="@drawable/crosshairs_gps"
+			android:contentDescription="@string/send_my"
+			android:background="@drawable/ripple_oval_green"
+			android:elevation="@dimen/fab_elevation_resting"
+			android:paddingStart="12dp"
+			android:paddingEnd="12dp"
+			android:paddingTop="12dp"
+			android:paddingBottom="12dp"
+			android:layout_gravity="center"
+			android:scaleType="fitXY"
+		    android:layout_marginTop="16dp"
+		    android:layout_marginRight="20dp"
+		    android:layout_marginBottom="16dp"
+		    android:layout_marginLeft="20dp"
+			/>
+	</FrameLayout>
+
+
+</LinearLayout>

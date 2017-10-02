@@ -2,23 +2,25 @@
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	android:layout_height="match_parent"
 	android:layout_width="match_parent"
+	android:layout_height="match_parent"
 	android:orientation="vertical"
 	>
 
 	<fragment
-		class="me.lazerka.mf.android.activity.MapFragment"
-		tools:layout="@layout/fragment_map"
 		android:id="@+id/map"
+		class="me.lazerka.mf.android.activity.MapFragment"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
-		android:layout_weight="1"/>
+		android:layout_weight="1"
+		tools:layout="@layout/fragment_map"/>
 
 	<FrameLayout
+		android:id="@+id/bottom_frame"
 		android:layout_width="match_parent"
-		android:layout_height="@dimen/bottom_menu_height"
-		android:id="@+id/bottom_fragment_container"
-		/>
+		android:layout_height="@dimen/bottom_menu_height">
+
+		<include layout="@layout/view_send"/>
+	</FrameLayout>
 
 </LinearLayout>

@@ -53,12 +53,12 @@ public class MainActivity extends Activity {
 
 		logService.getEventLogger("app_launched").send();
 
-		if (savedInstanceState == null) {
-			getFragmentManager().beginTransaction()
-					// replace(), not add, because this is called
-					.replace(R.id.bottom_fragment_container, new ContactsFragment())
-					.commit();
-		}
+		//if (savedInstanceState == null) {
+		//	getFragmentManager().beginTransaction()
+		//			// replace(), not add, because this is called
+		//			.replace(R.id.bottom_frame, new ContactsFragment())
+		//			.commit();
+		//}
 	}
 
 	@Override

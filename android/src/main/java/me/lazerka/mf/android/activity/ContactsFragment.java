@@ -143,7 +143,7 @@ public class ContactsFragment extends InjectedFragment {
 							R.animator.slide_from_below, R.animator.slide_to_above,
 							R.animator.slide_from_above, R.animator.slide_to_below
 					)
-					.replace(R.id.bottom_fragment_container, fragment)
+					.replace(R.id.bottom_frame, fragment)
 					.addToBackStack("ContactsFragment")
 					.commit();
 		}
