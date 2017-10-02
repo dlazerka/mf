@@ -58,7 +58,7 @@
 		android:supportsRtl="true"
 		>
 		<activity
-			android:name="com.baraded.mf.android.MainActivity2"
+			android:name="com.baraded.mf.android.MainActivity"
 			android:label="@string/app_name"
 			android:windowSoftInputMode="adjustResize|stateHidden">
 			<intent-filter>

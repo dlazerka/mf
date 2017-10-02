@@ -3,7 +3,7 @@
 http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
 -->
 <resources>
-	<string name="app_name">Find Us</string>
+	<string name="app_name">Send Location</string>
 	<string name="action_logout">Logout</string>
 	<string name="action_clear_token">Refresh GCM Token</string>
 	<string name="action_quit">Quit</string>

@@ -53,7 +53,7 @@ import javax.inject.Inject
  *
  * @author Dzmitry Lazerka
  */
-class MainActivity2 : Activity() {
+class MainActivity : Activity() {
     private val permissionAsker: PermissionAsker
 
     @Inject
@@ -105,7 +105,7 @@ class MainActivity2 : Activity() {
                 //Application.gcmManager.clearGcmToken();
                 recreate()
             R.id.action_quit -> {
-                logService!!.getEventLogger("app_quit").send()
+                logService.getEventLogger("app_quit").send()
                 this.finish()
             }
         } //Intent intent = new Intent(this, LoginActivity.class);
@@ -116,7 +116,7 @@ class MainActivity2 : Activity() {
 
     private inner class SendClickListener : View.OnClickListener {
         override fun onClick(v: View) {
-            logService!!.getEventLogger("send_my_clicked").send()
+            logService.getEventLogger("send_my_clicked").send()
         }
     }
 }

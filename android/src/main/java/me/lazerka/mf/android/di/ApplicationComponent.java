@@ -18,7 +18,7 @@
 
 package me.lazerka.mf.android.di;
 
-import com.baraded.mf.android.MainActivity2;
+import com.baraded.mf.android.MainActivity;
 import com.baraded.mf.logging.LogService;
 import dagger.Component;
 import me.lazerka.mf.android.Application;
@@ -40,7 +40,7 @@ public interface ApplicationComponent {
 
 	// Context-dependent
     void inject(MainActivity obj);
-    void inject(MainActivity2 obj);
+    void inject(MainActivity obj);
 	void inject(LoginActivity loginActivity);
     void inject(ContactsFragment obj);
     void inject(ContactFragment obj);
