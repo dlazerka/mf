@@ -202,7 +202,8 @@ android {
                     'proguard/square-okhttp.pro',
                     'proguard/square-okio.pro',
                     'proguard/dagger2.pro'
-            buildConfigField 'String', 'BACKEND_ROOT', '"https://lazerka-mf.appspot.com"'
+            buildConfigField 'String', 'BACKEND_ROOT', '"https://mf.baraded.com"'
+            buildConfigField 'String', 'SHARE_URL_PREFIX', '"https://mf.baraded.com/"'
 
             signingConfig signingConfigs.release
         }
@@ -212,7 +213,8 @@ android {
             minifyEnabled false
 
             buildConfigField 'String', 'BACKEND_ROOT', '"http://192.168.0.6:8380"'
-//            buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
+            buildConfigField 'String', 'SHARE_URL_PREFIX', '"http://192.168.0.6:8380/find/"'
+            //            buildConfigField 'String', 'BACKEND_ROOT', '"http://10.0.2.2:8380"'
         }
 
     }

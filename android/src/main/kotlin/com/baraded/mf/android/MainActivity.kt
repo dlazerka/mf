@@ -20,14 +20,21 @@ package com.baraded.mf.android
 
 import android.app.Activity
 import android.app.DialogFragment
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
+import android.util.Base64.NO_WRAP
+import android.util.Base64.URL_SAFE
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import com.baraded.mf.logging.LogService
+import me.lazerka.mf.android.BuildConfig
 import me.lazerka.mf.android.PermissionAsker
 import me.lazerka.mf.android.R
 import me.lazerka.mf.android.di.Injector
+import java.security.SecureRandom
 import javax.inject.Inject
 
 /*
@@ -122,8 +129,19 @@ public class MainActivity : Activity() {
         override fun onClick(v: View) {
             logService.getEventLogger("send_my_clicked").send()
 
-            val dialogFragment = SendDialogFragment.create()
-            dialogFragment.show(fragmentManager, "send")
+            val ba = ByteArray(32)
+            SecureRandom().nextBytes(ba)
+            val code = Base64.encodeToString(ba, NO_WRAP.or(URL_SAFE))
+            val codeUrl = BuildConfig.SHARE_URL_PREFIX + code
+
+            val intent = Intent(Intent.ACTION_SEND)
+            // SMS or email.
+            intent.type = "message/rfc822"
+            //intent.setType("text/plain");
+            intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My Location")
+            intent.putExtra(android.content.Intent.EXTRA_TEXT, codeUrl)
+
+            startActivity(Intent.createChooser(intent, "share"))
         }
     }
 }
