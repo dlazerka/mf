@@ -25,24 +25,25 @@ import javax.inject.Inject
  * Logs messages/errors to LogCat and FirebaseCrash.
  */
 class LogService
-
 @Inject
 constructor(val firebaseAnalytics: FirebaseAnalytics) {
 
-	companion object {
-		@JvmStatic fun getLogger(clazz: Class<*>) = getLogger(clazz.simpleName)
+    companion object {
+        @JvmStatic
+        fun getLogger(clazz: Class<*>) = getLogger(clazz.simpleName)
 
-		@JvmStatic fun getLogger(name: String): Logger {
-			if (name.length <= 23) {
-				return Logger(name)
-			} else {
-				// throw IllegalArgumentException("Log tag $name exceeds limit of 23 characters");
-				return Logger(name.substring(0, 23))
-			}
-		}
-	}
+        @JvmStatic
+        fun getLogger(name: String): Logger {
+            if (name.length <= 23) {
+                return Logger(name)
+            } else {
+                // throw IllegalArgumentException("Log tag $name exceeds limit of 23 characters");
+                return Logger(name.substring(0, 23))
+            }
+        }
+    }
 
     fun getEventLogger(eventName: String): EventLogger {
-		return EventLogger(eventName, firebaseAnalytics)
-	}
+        return EventLogger(eventName, firebaseAnalytics)
+    }
 }
