@@ -29,6 +29,7 @@ import android.util.Base64.URL_SAFE
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import com.baraded.mf.logging.LogService
 import me.lazerka.mf.android.BuildConfig
 import me.lazerka.mf.android.PermissionAsker
@@ -80,7 +81,7 @@ public class MainActivity : Activity() {
 
         logService.getEventLogger("app_launched").send()
 
-        val sendButton = findViewById(R.id.send_my_button)
+        val sendButton: Button = findViewById(R.id.send_my_button)
         //        val sendButton = findViewById(R.id.send_my_button) as ImageButton
 
         sendButton.setOnClickListener(SendClickListener())
